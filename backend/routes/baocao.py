@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from backend.database import get_db
 from backend.models import DonHang, DonHang_SanPham, SanPham
+from backend.routes.deps import get_current_user
 
 router = APIRouter(prefix="/baocao", tags=["BaoCao"])
 
@@ -13,8 +14,14 @@ router = APIRouter(prefix="/baocao", tags=["BaoCao"])
 def revenue_report(
     start_date: str,
     end_date: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
+    # Role check: Only Admin and Manager can view revenue reports
+    if current_user.get("role") not in ["Admin", "Manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
+    
     total = db.query(func.sum(DonHang.TongTien)).filter(
         DonHang.NgayDat >= start_date,
         DonHang.NgayDat <= end_date
@@ -28,8 +35,14 @@ def revenue_report(
 def orders_report(
     start_date: str,
     end_date: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
+    # Role check: Only Admin and Manager can view order reports
+    if current_user.get("role") not in ["Admin", "Manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
+    
     count = db.query(func.count(DonHang.MaDonHang)).filter(
         DonHang.NgayDat >= start_date,
         DonHang.NgayDat <= end_date
@@ -42,8 +55,14 @@ def orders_report(
 @router.get("/best_selling", response_model=list)
 def best_selling_products(
     top: int = 5,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
+    # Role check: Only Admin and Manager can view best-selling reports
+    if current_user.get("role") not in ["Admin", "Manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
+    
     results = db.query(
         SanPham.TenSP,
         func.sum(DonHang_SanPham.SoLuong).label("total_sold")
@@ -59,8 +78,14 @@ def best_selling_products(
 @router.get("/low_inventory", response_model=list)
 def low_inventory_products(
     threshold: int = 10,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
+    # Role check: Only Admin and Manager can view inventory reports
+    if current_user.get("role") not in ["Admin", "Manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
+    
     products = db.query(SanPham).filter(
         SanPham.SoLuongTonKho <= threshold,
         SanPham.IsDelete == 0

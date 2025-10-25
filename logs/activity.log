@@ -1,0 +1,98 @@
+2025-10-21 00:03:02,215 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-21 00:05:52,351 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-21 00:06:57,463 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-21 00:07:11,928 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-21 00:10:34,723 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-21 00:13:42,100 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-21 00:14:20,250 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-21 00:14:35,786 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-21 00:19:20,144 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-21 00:26:10,723 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-21 00:26:25,428 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-21 00:27:23,352 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-22 13:45:33,692 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-22 13:47:08,156 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:15:26,384 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:18:29,147 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:19:57,954 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:20:16,679 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:20:19,577 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:25:08,761 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "D:\Python\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-10-23 22:45:15,886 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:45:29,925 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:45:36,139 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:46:48,927 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "D:\Python\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-10-23 22:49:59,139 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:50:02,588 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:50:25,462 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:51:22,074 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:51:26,803 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:51:48,014 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:51:52,125 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:51:58,793 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:54:41,385 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:54:50,112 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:55:35,863 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "D:\Python\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-10-23 22:57:43,689 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:57:47,707 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 22:57:55,144 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 23:03:00,983 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 23:04:20,697 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "D:\Python\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-10-23 23:05:41,992 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "D:\Python\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-10-23 23:11:17,095 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 23:15:13,340 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "D:\Python\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-10-23 23:17:30,602 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 23:21:20,945 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "D:\Python\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-10-23 23:22:17,505 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 23:22:20,319 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "D:\Python\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-10-23 23:22:53,599 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 23:23:37,316 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "D:\Python\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-10-23 23:25:16,250 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 23:25:34,986 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 23:25:53,483 - INFO - \u2705 Database tables checked/created successfully.
+2025-10-23 23:26:51,792 - INFO - \u2705 Database tables checked/created successfully.

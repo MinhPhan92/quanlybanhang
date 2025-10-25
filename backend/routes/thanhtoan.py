@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models import ThanhToan, DonHang
+from backend.routes.deps import get_current_user
 
 router = APIRouter(prefix="/thanhtoan", tags=["ThanhToan"])
 
@@ -9,7 +10,12 @@ router = APIRouter(prefix="/thanhtoan", tags=["ThanhToan"])
 
 
 @router.post("/", response_model=dict)
-def add_payment_voucher(data: dict, db: Session = Depends(get_db)):
+def add_payment_voucher(data: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    # Role check: Only Admin, Manager, and Employee can add payment vouchers
+    if current_user.get("role") not in ["Admin", "Manager", "Employee"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
+    
     madonhang = data.get("MaDonHang")
     phuongthuc = data.get("PhuongThuc")
     ngaythanhtoan = data.get("NgayThanhToan")
@@ -35,7 +41,7 @@ def add_payment_voucher(data: dict, db: Session = Depends(get_db)):
 
 
 @router.get("/history/{madonhang}", response_model=list)
-def view_payment_history(madonhang: int, db: Session = Depends(get_db)):
+def view_payment_history(madonhang: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     payments = db.query(ThanhToan).filter(
         ThanhToan.MaDonHang == madonhang).all()
     return [p.__dict__ for p in payments]

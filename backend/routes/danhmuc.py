@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models import DanhMuc
+from backend.routes.deps import get_current_user
 
 router = APIRouter(prefix="/danhmuc", tags=["DanhMuc"])
 
@@ -9,7 +10,12 @@ router = APIRouter(prefix="/danhmuc", tags=["DanhMuc"])
 
 
 @router.post("/", response_model=dict)
-def create_danhmuc(danhmuc: dict, db: Session = Depends(get_db)):
+def create_danhmuc(danhmuc: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    # Role check: Only Admin and Manager can create categories
+    if current_user.get("role") not in ["Admin", "Manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
+    
     new_dm = DanhMuc(
         TenDanhMuc=danhmuc.get("TenDanhMuc"),
         IsDelete=danhmuc.get("IsDelete", 0)
@@ -23,7 +29,7 @@ def create_danhmuc(danhmuc: dict, db: Session = Depends(get_db)):
 
 
 @router.get("/", response_model=list)
-def get_all_danhmuc(db: Session = Depends(get_db)):
+def get_all_danhmuc(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     dms = db.query(DanhMuc).filter(DanhMuc.IsDelete == 0).all()
     return [dm.__dict__ for dm in dms]
 
@@ -31,7 +37,7 @@ def get_all_danhmuc(db: Session = Depends(get_db)):
 
 
 @router.get("/{madanhmuc}", response_model=dict)
-def get_danhmuc(madanhmuc: int, db: Session = Depends(get_db)):
+def get_danhmuc(madanhmuc: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     dm = db.query(DanhMuc).filter(DanhMuc.MaDanhMuc ==
                                   madanhmuc, DanhMuc.IsDelete == 0).first()
     if not dm:
@@ -42,7 +48,12 @@ def get_danhmuc(madanhmuc: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{madanhmuc}", response_model=dict)
-def update_danhmuc(madanhmuc: int, danhmuc: dict, db: Session = Depends(get_db)):
+def update_danhmuc(madanhmuc: int, danhmuc: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    # Role check: Only Admin and Manager can update categories
+    if current_user.get("role") not in ["Admin", "Manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
+    
     dm = db.query(DanhMuc).filter(DanhMuc.MaDanhMuc ==
                                   madanhmuc, DanhMuc.IsDelete == 0).first()
     if not dm:
@@ -58,7 +69,12 @@ def update_danhmuc(madanhmuc: int, danhmuc: dict, db: Session = Depends(get_db))
 
 
 @router.delete("/{madanhmuc}", response_model=dict)
-def delete_danhmuc(madanhmuc: int, db: Session = Depends(get_db)):
+def delete_danhmuc(madanhmuc: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    # Role check: Only Admin can delete categories
+    if current_user.get("role") != "Admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
+    
     dm = db.query(DanhMuc).filter(DanhMuc.MaDanhMuc ==
                                   madanhmuc, DanhMuc.IsDelete == 0).first()
     if not dm:

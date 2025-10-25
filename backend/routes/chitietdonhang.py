@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models import DonHang_SanPham, DonHang, SanPham
+from backend.routes.deps import get_current_user
 
 router = APIRouter(prefix="/chitietdonhang", tags=["ChiTietDonHang"])
 
@@ -9,7 +10,12 @@ router = APIRouter(prefix="/chitietdonhang", tags=["ChiTietDonHang"])
 
 
 @router.post("/", response_model=dict)
-def add_product_to_order(data: dict, db: Session = Depends(get_db)):
+def add_product_to_order(data: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    # Role check: Only Admin, Manager, and Employee can add products to orders
+    if current_user.get("role") not in ["Admin", "Manager", "Employee"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
+    
     madonhang = data.get("MaDonHang")
     masp = data.get("MaSP")
     soluong = data.get("SoLuong")
@@ -63,7 +69,12 @@ def update_total_price(madonhang: int, db: Session):
 
 
 @router.put("/", response_model=dict)
-def update_product_in_order(data: dict, db: Session = Depends(get_db)):
+def update_product_in_order(data: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    # Role check: Only Admin, Manager, and Employee can update order details
+    if current_user.get("role") not in ["Admin", "Manager", "Employee"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
+    
     madonhang = data.get("MaDonHang")
     masp = data.get("MaSP")
     soluong = data.get("SoLuong")
