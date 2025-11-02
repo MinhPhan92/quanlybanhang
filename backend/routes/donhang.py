@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.database import get_db
-from backend.models import DonHang
+from backend.models import DonHang, Shipper
 from backend.routes.deps import get_current_user
 from backend.utils.promotion_data import VoucherData
 from backend.utils.inventory_manager import InventoryManager, InventoryError
 from pydantic import BaseModel
 from typing import Optional
+from backend.utils.activity_logger import log_activity
 
 router = APIRouter(prefix="/donhang", tags=["DonHang"])
 
@@ -25,6 +26,24 @@ class StatusUpdateResponse(BaseModel):
     old_status: str
     new_status: str
     inventory_updated: bool
+
+
+class DeliveryUpdateRequest(BaseModel):
+    delivery_status: str
+    shipper_id: Optional[int] = None
+    shipper_name: Optional[str] = None
+    shipper_phone: Optional[str] = None
+    shipper_company: Optional[str] = None
+    shipper_plate: Optional[str] = None
+    shipping_fee: Optional[float] = None
+
+
+class DeliveryUpdateResponse(BaseModel):
+    success: bool
+    message: str
+    order_id: int
+    delivery_status: str
+    shipper_id: Optional[int] = None
 
 # Create
 
@@ -79,6 +98,19 @@ def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: d
     db.add(new_dh)
     db.commit()
     db.refresh(new_dh)
+
+    # Activity log
+    try:
+        log_activity(
+            db,
+            current_user,
+            action="CREATE",
+            entity="DonHang",
+            entity_id=new_dh.MaDonHang,
+            details=f"Created order with final amount {float(new_dh.TongTien)}",
+        )
+    except Exception:
+        pass
     
     # Return order info with voucher details
     response = {
@@ -136,6 +168,19 @@ def update_donhang(madonhang: int, donhang: dict, db: Session = Depends(get_db),
             setattr(dh, key, value)
     db.commit()
     db.refresh(dh)
+
+    # Activity log
+    try:
+        log_activity(
+            db,
+            current_user,
+            action="UPDATE",
+            entity="DonHang",
+            entity_id=dh.MaDonHang,
+            details="Updated order fields",
+        )
+    except Exception:
+        pass
     return dh.__dict__
 
 # Delete (hard delete)
@@ -153,6 +198,19 @@ def delete_donhang(madonhang: int, db: Session = Depends(get_db), current_user: 
         raise HTTPException(status_code=404, detail="Đơn hàng không tồn tại")
     db.delete(dh)
     db.commit()
+
+    # Activity log
+    try:
+        log_activity(
+            db,
+            current_user,
+            action="DELETE",
+            entity="DonHang",
+            entity_id=madonhang,
+            details="Deleted order",
+        )
+    except Exception:
+        pass
     return {"message": "Đã xóa đơn hàng"}
 
 # =====================================================
@@ -211,6 +269,19 @@ def update_order_status(
         # Update order status
         order.TrangThai = new_status
         db.commit()
+
+        # Activity log
+        try:
+            log_activity(
+                db,
+                current_user,
+                action="UPDATE_STATUS",
+                entity="DonHang",
+                entity_id=order.MaDonHang,
+                details=f"Status: {old_status} -> {new_status}",
+            )
+        except Exception:
+            pass
         
         return StatusUpdateResponse(
             success=True,
@@ -285,4 +356,93 @@ def check_order_inventory(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Lỗi kiểm tra tồn kho: {str(e)}"
+        )
+
+
+# =====================================================
+# 🚚 Delivery status and shipper assignment/update
+# =====================================================
+
+
+@router.put("/{madonhang}/delivery", response_model=DeliveryUpdateResponse, summary="Cập nhật giao hàng: trạng thái & shipper")
+def update_delivery(
+    madonhang: int,
+    request: DeliveryUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    # Role check: Only Admin, Manager, and Employee can update delivery info
+    if current_user.get("role") not in ["Admin", "Manager", "Employee"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission denied"
+        )
+
+    try:
+        order = db.query(DonHang).filter(DonHang.MaDonHang == madonhang).first()
+        if not order:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Đơn hàng không tồn tại")
+
+        # Handle shipper assignment or update
+        shipper_id = request.shipper_id
+        created_shipper = None
+        if shipper_id:
+            shipper = db.query(Shipper).filter(Shipper.MaShipper == shipper_id, Shipper.IsDelete == False).first()
+            if not shipper:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shipper không tồn tại")
+        else:
+            shipper = None
+            if request.shipper_name or request.shipper_phone:
+                shipper = Shipper(
+                    TenShipper=request.shipper_name,
+                    SdtShipper=request.shipper_phone,
+                    DonViGiao=request.shipper_company,
+                    BienSoXe=request.shipper_plate,
+                    TrangThai="Active",
+                    IsDelete=False,
+                )
+                db.add(shipper)
+                db.commit()
+                db.refresh(shipper)
+                created_shipper = shipper
+
+        # Assign shipper to order if any
+        if shipper_id or created_shipper is not None:
+            order.MaShipper = shipper_id or created_shipper.MaShipper
+
+        # Update delivery status and shipping fee if provided
+        if request.delivery_status:
+            order.TrangThai = request.delivery_status
+        if request.shipping_fee is not None:
+            order.PhiShip = request.shipping_fee
+
+        db.commit()
+
+        # Activity log
+        try:
+            log_activity(
+                db,
+                current_user,
+                action="UPDATE_DELIVERY",
+                entity="DonHang",
+                entity_id=order.MaDonHang,
+                details=f"Status={request.delivery_status}; Shipper={order.MaShipper}; Fee={request.shipping_fee}",
+            )
+        except Exception:
+            pass
+
+        return DeliveryUpdateResponse(
+            success=True,
+            message="Đã cập nhật thông tin giao hàng",
+            order_id=order.MaDonHang,
+            delivery_status=order.TrangThai,
+            shipper_id=order.MaShipper,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi cập nhật giao hàng: {str(e)}"
         )

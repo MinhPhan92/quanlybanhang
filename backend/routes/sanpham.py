@@ -9,6 +9,7 @@ from backend.schemas import (
     ProductResponse, 
     ProductListResponse
 )
+from backend.utils.activity_logger import log_activity
 import json
 from typing import Optional
 
@@ -111,6 +112,19 @@ def create_sanpham(
         db.add(new_sp)
         db.commit()
         db.refresh(new_sp)
+
+        # Activity log
+        try:
+            log_activity(
+                db,
+                current_user,
+                action="CREATE",
+                entity="SanPham",
+                entity_id=new_sp.MaSP,
+                details=f"Created product '{new_sp.TenSP}'",
+            )
+        except Exception:
+            pass
         
         # Return formatted response with decoded attributes
         return format_product_response(new_sp, include_attributes=True)
@@ -251,6 +265,19 @@ def update_sanpham(
         
         db.commit()
         db.refresh(sp)
+
+        # Activity log
+        try:
+            log_activity(
+                db,
+                current_user,
+                action="UPDATE",
+                entity="SanPham",
+                entity_id=sp.MaSP,
+                details=f"Updated product '{sp.TenSP}'",
+            )
+        except Exception:
+            pass
         
         # Return formatted response with decoded attributes
         product_data_response = format_product_response(sp, include_attributes=True)
@@ -298,6 +325,19 @@ def delete_sanpham(
         
         sp.IsDelete = True
         db.commit()
+
+        # Activity log
+        try:
+            log_activity(
+                db,
+                current_user,
+                action="DELETE",
+                entity="SanPham",
+                entity_id=sp.MaSP,
+                details=f"Soft-deleted product '{sp.TenSP}'",
+            )
+        except Exception:
+            pass
         
         return {"message": "Đã xóa sản phẩm thành công"}
         

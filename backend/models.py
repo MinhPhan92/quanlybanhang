@@ -13,6 +13,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -78,11 +79,15 @@ class DonHang(Base):
     MaNV = Column(Integer, ForeignKey("NhanVien.MaNV",
                   onupdate="CASCADE", ondelete="SET NULL"))
     KhuyenMai = Column(String(50), nullable=True)  # Voucher code field
+    PhiShip = Column(Numeric(10, 2), nullable=True)
+    MaShipper = Column(Integer, ForeignKey("Shipper.MaShipper",
+                    onupdate="CASCADE", ondelete="SET NULL"), nullable=True)
     khachhang = relationship("KhachHang", back_populates="donhangs")
     nhanvien = relationship("NhanVien", back_populates="donhangs")
     donhang_sanphams = relationship(
         "DonHang_SanPham", back_populates="donhang")
     thanhtoans = relationship("ThanhToan", back_populates="donhang")
+    shipper = relationship("Shipper", back_populates="donhangs")
 
 
 class DonHang_SanPham(Base):
@@ -156,3 +161,52 @@ class KhieuNai(Base):
     # Relationships
     khachhang = relationship("KhachHang")
     nhanvien_phanhoi = relationship("NhanVien")
+
+
+class Shipper(Base):
+    __tablename__ = "Shipper"
+    MaShipper = Column(Integer, primary_key=True, autoincrement=True)
+    TenShipper = Column(String(100))
+    SdtShipper = Column(CHAR(15))
+    DonViGiao = Column(String(100))
+    BienSoXe = Column(String(20))
+    TrangThai = Column(String(50))
+    IsDelete = Column(Boolean, default=False)
+    donhangs = relationship("DonHang", back_populates="shipper")
+
+
+class SystemLog(Base):
+    __tablename__ = "SystemLog"
+    Id = Column(Integer, primary_key=True, autoincrement=True)
+    Level = Column(String(20))  # INFO, WARNING, ERROR
+    Endpoint = Column(String(255))
+    Method = Column(String(10))
+    StatusCode = Column(Integer)
+    RequestBody = Column(Text, nullable=True)
+    ResponseBody = Column(Text, nullable=True)
+    ErrorMessage = Column(Text, nullable=True)
+    CreatedAt = Column(DateTime, default=datetime.utcnow)
+
+
+class ActivityLog(Base):
+    __tablename__ = "ActivityLog"
+    Id = Column(Integer, primary_key=True, autoincrement=True)
+    UserId = Column(Integer, nullable=True)
+    Username = Column(String(100), nullable=True)
+    Role = Column(String(50), nullable=True)
+    Action = Column(String(100))
+    Entity = Column(String(100), nullable=True)
+    EntityId = Column(String(100), nullable=True)
+    Details = Column(Text, nullable=True)
+    IP = Column(String(64), nullable=True)
+    UserAgent = Column(String(255), nullable=True)
+    CreatedAt = Column(DateTime, default=datetime.utcnow)
+
+
+class SystemConfig(Base):
+    __tablename__ = "SystemConfig"
+    Id = Column(Integer, primary_key=True, autoincrement=True)
+    ConfigKey = Column(String(100), unique=True, nullable=False)
+    ConfigValue = Column(String(255), nullable=False)
+    Description = Column(String(255), nullable=True)
+    UpdatedAt = Column(DateTime, default=datetime.utcnow)
