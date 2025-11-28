@@ -15,7 +15,7 @@ from backend.models import SystemLog
 
 # Database & Models
 from backend.database import engine
-from backend import models
+import backend.models as models
 
 # Routers
 from backend.routes import (
@@ -34,6 +34,7 @@ from backend.routes import (
     khieunai,
     config,
     alert,
+    chatbot,
 )
 
 # =====================================================
@@ -172,7 +173,7 @@ app.include_router(danhgia.router, prefix="/api", tags=["Đánh giá"])
 app.include_router(khieunai.router, prefix="/api", tags=["Khiếu nại"])
 app.include_router(config.router, prefix="/api", tags=["Config"])
 app.include_router(alert.router, prefix="/api", tags=["Alerts"])
-
+app.include_router(chatbot.router, prefix="/api", tags=["Chatbot"])
 # =====================================================
 # 🧩 6. Sự kiện khởi động - tạo bảng CSDL nếu chưa có
 # =====================================================

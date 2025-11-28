@@ -11,6 +11,14 @@ class RegisterRequest(BaseModel):
     ChucVu: Optional[str] = "Employee"
 
 
+class RegisterCustomerRequest(BaseModel):
+    SdtKH: str
+    password: str
+    TenKH: str
+    EmailKH: Optional[str] = None
+    DiaChiKH: Optional[str] = None
+
+
 class LoginRequest(BaseModel):
     username: str
     password: str
