@@ -1,0 +1,100 @@
+.infoContainer {
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.infoTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 2rem;
+}
+
+.methodsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.methodCard {
+  padding: 1.5rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  border-left: 4px solid #ff8c42;
+  transition: background-color 0.2s;
+}
+
+.methodCard:hover {
+  background-color: #f3f4f6;
+}
+
+.iconBox {
+  width: 3rem;
+  height: 3rem;
+  background-color: #ff8c42;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.icon {
+  color: #ffffff;
+}
+
+.methodTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.methodContent {
+  font-size: 0.95rem;
+  color: #374151;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.methodSubtext {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.socialSection {
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.socialTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.socialLinks {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.socialLink {
+  padding: 0.5rem 1rem;
+  background-color: #f3f4f6;
+  color: #ff8c42;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.socialLink:hover {
+  background-color: #ff8c42;
+  color: #ffffff;
+}
