@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models import SanPham, DanhMuc
-from backend.routes.deps import get_current_user
+from backend.routes.deps import get_current_user, get_current_user_optional
 from backend.schemas import (
     ProductCreateRequest, 
     ProductUpdateRequest, 
@@ -13,7 +13,7 @@ from backend.utils.activity_logger import log_activity
 import json
 from typing import Optional
 
-router = APIRouter(prefix="/sanpham", tags=["SanPham"])
+router = APIRouter(tags=["SanPham"])
 
 # =====================================================
 # 🧩 Helper Functions for JSON Attributes
@@ -146,12 +146,13 @@ def get_all_sanpham(
     include_attributes: bool = False,
     page: int = 1,
     limit: int = 10,
-    db: Session = Depends(get_db), 
-    current_user: dict = Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: Optional[dict] = Depends(get_current_user_optional)
 ):
     """
     Lấy danh sách sản phẩm với tùy chọn bao gồm thuộc tính.
-    Để tối ưu hiệu suất, có thể bỏ qua việc giải mã thuộc tính.
+    Public access - không yêu cầu đăng nhập.
+    Nếu có token hợp lệ, có thể sử dụng để hiển thị thông tin cá nhân hóa.
     """
     try:
         # Get total count
@@ -182,10 +183,11 @@ def get_all_sanpham(
 def get_sanpham(
     masp: int, 
     db: Session = Depends(get_db), 
-    current_user: dict = Depends(get_current_user)
+    current_user: Optional[dict] = Depends(get_current_user_optional)
 ):
     """
     Xem chi tiết sản phẩm với thuộc tính đã giải mã.
+    Public access - không yêu cầu đăng nhập.
     """
     try:
         sp = db.query(SanPham).filter(

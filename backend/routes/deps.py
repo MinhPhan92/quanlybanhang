@@ -27,6 +27,34 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict:
     return payload
 
 
+async def get_current_user_optional(
+    request: Request
+) -> Optional[Dict]:
+    """
+    Optional authentication dependency.
+    Returns user dict if token is valid, None if no token or invalid token.
+    Allows public access to routes while still identifying logged-in users.
+    """
+    try:
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return None
+        
+        token = auth_header.split(" ", 1)[1]
+        if not token:
+            return None
+        
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            return payload
+        except (ExpiredSignatureError, JWTError):
+            # Token is invalid or expired, but we don't raise error for optional auth
+            return None
+    except Exception:
+        # Any other error, return None (public access)
+        return None
+
+
 def jwt_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):

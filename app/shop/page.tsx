@@ -1,33 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Header from "../components/shared/header/Header"
 import Footer from "../components/shared/footer/Footer"
 import ProductCard from "../components/home/product-card/product-card"
+import { productsApi, categoriesApi, Product, Category } from "@/app/lib/api/products"
 import styles from "@/app/shop/shop.module.css"
 
-const allProducts = [
-  { id: 1, name: "Lò Nướng Thông Minh", price: 2500000, image: "/smart-oven.png", category: "Nướng" },
-  { id: 2, name: "Máy Giặt Tự Động", price: 8500000, image: "/automatic-washing-machine.jpg", category: "Giặt Sấy" },
-  { id: 3, name: "Tủ Lạnh Kép", price: 15000000, image: "/double-door-refrigerator.jpg", category: "Lạnh" },
-  { id: 4, name: "Nồi Cơm Điện Tử", price: 1200000, image: "/rice-cooker.png", category: "Nấu Ăn" },
-  { id: 5, name: "Máy Rửa Chén", price: 12000000, image: "/modern-dishwasher.png", category: "Rửa" },
-  { id: 6, name: "Máy Sấy Quần Áo", price: 6500000, image: "/clothes-dryer.jpg", category: "Giặt Sấy" },
-  { id: 7, name: "Bếp Từ Cảm Ứng", price: 3500000, image: "/induction-cooktop.jpg", category: "Nấu Ăn" },
-  { id: 8, name: "Quạt Hơi Nước", price: 2800000, image: "/misting-fan.jpg", category: "Làm Mát" },
-  { id: 9, name: "Máy Hút Bụi Điện", price: 4500000, image: "/classic-vacuum-cleaner.png", category: "Vệ Sinh" },
-  { id: 10, name: "Lò Vi Sóng Hiện Đại", price: 3200000, image: "/microwave-oven.png", category: "Nấu Ăn" },
-  {
-    id: 11,
-    name: "Máy Giặt Lồng Ngang",
-    price: 7500000,
-    image: "/front-load-washing-machine.jpg",
-    category: "Giặt Sấy",
-  },
-  { id: 12, name: "Tủ Cơm Điện", price: 1800000, image: "/electric-cooker.jpg", category: "Nấu Ăn" },
-]
-
-const categories = ["Tất Cả", "Nấu Ăn", "Giặt Sấy", "Lạnh", "Nướng", "Rửa", "Làm Mát", "Vệ Sinh"]
 const sortOptions = [
   { value: "newest", label: "Mới Nhất" },
   { value: "priceLow", label: "Giá Thấp Đến Cao" },
@@ -36,23 +15,51 @@ const sortOptions = [
 ]
 
 export default function ShopPage() {
-  const [selectedCategory, setSelectedCategory] = useState("Tất Cả")
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<number | "all">("all")
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("newest")
 
-  const filteredProducts = allProducts.filter((product) => {
-    const matchesCategory = selectedCategory === "Tất Cả" || product.category === selectedCategory
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesCategory && matchesSearch
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const [productsData, categoriesData] = await Promise.all([
+        productsApi.getAll(1, 100, true).catch(() => ({ products: [], total: 0 })),
+        categoriesApi.getAll().catch(() => []),
+      ])
+      setProducts(productsData.products || [])
+      setCategories(categoriesData || [])
+    } catch (err: any) {
+      setError(err.message || "Không thể tải dữ liệu sản phẩm")
+      console.error("Error loading products:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredProducts = products.filter((product) => {
+    const matchesCategory =
+      selectedCategory === "all" || product.MaDanhMuc === selectedCategory
+    const matchesSearch = product.TenSP.toLowerCase().includes(searchTerm.toLowerCase())
+    return matchesCategory && matchesSearch && !product.IsDelete
   })
 
   // Sort products
+  const sortedProducts = [...filteredProducts]
   if (sortBy === "priceLow") {
-    filteredProducts.sort((a, b) => a.price - b.price)
+    sortedProducts.sort((a, b) => a.GiaSP - b.GiaSP)
   } else if (sortBy === "priceHigh") {
-    filteredProducts.sort((a, b) => b.price - a.price)
+    sortedProducts.sort((a, b) => b.GiaSP - a.GiaSP)
   } else if (sortBy === "popular") {
-    filteredProducts.sort(() => Math.random() - 0.5)
+    sortedProducts.sort(() => Math.random() - 0.5)
   }
 
   return (
@@ -86,15 +93,23 @@ export default function ShopPage() {
           <div className={styles.filterSection}>
             <h3 className={styles.filterTitle}>Danh Mục</h3>
             <div className={styles.categoryList}>
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`${styles.categoryButton} ${selectedCategory === category ? styles.active : ""}`}
-                >
-                  {category}
-                </button>
-              ))}
+              <button
+                onClick={() => setSelectedCategory("all")}
+                className={`${styles.categoryButton} ${selectedCategory === "all" ? styles.active : ""}`}
+              >
+                Tất Cả
+              </button>
+              {categories
+                .filter((cat) => !cat.IsDelete)
+                .map((category) => (
+                  <button
+                    key={category.MaDanhMuc}
+                    onClick={() => setSelectedCategory(category.MaDanhMuc)}
+                    className={`${styles.categoryButton} ${selectedCategory === category.MaDanhMuc ? styles.active : ""}`}
+                  >
+                    {category.TenDanhMuc}
+                  </button>
+                ))}
             </div>
           </div>
 
@@ -126,8 +141,14 @@ export default function ShopPage() {
         <section className={styles.productsSection}>
           {/* Sort Bar */}
           <div className={styles.sortBar}>
-            <span className={styles.resultCount}>Hiển thị {filteredProducts.length} sản phẩm</span>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={styles.sortSelect}>
+            <span className={styles.resultCount}>
+              Hiển thị {sortedProducts.length} sản phẩm
+            </span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className={styles.sortSelect}
+            >
               {sortOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -137,10 +158,21 @@ export default function ShopPage() {
           </div>
 
           {/* Products Grid */}
-          {filteredProducts.length > 0 ? (
+          {loading ? (
+            <div className={styles.loadingContainer}>
+              <p>Đang tải sản phẩm...</p>
+            </div>
+          ) : error ? (
+            <div className={styles.errorContainer}>
+              <p>{error}</p>
+              <button onClick={loadData} className={styles.resetButton}>
+                Thử lại
+              </button>
+            </div>
+          ) : sortedProducts.length > 0 ? (
             <div className={styles.productsGrid}>
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {sortedProducts.map((product) => (
+                <ProductCard key={product.MaSP} product={product} />
               ))}
             </div>
           ) : (
@@ -149,7 +181,7 @@ export default function ShopPage() {
               <button
                 onClick={() => {
                   setSearchTerm("")
-                  setSelectedCategory("Tất Cả")
+                  setSelectedCategory("all")
                 }}
                 className={styles.resetButton}
               >

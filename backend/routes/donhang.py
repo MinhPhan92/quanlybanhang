@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from typing import Optional
 from backend.utils.activity_logger import log_activity
 
-router = APIRouter(prefix="/donhang", tags=["DonHang"])
+router = APIRouter(tags=["DonHang"])
 
 # =====================================================
 # 📋 Request/Response Models

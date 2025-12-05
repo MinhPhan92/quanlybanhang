@@ -1,31 +1,91 @@
 "use client"
 
-import { useState } from "react"
-import { Heart, Share2, Star } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Heart, Share2, Star, Loader2 } from "lucide-react"
+import { productsApi, Product } from "@/app/lib/api/products"
 import styles from "./product-detail.module.css"
 
-export default function ProductDetail() {
+interface ProductDetailProps {
+  productId: number | null
+}
+
+export default function ProductDetail({ productId }: ProductDetailProps) {
+  const [product, setProduct] = useState<Product | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [isFavorite, setIsFavorite] = useState(false)
   const [activeImage, setActiveImage] = useState(0)
 
-  const images = [
-    "/m-y-h-t-b-i-hi-n---i.jpg",
-    "/m-y-h-t-b-i-t--nhi-u-g-c.jpg",
-    "/m-y-h-t-b-i-th-ng-s-.jpg",
-    "/m-y-h-t-b-i-b-o-h-nh.jpg",
-  ]
+  useEffect(() => {
+    if (productId) {
+      loadProduct()
+    } else {
+      setError("Không tìm thấy sản phẩm")
+      setLoading(false)
+    }
+  }, [productId])
 
-  const reviews = [
-    { rating: 5, text: "Sản phẩm rất tốt, giao hàng nhanh!" },
-    { rating: 5, text: "Chất lượng vượt mong đợi, sẽ mua lại." },
-    { rating: 4, text: "Tốt nhưng hơi lớn hơn dự tính." },
-  ]
+  const loadProduct = async () => {
+    if (!productId) return
+    try {
+      setLoading(true)
+      setError(null)
+      const data = await productsApi.getOne(productId)
+      setProduct(data)
+    } catch (err: any) {
+      setError(err.message || "Không thể tải thông tin sản phẩm")
+      console.error("Error loading product:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const handleQuantityChange = (e:any) => {
+  const handleQuantityChange = (e: any) => {
     const value = Number.parseInt(e.target.value)
     if (value > 0) setQuantity(value)
   }
+
+  if (loading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <Loader2 className={styles.spinner} />
+        <p>Đang tải thông tin sản phẩm...</p>
+      </div>
+    )
+  }
+
+  if (error || !product) {
+    return (
+      <div className={styles.errorContainer}>
+        <p>{error || "Không tìm thấy sản phẩm"}</p>
+      </div>
+    )
+  }
+
+  // Parse attributes from MoTa
+  let attributes: Record<string, any> = {}
+  if (product.MoTa) {
+    try {
+      attributes = JSON.parse(product.MoTa)
+    } catch {
+      // If not JSON, use as is
+    }
+  }
+
+  // Get images from attributes or use placeholder
+  const images = attributes.images
+    ? Array.isArray(attributes.images)
+      ? attributes.images
+      : [attributes.images]
+    : attributes.image
+    ? [attributes.image]
+    : ["/placeholder.svg"]
+
+  const formattedPrice = new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(product.GiaSP || 0)
 
   return (
     <div className={styles.container}>
@@ -55,8 +115,10 @@ export default function ProductDetail() {
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.titleSection}>
-            <span className={styles.category}>Thiết bị làm sạch</span>
-            <h1 className={styles.title}>Máy Hút Bụi Thông Minh Philips Series 3000</h1>
+            {product.TenDanhMuc && (
+              <span className={styles.category}>{product.TenDanhMuc}</span>
+            )}
+            <h1 className={styles.title}>{product.TenSP}</h1>
           </div>
 
           {/* Actions */}
@@ -87,9 +149,12 @@ export default function ProductDetail() {
         {/* Price Section */}
         <div className={styles.priceSection}>
           <div className={styles.priceBlock}>
-            <span className={styles.originalPrice}>3.990.000₫</span>
-            <span className={styles.currentPrice}>2.890.000₫</span>
-            <span className={styles.discount}>-27%</span>
+            <span className={styles.currentPrice}>{formattedPrice}</span>
+            {product.SoLuongTonKho !== undefined && (
+              <span className={styles.stock}>
+                Còn {product.SoLuongTonKho} sản phẩm
+              </span>
+            )}
           </div>
           <div className={styles.shipping}>
             <span className={styles.shippingLabel}>Miễn phí vận chuyển</span>
@@ -98,36 +163,29 @@ export default function ProductDetail() {
         </div>
 
         {/* Highlights */}
-        <div className={styles.highlights}>
-          <div className={styles.highlight}>
-            <span className={styles.highlightLabel}>Công suất</span>
-            <span className={styles.highlightValue}>2200W</span>
+        {Object.keys(attributes).length > 0 && (
+          <div className={styles.highlights}>
+            {Object.entries(attributes)
+              .filter(([key]) => !["image", "images"].includes(key))
+              .slice(0, 4)
+              .map(([key, value]) => (
+                <div key={key} className={styles.highlight}>
+                  <span className={styles.highlightLabel}>{key}</span>
+                  <span className={styles.highlightValue}>
+                    {String(value)}
+                  </span>
+                </div>
+              ))}
           </div>
-          <div className={styles.highlight}>
-            <span className={styles.highlightLabel}>Dung tích</span>
-            <span className={styles.highlightValue}>3L</span>
-          </div>
-          <div className={styles.highlight}>
-            <span className={styles.highlightLabel}>Bảo hành</span>
-            <span className={styles.highlightValue}>2 năm</span>
-          </div>
-          <div className={styles.highlight}>
-            <span className={styles.highlightLabel}>Màu sắc</span>
-            <span className={styles.highlightValue}>Đen/Trắng</span>
-          </div>
-        </div>
+        )}
 
         {/* Description */}
-        <div className={styles.description}>
-          <h2 className={styles.descriptionTitle}>Mô tả sản phẩm</h2>
-          <ul className={styles.descriptionList}>
-            <li>Công suất 2200W mạnh mẽ, hút sạch bụi hiệu quả</li>
-            <li>Bộ lọc HEPA cao cấp, bảo vệ sức khỏe gia đình</li>
-            <li>Thiết kế nhẹ nhàng, dễ sử dụng và bảo trì</li>
-            <li>Tương thích với nhiều loại mặt sàn khác nhau</li>
-            <li>Chế độ êm ớt, phù hợp sử dụng ban đêm</li>
-          </ul>
-        </div>
+        {product.MoTa && !product.MoTa.startsWith("{") && (
+          <div className={styles.description}>
+            <h2 className={styles.descriptionTitle}>Mô tả sản phẩm</h2>
+            <p className={styles.descriptionText}>{product.MoTa}</p>
+          </div>
+        )}
 
         {/* Purchase Section */}
         <div className={styles.purchase}>
@@ -153,19 +211,11 @@ export default function ProductDetail() {
         </div>
 
         {/* Reviews Section */}
+        {/* TODO: Implement reviews API integration */}
         <div className={styles.reviewsSection}>
           <h2 className={styles.reviewsTitle}>Đánh giá từ khách hàng</h2>
           <div className={styles.reviewsList}>
-            {reviews.map((review, idx) => (
-              <div key={idx} className={styles.reviewItem}>
-                <div className={styles.reviewStars}>
-                  {[...Array(review.rating)].map((_, i) => (
-                    <Star key={i} size={14} fill="#fbbf24" color="#fbbf24" />
-                  ))}
-                </div>
-                <p className={styles.reviewText}>{review.text}</p>
-              </div>
-            ))}
+            <p className={styles.noReviews}>Chưa có đánh giá nào</p>
           </div>
         </div>
       </section>

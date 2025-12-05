@@ -1,18 +1,22 @@
 "use client"
 
 import Link from "next/link"
-import { ShoppingCart, Search, Menu, Shield } from "lucide-react"
+import { ShoppingCart, Search, Menu, Shield, LogIn, LogOut, User } from "lucide-react"
 import { useState, useEffect } from "react"
-import { authApi } from "@/app/lib/api/auth"
+import { useAuth } from "@/app/contexts/AuthContext"
+import { useRouter } from "next/navigation"
 import styles from "./Header.module.css"
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false)
+  const { user, isAuthenticated, logout } = useAuth()
+  const router = useRouter()
+  const isAdmin = user?.role === "Admin" || user?.role === "Manager"
 
-  useEffect(() => {
-    setIsAdmin(authApi.isAdmin())
-  }, [])
+  const handleLogout = () => {
+    logout()
+    router.push("/")
+  }
 
   return (
     <header className={styles.header}>
@@ -60,6 +64,19 @@ export default function Header() {
               <ShoppingCart size={20} />
               <span className={styles.cartBadge}>0</span>
             </button>
+            {isAuthenticated ? (
+              <div className={styles.userMenu}>
+                <span className={styles.userName}>{user?.username}</span>
+                <button onClick={handleLogout} className={styles.logoutButton} title="Đăng xuất">
+                  <LogOut size={20} />
+                </button>
+              </div>
+            ) : (
+              <Link href="/login" className={styles.loginButton}>
+                <LogIn size={20} />
+                <span className={styles.loginText}>Đăng nhập</span>
+              </Link>
+            )}
             <button onClick={() => setIsOpen(!isOpen)} className={styles.menuButton}>
               <Menu size={20} />
             </button>
@@ -85,6 +102,17 @@ export default function Header() {
               <Link href="/admin" className={styles.mobileNavLink}>
                 <Shield size={16} style={{ marginRight: "4px", verticalAlign: "middle" }} />
                 Admin
+              </Link>
+            )}
+            {isAuthenticated ? (
+              <button onClick={handleLogout} className={styles.mobileNavLink}>
+                <LogOut size={16} style={{ marginRight: "4px", verticalAlign: "middle" }} />
+                Đăng xuất
+              </button>
+            ) : (
+              <Link href="/login" className={styles.mobileNavLink}>
+                <LogIn size={16} style={{ marginRight: "4px", verticalAlign: "middle" }} />
+                Đăng nhập
               </Link>
             )}
           </nav>

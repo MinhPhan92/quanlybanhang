@@ -25,11 +25,31 @@ export interface UserInfo {
   MaKH?: number;
 }
 
+export interface StatusResponse {
+  status: string;
+  version: string;
+  user: {
+    MaTK: number;
+    username: string;
+    role: string;
+    MaNV?: number;
+    MaKH?: number;
+    exp?: number;
+    iat?: number;
+  };
+}
+
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     return apiClient(API_ENDPOINTS.AUTH.LOGIN, {
       method: "POST",
       body: JSON.stringify(credentials),
+    });
+  },
+
+  checkStatus: async (): Promise<StatusResponse> => {
+    return apiClient(API_ENDPOINTS.STATUS, {
+      method: "GET",
     });
   },
 
@@ -57,6 +77,7 @@ export const authApi = {
   logout: () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");
+      localStorage.removeItem("user_role");
       window.location.href = "/";
     }
   },

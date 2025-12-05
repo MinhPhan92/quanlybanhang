@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from typing import Optional
 from backend.database import get_db
 from backend.models import DanhMuc
-from backend.routes.deps import get_current_user
+from backend.routes.deps import get_current_user, get_current_user_optional
 
-router = APIRouter(prefix="/danhmuc", tags=["DanhMuc"])
+router = APIRouter(tags=["DanhMuc"])
 
 # Create
 
@@ -29,7 +30,14 @@ def create_danhmuc(danhmuc: dict, db: Session = Depends(get_db), current_user: d
 
 
 @router.get("/", response_model=list)
-def get_all_danhmuc(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+def get_all_danhmuc(
+    db: Session = Depends(get_db), 
+    current_user: Optional[dict] = Depends(get_current_user_optional)
+):
+    """
+    Lấy danh sách danh mục.
+    Public access - không yêu cầu đăng nhập.
+    """
     dms = db.query(DanhMuc).filter(DanhMuc.IsDelete == 0).all()
     return [dm.__dict__ for dm in dms]
 

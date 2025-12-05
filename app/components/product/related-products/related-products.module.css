@@ -176,3 +176,12 @@
   color: #ffffff;
   border-color: #ff8c42;
 }
+
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #6b7280;
+  padding: 2rem;
+}

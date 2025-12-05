@@ -1,12 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, X, Save, Loader2 } from "lucide-react";
-import { projectsApi, Project, ProjectCreateRequest, ProjectUpdateRequest } from "@/app/lib/api/projects";
-import { authApi } from "@/app/lib/api/auth";
-import styles from "./admin.module.css";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 export default function AdminPage() {
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated || !user) {
+        router.push("/login");
+      } else {
+        router.push("/admin/dashboard");
+      }
+    }
+  }, [isAuthenticated, user, isLoading, router]);
+
+  return null;
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,22 +33,24 @@ export default function AdminPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    // Wait for auth to load
+    if (isLoading) return;
+
     // Check authentication and admin role
-    if (!authApi.isAuthenticated()) {
-      window.location.href = "/";
+    if (!isAuthenticated || !user) {
+      router.push("/login");
       return;
     }
 
-    const user = authApi.getCurrentUser();
-    if (user?.role !== "Admin") {
-      setError("Bạn không có quyền truy cập trang này. Chỉ Admin mới có quyền.");
+    if (user.role !== "Admin" && user.role !== "Manager") {
+      setError("Bạn không có quyền truy cập trang này. Chỉ Admin và Manager mới có quyền.");
       setIsAdmin(false);
       return;
     }
 
     setIsAdmin(true);
     loadProjects();
-  }, []);
+  }, [isAuthenticated, user, isLoading, router]);
 
   const loadProjects = async () => {
     try {

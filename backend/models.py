@@ -210,3 +210,18 @@ class SystemConfig(Base):
     ConfigValue = Column(String(255), nullable=False)
     Description = Column(String(255), nullable=True)
     UpdatedAt = Column(DateTime, default=datetime.utcnow)
+
+
+class Project(Base):
+    __tablename__ = "Project"
+    MaProject = Column(Integer, primary_key=True, autoincrement=True)
+    TenProject = Column(String(200), nullable=False)
+    MoTa = Column(Text, nullable=True)
+    TrangThai = Column(String(50), default="Active")  # Active, Inactive, Completed
+    NgayTao = Column(DateTime, default=datetime.utcnow)
+    NgayCapNhat = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    MaNVCreate = Column(Integer, ForeignKey("NhanVien.MaNV", onupdate="CASCADE", ondelete="SET NULL"), nullable=True)
+    IsDelete = Column(Boolean, default=False)
+    
+    # Relationships
+    nhanvien_create = relationship("NhanVien")

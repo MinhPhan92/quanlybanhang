@@ -5,14 +5,10 @@ import { useState } from "react"
 import Link from "next/link"
 import styles from "./product-card.module.css"
 
+import { Product } from "@/app/lib/api/products"
+
 interface ProductCardProps {
-  product: {
-    id: number
-    name: string
-    price: number
-    image: string
-    category: string
-  }
+  product: Product
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
@@ -21,14 +17,28 @@ export default function ProductCard({ product }: ProductCardProps) {
   const formattedPrice = new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-  }).format(product.price)
+  }).format(product.GiaSP || 0)
+
+  // Parse attributes from MoTa if it's JSON
+  let attributes: Record<string, any> = {}
+  if (product.MoTa) {
+    try {
+      attributes = JSON.parse(product.MoTa)
+    } catch {
+      // If not JSON, use as is
+    }
+  }
 
   return (
-    <Link href={`/product/${product.id}`}>
+    <Link href={`/product/${product.MaSP}`}>
       <div className={styles.card}>
         {/* Image Container */}
         <div className={styles.imageContainer}>
-          <img src={product.image || "/placeholder.svg"} alt={product.name} className={styles.image} />
+          <img
+            src={attributes.image || "/placeholder.svg"}
+            alt={product.TenSP}
+            className={styles.image}
+          />
 
           {/* Heart Button */}
           <button
@@ -48,17 +58,24 @@ export default function ProductCard({ product }: ProductCardProps) {
           </button>
 
           {/* Category Badge */}
-          <div className={styles.categoryBadge}>
-            <span className={styles.categoryText}>{product.category}</span>
-          </div>
+          {product.TenDanhMuc && (
+            <div className={styles.categoryBadge}>
+              <span className={styles.categoryText}>{product.TenDanhMuc}</span>
+            </div>
+          )}
         </div>
 
         {/* Content */}
         <div className={styles.content}>
-          <h3 className={styles.name}>{product.name}</h3>
+          <h3 className={styles.name}>{product.TenSP}</h3>
 
           <div className={styles.priceSection}>
             <span className={styles.price}>{formattedPrice}</span>
+            {product.SoLuongTonKho !== undefined && (
+              <span className={styles.stock}>
+                Còn {product.SoLuongTonKho} sản phẩm
+              </span>
+            )}
           </div>
 
           {/* Add to Cart Button */}

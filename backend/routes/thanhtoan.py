@@ -4,7 +4,7 @@ from backend.database import get_db
 from backend.models import ThanhToan, DonHang
 from backend.routes.deps import get_current_user
 
-router = APIRouter(prefix="/thanhtoan", tags=["ThanhToan"])
+router = APIRouter(tags=["ThanhToan"])
 
 # Add payment voucher
 

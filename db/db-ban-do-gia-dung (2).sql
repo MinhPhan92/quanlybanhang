@@ -1,8 +1,8 @@
 ﻿-- =======================================
 -- TẠO DATABASE
 -- =======================================
-CREATE DATABASE QuanLyBanHang CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE QuanLyBanHang;
+-- CREATE DATABASE QuanLyBanHang CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- USE QuanLyBanHang;
 
 -- =======================================
 -- BẢNG KHÁCH HÀNG

@@ -2,8 +2,15 @@
 # 📁 backend/main.py
 # =====================================================
 
-import logging
+import sys
 from pathlib import Path
+
+# Add project root to Python path to allow imports when running from backend directory
+project_root = Path(__file__).resolve().parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+import logging
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -34,6 +41,8 @@ from backend.routes import (
     khieunai,
     config,
     alert,
+    project,
+    logs,
 )
 
 # =====================================================
@@ -172,6 +181,8 @@ app.include_router(danhgia.router, prefix="/api", tags=["Đánh giá"])
 app.include_router(khieunai.router, prefix="/api", tags=["Khiếu nại"])
 app.include_router(config.router, prefix="/api", tags=["Config"])
 app.include_router(alert.router, prefix="/api", tags=["Alerts"])
+app.include_router(project.router, prefix="/api", tags=["Dự án"])
+app.include_router(logs.router, prefix="/api", tags=["Logs"])
 
 # =====================================================
 # 🧩 6. Sự kiện khởi động - tạo bảng CSDL nếu chưa có

@@ -1,0 +1,85 @@
+import apiClient from "../utils/axios";
+import { API_ENDPOINTS } from "../utils/constants";
+
+export interface Product {
+  MaSP: number;
+  TenSP: string;
+  GiaSP: number;
+  SoLuongTonKho: number;
+  MoTa?: string;
+  MaDanhMuc?: number;
+  IsDelete: boolean;
+  attributes?: Record<string, any>;
+  TenDanhMuc?: string;
+}
+
+export interface ProductListResponse {
+  products: Product[];
+  total: number;
+}
+
+export interface ProductCreateRequest {
+  TenSP: string;
+  GiaSP: number;
+  SoLuongTonKho: number;
+  MoTa?: string;
+  MaDanhMuc?: number;
+  attributes?: Record<string, any>;
+}
+
+export interface ProductUpdateRequest {
+  TenSP?: string;
+  GiaSP?: number;
+  SoLuongTonKho?: number;
+  MoTa?: string;
+  MaDanhMuc?: number;
+  attributes?: Record<string, any>;
+}
+
+export interface Category {
+  MaDanhMuc: number;
+  TenDanhMuc: string;
+  IsDelete: boolean;
+}
+
+export const productsApi = {
+  getAll: async (page: number = 1, limit: number = 10, includeAttributes: boolean = true): Promise<ProductListResponse> => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      include_attributes: includeAttributes.toString(),
+    });
+    return apiClient(`/api/sanpham?${params.toString()}`);
+  },
+
+  getOne: async (id: number): Promise<Product> => {
+    return apiClient(`/api/sanpham/${id}`);
+  },
+
+  create: async (data: ProductCreateRequest): Promise<Product> => {
+    return apiClient("/api/sanpham", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  update: async (id: number, data: ProductUpdateRequest): Promise<Product> => {
+    return apiClient(`/api/sanpham/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete: async (id: number): Promise<{ message: string }> => {
+    return apiClient(`/api/sanpham/${id}`, {
+      method: "DELETE",
+    });
+  },
+};
+
+export const categoriesApi = {
+  getAll: async (): Promise<Category[]> => {
+    return apiClient("/api/danhmuc");
+  },
+};
+

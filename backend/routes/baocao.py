@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
+from datetime import datetime, timedelta
+from typing import Dict, List
 from backend.database import get_db
-from backend.models import DonHang, DonHang_SanPham, SanPham
+from backend.models import DonHang, DonHang_SanPham, SanPham, KhachHang, DanhMuc
 from backend.routes.deps import get_current_user
 
-router = APIRouter(prefix="/baocao", tags=["BaoCao"])
+router = APIRouter(tags=["BaoCao"])
 
 # Revenue report (total revenue in a period)
 
@@ -98,3 +100,112 @@ def low_inventory_products(
         }
         for p in products
     ]
+
+# Dashboard Summary (for admin dashboard)
+@router.get("/summary", response_model=dict)
+def get_dashboard_summary(
+    db: Session = Depends(get_db),
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Get dashboard summary with key metrics and recent data.
+    Only Admin and Manager can access.
+    """
+    # Role check: Only Admin and Manager can view dashboard
+    if current_user.get("role") not in ["Admin", "Manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Permission denied"
+        )
+    
+    try:
+        # Get today's date
+        today = datetime.now().date()
+        start_of_month = today.replace(day=1)
+        
+        # Orders today
+        orders_today = db.query(func.count(DonHang.MaDonHang)).filter(
+            func.date(DonHang.NgayDat) == today
+        ).scalar() or 0
+        
+        # Total products
+        total_products = db.query(func.count(SanPham.MaSP)).filter(
+            SanPham.IsDelete == False
+        ).scalar() or 0
+        
+        # Total customers
+        total_customers = db.query(func.count(KhachHang.MaKH)).filter(
+            KhachHang.IsDelete == False
+        ).scalar() or 0
+        
+        # Recent orders (last 5)
+        recent_orders = db.query(DonHang).join(
+            KhachHang, DonHang.MaKH == KhachHang.MaKH
+        ).order_by(desc(DonHang.NgayDat)).limit(5).all()
+        
+        recent_orders_data = [
+            {
+                "id": order.MaDonHang,
+                "code": f"DH{order.MaDonHang:04d}",
+                "customer_name": order.khachhang.TenKH if order.khachhang else "N/A",
+                "total": float(order.TongTien) if order.TongTien else 0,
+                "status": order.TrangThai,
+                "created_at": order.NgayDat.isoformat() if order.NgayDat else None
+            }
+            for order in recent_orders
+        ]
+        
+        # Monthly sales (last 3 months)
+        monthly_sales = []
+        for i in range(2, -1, -1):  # Last 3 months
+            month_start = (start_of_month - timedelta(days=30 * i)).replace(day=1)
+            month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            
+            month_revenue = db.query(func.sum(DonHang.TongTien)).filter(
+                DonHang.NgayDat >= month_start,
+                DonHang.NgayDat <= month_end
+            ).scalar() or 0
+            
+            monthly_sales.append({
+                "name": f"T{month_start.month}",
+                "sales": float(month_revenue)
+            })
+        
+        # New products (last 5, based on ID as proxy for newness)
+        new_products = db.query(SanPham).filter(
+            SanPham.IsDelete == False
+        ).order_by(desc(SanPham.MaSP)).limit(5).all()
+        
+        new_products_data = []
+        for product in new_products:
+            # Parse attributes for image
+            image = "/placeholder.svg"
+            if product.MoTa:
+                try:
+                    import json
+                    attrs = json.loads(product.MoTa)
+                    image = attrs.get("image") or attrs.get("images", [""])[0] or "/placeholder.svg"
+                except:
+                    pass
+            
+            new_products_data.append({
+                "id": product.MaSP,
+                "name": product.TenSP,
+                "price": f"{product.GiaSP:,.0f}" if product.GiaSP else "0",
+                "image": image
+            })
+        
+        return {
+            "orders_today": orders_today,
+            "total_products": total_products,
+            "total_customers": total_customers,
+            "recent_orders": recent_orders_data,
+            "monthly_sales": monthly_sales,
+            "new_products": new_products_data
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating dashboard summary: {str(e)}"
+        )

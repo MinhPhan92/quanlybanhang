@@ -5,7 +5,7 @@ from backend.models import NhanVien
 from backend.routes.deps import get_current_user
 from backend.routes.auth import get_password_hash
 
-router = APIRouter(prefix="/nhanvien", tags=["NhanVien"])
+router = APIRouter(tags=["NhanVien"])
 
 # Create (Admin only)
 
