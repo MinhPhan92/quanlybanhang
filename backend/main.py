@@ -60,7 +60,8 @@ app = FastAPI(
 # ⚠️ Khi deploy thật, nên thay allow_origins=["*"] bằng domain frontend cụ thể.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ví dụ: ["http://localhost:5500"]
+    # Allow local Next.js dev server. Add your deployed FE domain(s) here when needed.
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

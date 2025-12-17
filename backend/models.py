@@ -59,7 +59,9 @@ class SanPham(Base):
     TenSP = Column(String(100))
     GiaSP = Column(Numeric(10, 2))
     SoLuongTonKho = Column(Integer)
-    MoTa = Column(String(255))
+    # MoTa stores either free-form description text OR JSON-encoded attributes.
+    # Use TEXT to avoid truncation (attributes/description can exceed 255 chars).
+    MoTa = Column(Text)
     MaDanhMuc = Column(Integer, ForeignKey(
         "DanhMuc.MaDanhMuc", onupdate="CASCADE", ondelete="SET NULL"))
     IsDelete = Column(Boolean, default=False)

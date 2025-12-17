@@ -29,15 +29,16 @@ export interface StatusUpdateResponse {
 
 export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
-    return apiClient("/api/donhang");
+    // apiClient base already includes /api
+    return apiClient("/donhang");
   },
 
   getOne: async (id: number): Promise<Order> => {
-    return apiClient(`/api/donhang/${id}`);
+    return apiClient(`/donhang/${id}`);
   },
 
   updateStatus: async (id: number, newStatus: string): Promise<StatusUpdateResponse> => {
-    return apiClient(`/api/donhang/${id}/status`, {
+    return apiClient(`/donhang/${id}/status`, {
       method: "PUT",
       body: JSON.stringify({ new_status: newStatus }),
     });

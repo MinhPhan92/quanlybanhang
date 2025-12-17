@@ -3,21 +3,29 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/a
 
 export const apiClient = async (
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit & { auth?: boolean; debug?: boolean } = {}
 ) => {
   // Get token from localStorage (key is "token" as used in login)
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const auth = options.auth !== false;
+  const debug = options.debug === true;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string> || {}),
   };
 
-  if (token) {
+  if (auth && token) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const url = `${API_BASE_URL}${endpoint}`;
+  if (debug && typeof window !== "undefined") {
+    // eslint-disable-next-line no-console
+    console.log("[apiClient]", options.method || "GET", url, { auth });
+  }
+
+  const response = await fetch(url, {
     ...options,
     headers,
   });
@@ -25,8 +33,13 @@ export const apiClient = async (
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: "An error occurred" }));
     
-    // Handle 401 Unauthorized - redirect to login
-    if (response.status === 401 && typeof window !== "undefined") {
+    if (debug && typeof window !== "undefined") {
+      // eslint-disable-next-line no-console
+      console.log("[apiClient:error]", response.status, url, error);
+    }
+
+    // Handle 401 Unauthorized - redirect to login (only for auth-protected calls)
+    if (auth && response.status === 401 && typeof window !== "undefined") {
       // Clear invalid token
       localStorage.removeItem("token");
       localStorage.removeItem("user_role");

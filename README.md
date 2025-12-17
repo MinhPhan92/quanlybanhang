@@ -13,6 +13,8 @@ pip install fastapi uvicorn sqlalchemy pymysql passlib python-jose
 ### 2. Khởi tạo database MySQL
 
 - Chạy file `db/db-ban-do-gia-dung.sql` trên MySQL để tạo database và các bảng.
+- Nếu DB hiện tại đang bị giới hạn mô tả sản phẩm (cột `SanPham.MoTa`), hãy chạy migration:
+  - `db/migrations/2025-12-17_alter_sanpham_mota_text.sql`
 
 ### 3. Cấu hình kết nối database
 
@@ -64,6 +66,17 @@ pip install fastapi uvicorn sqlalchemy pymysql passlib python-jose
   ```
 
 - Đảm bảo backend và MySQL đều đang chạy.
+
+## Export DB (.sql) để gửi team
+
+### Cách nhanh (MySQL Workbench)
+- Server → Data Export → chọn schema `QuanLyBanHang` → Export to Self-Contained File (`.sql`).
+
+### Cách CLI (mysqldump)
+
+```bash
+mysqldump -u root -p QuanLyBanHang > QuanLyBanHang_export.sql
+```
 
 ## Tác giả
 
