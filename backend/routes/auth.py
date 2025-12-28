@@ -113,6 +113,39 @@ def register_user(request_data: RegisterRequest, db: Session = Depends(get_db)):
     }
 
 
+@router.post("/register", response_model=UserResponse)
+def customer_register(request_data: RegisterRequest, db: Session = Depends(get_db)):
+    # BƯỚC 1: MÃ HÓA MẬT KHẨU
+    hashed_password = get_password_hash(request_data.password)
+
+    # BƯỚC 2: TẠO VÀ LƯU KHÁCH HÀNG (lưu hashed_password vào KhachHang)
+    new_customer = KhachHang(
+        TenKH=request_data.TenKH,
+        SdtKH=request_data.SdtKH,
+        DiaChi=request_data.DiaChi,
+    )
+    db.add(new_customer)
+    db.commit()
+    db.refresh(new_customer)
+
+    # BƯỚC 3: TẠO VÀ LƯU TÀI KHOẢN (lưu hash vào TaiKhoan.Pass)
+    new_account = TaiKhoan(
+        Username=request_data.SdtKH,
+        Pass=hashed_password,
+        VaiTro="Customer",
+        MaKH=new_customer.MaKH
+    )
+    db.add(new_account)
+    db.commit()
+    db.refresh(new_account)
+
+    return {
+        "MaTK": new_account.MaTK,
+        "username": new_account.Username,
+        "role": new_account.VaiTro
+    }
+
+
 @router.post("/login", response_model=TokenResponse, summary="Đăng nhập hệ thống")
 def login(credentials: LoginRequest, db: Session = Depends(get_db)):
     """

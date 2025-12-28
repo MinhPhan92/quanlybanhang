@@ -18,8 +18,10 @@ export default function ProductGrid() {
       setLoading(true)
       const data = await productsApi.getAll(1, 8, true)
       setProducts((data.products || []).filter((p) => !p.IsDelete).slice(0, 8))
-    } catch (error) {
-      console.error("Error loading products:", error)
+    } catch (error: any) {
+      // Silently handle errors - don't show error to user for product grid
+      // This is expected if backend is not running or endpoint doesn't exist
+      console.warn("Could not load products:", error?.message || "Unknown error")
       setProducts([])
     } finally {
       setLoading(false)

@@ -25,13 +25,40 @@ export const apiClient = async (
     console.log("[apiClient]", options.method || "GET", url, { auth });
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+    });
+  } catch (networkError: any) {
+    // Handle network errors (backend not running, CORS, etc.)
+    const errorMessage = networkError.message?.includes("Failed to fetch") || networkError.message?.includes("NetworkError")
+      ? "Không thể kết nối đến server. Vui lòng kiểm tra backend có đang chạy không."
+      : `Lỗi kết nối: ${networkError.message || "Unknown error"}`;
+    
+    if (debug && typeof window !== "undefined") {
+      // eslint-disable-next-line no-console
+      console.warn("[apiClient:network-error]", url, errorMessage);
+    }
+    
+    throw new Error(errorMessage);
+  }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "An error occurred" }));
+    let error: any;
+    try {
+      error = await response.json();
+    } catch {
+      // If response is not JSON, create a generic error
+      error = { 
+        detail: response.status === 404 
+          ? "Không tìm thấy tài nguyên" 
+          : response.status === 500
+          ? "Lỗi máy chủ"
+          : `Request failed with status ${response.status}`
+      };
+    }
     
     if (debug && typeof window !== "undefined") {
       // eslint-disable-next-line no-console
@@ -47,8 +74,14 @@ export const apiClient = async (
       window.location.href = "/login";
       throw new Error("Session expired. Please login again.");
     }
+
+    // For 404 errors on public endpoints (like products), provide a more helpful message
+    if (response.status === 404 && !auth) {
+      const errorMessage = error.detail || error.message || "Không tìm thấy dữ liệu. Vui lòng kiểm tra kết nối backend.";
+      throw new Error(errorMessage);
+    }
     
-    throw new Error(error.detail || error.message || "Request failed");
+    throw new Error(error.detail || error.message || `Request failed (${response.status})`);
   }
 
   return response.json();

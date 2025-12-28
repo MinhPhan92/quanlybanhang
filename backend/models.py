@@ -227,3 +227,18 @@ class Project(Base):
     
     # Relationships
     nhanvien_create = relationship("NhanVien")
+
+
+class LienHe(Base):
+    """Contact form submissions - public access, no authentication required"""
+    __tablename__ = "LienHe"
+    MaLienHe = Column(Integer, primary_key=True, autoincrement=True)
+    HoTen = Column(String(100), nullable=False)
+    Email = Column(String(100), nullable=False)
+    SoDienThoai = Column(String(15), nullable=True)
+    ChuDe = Column(String(200), nullable=False)
+    NoiDung = Column(Text, nullable=False)
+    TrangThai = Column(String(50), default="ChuaXuLy")  # ChuaXuLy, DangXuLy, DaXuLy
+    NgayGui = Column(DateTime, default=datetime.utcnow)
+    GhiChu = Column(Text, nullable=True)  # Admin notes
+    IsDelete = Column(Boolean, default=False)

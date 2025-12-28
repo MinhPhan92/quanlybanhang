@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Header from "../components/shared/header/Header"
 import Footer from "../components/shared/footer/Footer"
 import ProductCard from "../components/home/product-card/product-card"
-import { productsApi, categoriesApi, Product, Category } from "@/app/lib/api/products"
+import { productsApi, categoriesApi, Product, Category, ProductFilters } from "@/app/lib/api/products"
 import styles from "@/app/shop/shop.module.css"
 
 const sortOptions = [
@@ -15,24 +16,130 @@ const sortOptions = [
 ]
 
 export default function ShopPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedCategory, setSelectedCategory] = useState<number | "all">("all")
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("newest")
+  const [priceRange, setPriceRange] = useState<"under2" | "2to5" | "5to10" | "over10" | "all">("all")
+  const [page] = useState(1)
+  const [limit] = useState(100)
 
+  // Đồng bộ state filter với query params trên URL (madanhmuc, search, priceRange)
   useEffect(() => {
-    loadData()
-  }, [])
+    const madanhmucParam = searchParams.get("madanhmuc")
+    const searchParam = searchParams.get("search") || ""
+    const priceRangeParam = searchParams.get("priceRange") as
+      | "under2"
+      | "2to5"
+      | "5to10"
+      | "over10"
+      | "all"
+      | null
+
+    if (madanhmucParam) {
+      const parsed = Number(madanhmucParam)
+      setSelectedCategory(!Number.isNaN(parsed) ? parsed : null)
+    } else {
+      setSelectedCategory(null)
+    }
+
+    setSearchTerm(searchParam)
+
+    if (priceRangeParam && ["under2", "2to5", "5to10", "over10", "all"].includes(priceRangeParam)) {
+      setPriceRange(priceRangeParam)
+    } else {
+      setPriceRange("all")
+    }
+  }, [searchParams])
+
+  // Hàm đổi danh mục, chỉ cập nhật URL (không reload trang)
+  const onCategoryChange = (madanhmuc: number | null) => {
+    const params = new URLSearchParams(searchParams.toString())
+
+    if (madanhmuc === null) {
+      params.delete("madanhmuc")
+    } else {
+      params.set("madanhmuc", String(madanhmuc))
+    }
+
+    router.push(params.toString() ? `/shop?${params.toString()}` : "/shop")
+  }
+
+  // Hàm cập nhật search, giữ nguyên các filter khác
+  const onSearchChange = (value: string) => {
+    setSearchTerm(value)
+    const params = new URLSearchParams(searchParams.toString())
+
+    const trimmed = value.trim()
+    if (trimmed) {
+      params.set("search", trimmed)
+    } else {
+      params.delete("search")
+    }
+
+    router.push(params.toString() ? `/shop?${params.toString()}` : "/shop")
+  }
+
+  const buildFilters = (): ProductFilters => {
+    const filters: ProductFilters = {}
+
+    // Đọc madanhmuc trực tiếp từ URL (searchParams)
+    const madanhmucParam = searchParams.get("madanhmuc")
+    if (madanhmucParam) {
+      const parsed = Number(madanhmucParam)
+      if (!Number.isNaN(parsed)) {
+        filters.madanhmuc = parsed
+      }
+    }
+
+    // Đọc search từ URL
+    const searchParam = searchParams.get("search")
+    if (searchParam && searchParam.trim() !== "") {
+      filters.search = searchParam.trim()
+    }
+
+    // Map khoảng giá UI -> min_price, max_price
+    switch (priceRange) {
+      case "under2":
+        filters.min_price = 0
+        filters.max_price = 2000000
+        break
+      case "2to5":
+        filters.min_price = 2000000
+        filters.max_price = 5000000
+        break
+      case "5to10":
+        filters.min_price = 5000000
+        filters.max_price = 10000000
+        break
+      case "over10":
+        filters.min_price = 10000000
+        break
+      default:
+        break
+    }
+
+    return filters
+  }
+
+  // Luôn gọi API khi URL (searchParams) hoặc khoảng giá thay đổi
+  useEffect(() => {
+    void loadData()
+  }, [searchParams, priceRange])
 
   const loadData = async () => {
     try {
       setLoading(true)
       setError(null)
+      const filters = buildFilters()
       const [productsData, categoriesData] = await Promise.all([
-        productsApi.getAll(1, 100, true).catch(() => ({ products: [], total: 0 })),
+        productsApi.getAll(page, limit, true, filters).catch(() => ({ products: [], total: 0 })),
         categoriesApi.getAll().catch(() => []),
       ])
       setProducts(productsData.products || [])
@@ -45,12 +152,7 @@ export default function ShopPage() {
     }
   }
 
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory =
-      selectedCategory === "all" || product.MaDanhMuc === selectedCategory
-    const matchesSearch = product.TenSP.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesCategory && matchesSearch && !product.IsDelete
-  })
+  const filteredProducts = products.filter((product) => !product.IsDelete)
 
   // Sort products
   const sortedProducts = [...filteredProducts]
@@ -84,7 +186,7 @@ export default function ShopPage() {
               type="text"
               placeholder="Tìm sản phẩm..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => onSearchChange(e.target.value)}
               className={styles.searchInput}
             />
           </div>
@@ -93,19 +195,20 @@ export default function ShopPage() {
           <div className={styles.filterSection}>
             <h3 className={styles.filterTitle}>Danh Mục</h3>
             <div className={styles.categoryList}>
-              <button
-                onClick={() => setSelectedCategory("all")}
-                className={`${styles.categoryButton} ${selectedCategory === "all" ? styles.active : ""}`}
-              >
-                Tất Cả
-              </button>
               {categories
                 .filter((cat) => !cat.IsDelete)
                 .map((category) => (
                   <button
                     key={category.MaDanhMuc}
-                    onClick={() => setSelectedCategory(category.MaDanhMuc)}
-                    className={`${styles.categoryButton} ${selectedCategory === category.MaDanhMuc ? styles.active : ""}`}
+                    type="button"
+                    onClick={() =>
+                      onCategoryChange(
+                        selectedCategory === category.MaDanhMuc ? null : category.MaDanhMuc,
+                      )
+                    }
+                    className={`${styles.categoryButton} ${
+                      selectedCategory === category.MaDanhMuc ? styles.categoryButtonActive : ""
+                    }`}
                   >
                     {category.TenDanhMuc}
                   </button>
@@ -118,19 +221,48 @@ export default function ShopPage() {
             <h3 className={styles.filterTitle}>Khoảng Giá</h3>
             <div className={styles.priceRanges}>
               <label className={styles.priceLabel}>
-                <input type="checkbox" defaultChecked />
+                <input
+                  type="radio"
+                  name="priceRange"
+                  checked={priceRange === "all"}
+                  onChange={() => setPriceRange("all")}
+                />
+                <span>Tất cả</span>
+              </label>
+              <label className={styles.priceLabel}>
+                <input
+                  type="radio"
+                  name="priceRange"
+                  checked={priceRange === "under2"}
+                  onChange={() => setPriceRange("under2")}
+                />
                 <span>Dưới 2 triệu</span>
               </label>
               <label className={styles.priceLabel}>
-                <input type="checkbox" />
+                <input
+                  type="radio"
+                  name="priceRange"
+                  checked={priceRange === "2to5"}
+                  onChange={() => setPriceRange("2to5")}
+                />
                 <span>2-5 triệu</span>
               </label>
               <label className={styles.priceLabel}>
-                <input type="checkbox" />
+                <input
+                  type="radio"
+                  name="priceRange"
+                  checked={priceRange === "5to10"}
+                  onChange={() => setPriceRange("5to10")}
+                />
                 <span>5-10 triệu</span>
               </label>
               <label className={styles.priceLabel}>
-                <input type="checkbox" />
+                <input
+                  type="radio"
+                  name="priceRange"
+                  checked={priceRange === "over10"}
+                  onChange={() => setPriceRange("over10")}
+                />
                 <span>Trên 10 triệu</span>
               </label>
             </div>
@@ -179,9 +311,10 @@ export default function ShopPage() {
             <div className={styles.noResults}>
               <p>Không tìm thấy sản phẩm phù hợp</p>
               <button
+                type="button"
                 onClick={() => {
                   setSearchTerm("")
-                  setSelectedCategory("all")
+                  router.push("/shop")
                 }}
                 className={styles.resetButton}
               >

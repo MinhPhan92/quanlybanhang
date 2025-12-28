@@ -14,6 +14,9 @@ import logging
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 import time
 from sqlalchemy.orm import Session
 from backend.database import SessionLocal
@@ -23,6 +26,7 @@ from backend.models import SystemLog
 # Database & Models
 from backend.database import engine
 from backend import models
+from contextlib import asynccontextmanager
 
 # Routers
 from backend.routes import (
@@ -43,15 +47,31 @@ from backend.routes import (
     alert,
     project,
     logs,
+    contact,
+    giohang,
 )
 
+
 # =====================================================
-# 🚀 1. Khởi tạo ứng dụng FastAPI
+# 🚀 1. Khởi tạo ứng dụng FastAPI (sử dụng lifespan thay cho on_event startup)
 # =====================================================
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan khởi tạo tài nguyên (thay cho @app.on_event('startup'))."""
+    # Tự động tạo các bảng trong CSDL nếu chưa tồn tại.
+    models.Base.metadata.create_all(bind=engine)
+    logging.info("✅ Database tables checked/created successfully (lifespan).")
+    yield
+
+
 app = FastAPI(
     title="Hệ thống Quản Lý Bán Hàng",
     description="API backend cho hệ thống quản lý bán hàng tích hợp AI & phân quyền",
     version="1.0.0",
+    lifespan=lifespan,
+    redirect_slashes=False,  # Disable automatic trailing slash redirects to avoid CORS issues
 )
 
 # =====================================================
@@ -60,12 +80,44 @@ app = FastAPI(
 # ⚠️ Khi deploy thật, nên thay allow_origins=["*"] bằng domain frontend cụ thể.
 app.add_middleware(
     CORSMiddleware,
-    # Allow local Next.js dev server. Add your deployed FE domain(s) here when needed.
-    allow_origins=["http://localhost:3000"],
+    # Temporarily allow all origins for debugging - change back to ["http://localhost:3000"] after fixing
+    allow_origins=["*"],  # TODO: Change back to ["http://localhost:3000"] for production
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+# Exception handlers to ensure CORS headers are added to error responses
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    response = JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}
+    )
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    response = JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()}
+    )
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    response = JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)}
+    )
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 # =====================================================
 # 🧱 3. Mount frontend tĩnh (dành cho demo hoặc test local)
@@ -184,17 +236,8 @@ app.include_router(config.router, prefix="/api", tags=["Config"])
 app.include_router(alert.router, prefix="/api", tags=["Alerts"])
 app.include_router(project.router, prefix="/api", tags=["Dự án"])
 app.include_router(logs.router, prefix="/api", tags=["Logs"])
-
-# =====================================================
-# 🧩 6. Sự kiện khởi động - tạo bảng CSDL nếu chưa có
-# =====================================================
-
-
-@app.on_event("startup")
-def on_startup_create_db():
-    """Tự động tạo các bảng trong CSDL nếu chưa tồn tại."""
-    models.Base.metadata.create_all(bind=engine)
-    logging.info("✅ Database tables checked/created successfully.")
+app.include_router(contact.router, prefix="/api/lienhe", tags=["Liên hệ"])
+app.include_router(giohang.router, prefix="/api", tags=["Giỏ hàng"])
 
 # =====================================================
 # 🏠 7. Route gốc - kiểm tra kết nối backend
@@ -205,6 +248,12 @@ def on_startup_create_db():
 def root():
     logging.info("Root endpoint accessed.")
     return {"message": "✅ Backend FastAPI đã kết nối MySQL thành công!"}
+
+
+@app.get("/api/test-cors", tags=["Root"])
+def test_cors():
+    """Test endpoint to verify CORS is working."""
+    return {"message": "CORS test successful", "cors_enabled": True}
 
 
 @app.get("/api/status", tags=["Root"], summary="Trạng thái hệ thống")

@@ -29,7 +29,7 @@ def create_danhmuc(danhmuc: dict, db: Session = Depends(get_db), current_user: d
 # Read all
 
 
-@router.get("/", response_model=list)
+@router.get("/")
 def get_all_danhmuc(
     db: Session = Depends(get_db), 
     current_user: Optional[dict] = Depends(get_current_user_optional)
@@ -38,19 +38,37 @@ def get_all_danhmuc(
     Lấy danh sách danh mục.
     Public access - không yêu cầu đăng nhập.
     """
-    dms = db.query(DanhMuc).filter(DanhMuc.IsDelete == 0).all()
-    return [dm.__dict__ for dm in dms]
+    try:
+        dms = db.query(DanhMuc).filter(DanhMuc.IsDelete == 0).all()
+        # Properly serialize SQLAlchemy objects to dictionaries
+        result = []
+        for dm in dms:
+            result.append({
+                "MaDanhMuc": dm.MaDanhMuc,
+                "TenDanhMuc": dm.TenDanhMuc,
+                "IsDelete": bool(dm.IsDelete) if dm.IsDelete is not None else False
+            })
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi lấy danh sách danh mục: {str(e)}"
+        )
 
 # Read one
 
 
-@router.get("/{madanhmuc}", response_model=dict)
+@router.get("/{madanhmuc}")
 def get_danhmuc(madanhmuc: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     dm = db.query(DanhMuc).filter(DanhMuc.MaDanhMuc ==
                                   madanhmuc, DanhMuc.IsDelete == 0).first()
     if not dm:
         raise HTTPException(status_code=404, detail="Danh mục không tồn tại")
-    return dm.__dict__
+    return {
+        "MaDanhMuc": dm.MaDanhMuc,
+        "TenDanhMuc": dm.TenDanhMuc,
+        "IsDelete": bool(dm.IsDelete) if dm.IsDelete is not None else False
+    }
 
 # Update
 
@@ -71,7 +89,11 @@ def update_danhmuc(madanhmuc: int, danhmuc: dict, db: Session = Depends(get_db),
             setattr(dm, key, value)
     db.commit()
     db.refresh(dm)
-    return dm.__dict__
+    return {
+        "MaDanhMuc": dm.MaDanhMuc,
+        "TenDanhMuc": dm.TenDanhMuc,
+        "IsDelete": bool(dm.IsDelete) if dm.IsDelete is not None else False
+    }
 
 # Delete (soft delete)
 

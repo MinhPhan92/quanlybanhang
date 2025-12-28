@@ -18,6 +18,13 @@ export interface ProductListResponse {
   total: number;
 }
 
+export interface ProductFilters {
+  madanhmuc?: number;
+  min_price?: number;
+  max_price?: number;
+  search?: string;
+}
+
 export interface ProductCreateRequest {
   TenSP: string;
   GiaSP: number;
@@ -43,14 +50,35 @@ export interface Category {
 }
 
 export const productsApi = {
-  getAll: async (page: number = 1, limit: number = 10, includeAttributes: boolean = true): Promise<ProductListResponse> => {
+  getAll: async (
+    page: number = 1,
+    limit: number = 10,
+    includeAttributes: boolean = true,
+    filters: ProductFilters = {}
+  ): Promise<ProductListResponse> => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
       include_attributes: includeAttributes.toString(),
     });
+
+    // Thêm bộ lọc nếu có (đặt đúng tên param theo backend)
+    if (typeof filters.madanhmuc === "number") {
+      params.set("madanhmuc", filters.madanhmuc.toString());
+    }
+    if (typeof filters.min_price === "number") {
+      params.set("min_price", filters.min_price.toString());
+    }
+    if (typeof filters.max_price === "number") {
+      params.set("max_price", filters.max_price.toString());
+    }
+    if (typeof filters.search === "string" && filters.search.trim() !== "") {
+      params.set("search", filters.search.trim());
+    }
+
     // apiClient base already includes /api, so use route path without duplicating /api
-    return apiClient(`/sanpham?${params.toString()}`, { auth: false, debug: true });
+    // Backend route is @router.get("/") which requires trailing slash when redirect_slashes=False
+    return apiClient(`/sanpham/?${params.toString()}`, { auth: false, debug: true });
   },
 
   getOne: async (id: number): Promise<Product> => {
@@ -58,7 +86,7 @@ export const productsApi = {
   },
 
   create: async (data: ProductCreateRequest): Promise<Product> => {
-    return apiClient("/sanpham", {
+    return apiClient("/sanpham/", {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -81,7 +109,8 @@ export const productsApi = {
 export const categoriesApi = {
   getAll: async (): Promise<Category[]> => {
     // apiClient base already includes /api
-    return apiClient("/danhmuc", { auth: false, debug: true });
+    // Backend route requires trailing slash when redirect_slashes=False
+    return apiClient("/danhmuc/", { auth: false, debug: true });
   },
 };
 

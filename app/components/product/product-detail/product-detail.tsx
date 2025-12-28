@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Heart, Share2, Star, Loader2 } from "lucide-react"
 import { productsApi, Product } from "@/app/lib/api/products"
+import { useCart } from "@/app/contexts/CartContext"
 import styles from "./product-detail.module.css"
 
 interface ProductDetailProps {
@@ -10,6 +12,8 @@ interface ProductDetailProps {
 }
 
 export default function ProductDetail({ productId }: ProductDetailProps) {
+  const router = useRouter()
+  const { addToCart } = useCart()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -46,6 +50,58 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
     if (value > 0) setQuantity(value)
   }
 
+  // Safe MoTa parsing helper
+  const parseMoTa = (moTa: string | undefined): Record<string, any> => {
+    if (!moTa) return {}
+    if (typeof moTa === "string") {
+      try {
+        return JSON.parse(moTa)
+      } catch {
+        return {}
+      }
+    }
+    return typeof moTa === "object" ? moTa : {}
+  }
+
+  const handleAddToCart = async () => {
+    if (!product) return
+
+    // Parse attributes to get image
+    const attributes = parseMoTa(product.MoTa)
+    const productImages = attributes.images
+      ? Array.isArray(attributes.images)
+        ? attributes.images
+        : [attributes.images]
+      : attributes.image
+      ? [attributes.image]
+      : ["/placeholder.svg"]
+
+    try {
+      await addToCart(
+        {
+          id: product.MaSP,
+          name: product.TenSP,
+          price: product.GiaSP || 0,
+          image: attributes.image || productImages[0] || "/placeholder.svg",
+        },
+        quantity
+      )
+    } catch (error) {
+      // Error is already handled in CartContext
+      console.error("Failed to add to cart:", error)
+    }
+  }
+
+  const handleBuyNow = async () => {
+    try {
+      await handleAddToCart()
+      router.push("/checkout")
+    } catch (error) {
+      // Error is already handled in handleAddToCart
+      console.error("Failed to buy now:", error)
+    }
+  }
+
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
@@ -63,15 +119,8 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
     )
   }
 
-  // Parse attributes from MoTa
-  let attributes: Record<string, any> = {}
-  if (product.MoTa) {
-    try {
-      attributes = JSON.parse(product.MoTa)
-    } catch {
-      // If not JSON, use as is
-    }
-  }
+  // Parse attributes from MoTa (safe parsing)
+  const attributes = parseMoTa(product.MoTa)
 
   // Get images from attributes or use placeholder
   const images = attributes.images
@@ -100,6 +149,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
         <div className={styles.thumbnails}>
           {images.map((img, idx) => (
             <button
+              type="button"
               key={idx}
               className={`${styles.thumbnail} ${activeImage === idx ? styles.active : ""}`}
               onClick={() => setActiveImage(idx)}
@@ -124,13 +174,14 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
           {/* Actions */}
           <div className={styles.actions}>
             <button
+              type="button"
               className={styles.favoriteBtn}
               onClick={() => setIsFavorite(!isFavorite)}
               title="Thêm vào danh sách yêu thích"
             >
               <Heart size={24} fill={isFavorite ? "#ff8c42" : "none"} color={isFavorite ? "#ff8c42" : "#1f2937"} />
             </button>
-            <button className={styles.shareBtn} title="Chia sẻ sản phẩm">
+            <button type="button" className={styles.shareBtn} title="Chia sẻ sản phẩm">
               <Share2 size={24} />
             </button>
           </div>
@@ -205,8 +256,20 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
           </div>
 
           <div className={styles.buttons}>
-            <button className={styles.addToCartBtn}>Thêm vào giỏ hàng</button>
-            <button className={styles.buyNowBtn}>Mua ngay</button>
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              className={styles.addToCartBtn}
+            >
+              Thêm vào giỏ hàng
+            </button>
+            <button
+              type="button"
+              onClick={handleBuyNow}
+              className={styles.buyNowBtn}
+            >
+              Mua ngay
+            </button>
           </div>
         </div>
 

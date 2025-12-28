@@ -91,32 +91,51 @@ export default function AboutPage() {
             <div className={styles.teamGrid}>
               <div className={styles.teamCard}>
                 <div className={styles.teamImage}>
-                  <img src="/anhceo3.jpg" alt="CEO" />
+                  <img src="/trung.jpg" alt="CEO" />
+                </div>
+                <h3 className={styles.teamName}>Nguyễn Thành Trung</h3>
+                <p className={styles.teamPosition}>Tổng Giám đốc</p>
+                <p className={styles.teamBio}>
+                Người điều hành toàn bộ công ty
+                </p>
+              </div><div className={styles.teamCard}>
+                <div className={styles.teamImage}>
+                  <img src="/minh.jpg" alt="CEO" />
+                </div>
+                <h3 className={styles.teamName}>Phan Đức Minh</h3>
+                <p className={styles.teamPosition}>Giám đốc Điều hành</p>
+                <p className={styles.teamBio}>
+                Quản lý hoạt động vận hành hằng ngày
+                </p>
+              </div>
+              <div className={styles.teamCard}>
+                <div className={styles.teamImage}>
+                  <img src="/anhceo2.jpg" alt="CEO" />
                 </div>
                 <h3 className={styles.teamName}>Trần Văn Hiệp</h3>
-                <p className={styles.teamPosition}>Giám Đốc Điều Hành</p>
+                <p className={styles.teamPosition}>Giám đốc Tài chính</p>
                 <p className={styles.teamBio}>
-                  Có 20 năm kinh nghiệm trong ngành công nghiệp gia dụng và quản lý kinh doanh.
+                Quản lý tài chính và hoạt động kinh doanh
                 </p>
               </div>
               <div className={styles.teamCard}>
                 <div className={styles.teamImage}>
-                  <img src="/anhceo2.jpg" alt="Production Director" />
+                  <img src="/hao.jpg" alt="Production Director" />
                 </div>
-                <h3 className={styles.teamName}>Hiệp Trần Văn</h3>
-                <p className={styles.teamPosition}>Giám Đốc Sản Xuất</p>
+                <h3 className={styles.teamName}>Phan Quân Hào</h3>
+                <p className={styles.teamPosition}>Giám đốc Kinh doanh</p>
                 <p className={styles.teamBio}>
-                  Chuyên gia quản lý chất lượng sản phẩm với hơn 15 năm kinh nghiệm trong ngành.
+                Quản lý hoạt động sản xuất và chất lượng sản phẩm
                 </p>
               </div>
               <div className={styles.teamCard}>
                 <div className={styles.teamImage}>
-                  <img src="/anhceo1.jpg" alt="Marketing Director" />
+                  <img src="/bao.jpg" alt="Marketing Director" />
                 </div>
-                <h3 className={styles.teamName}>Văn Trần Hiệp</h3>
-                <p className={styles.teamPosition}>Giám Đốc Tiếp Thị</p>
+                <h3 className={styles.teamName}>Đặng Quốc Bảo</h3>
+                <p className={styles.teamPosition}>Giám đốc Nhân sự</p>
                 <p className={styles.teamBio}>
-                  Tiên phong trong chiến lược tiếp thị kỹ thuật số và xây dựng thương hiệu.
+                Quản lý hoạt động nhân sự và tiếp thị
                 </p>
               </div>
             </div>
