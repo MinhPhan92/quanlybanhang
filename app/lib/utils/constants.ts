@@ -39,6 +39,7 @@ export const API_ENDPOINTS = {
   REPORT: {
     SUMMARY: "/baocao/summary",
     REVENUE: "/baocao/revenue",
+    DOANHTHU: "/baocao/doanhthu",
     ORDERS: "/baocao/orders",
     BEST_SELLING: "/baocao/best_selling",
     LOW_INVENTORY: "/baocao/low_inventory",

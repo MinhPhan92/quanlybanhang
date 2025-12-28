@@ -19,10 +19,9 @@ export default function ProductGrid() {
       const data = await productsApi.getAll(1, 8, true)
       setProducts((data.products || []).filter((p) => !p.IsDelete).slice(0, 8))
     } catch (error: any) {
-      // Only log error if it's not a 404 (which is already logged in axios)
-      if (!error.message?.includes("Không tìm thấy")) {
-        console.error("Error loading products:", error)
-      }
+      // Silently handle errors - don't show error to user for product grid
+      // This is expected if backend is not running or endpoint doesn't exist
+      console.warn("Could not load products:", error?.message || "Unknown error")
       setProducts([])
     } finally {
       setLoading(false)

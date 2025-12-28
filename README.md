@@ -53,6 +53,10 @@ DATABASE_URL=mysql+pymysql://user:password@localhost:3306/db_name
 SECRET_KEY=your-secret-key
 ```
 
+- Chạy file `db/db-ban-do-gia-dung.sql` trên MySQL để tạo database và các bảng.
+- Nếu DB hiện tại đang bị giới hạn mô tả sản phẩm (cột `SanPham.MoTa`), hãy chạy migration:
+  - `db/migrations/2025-12-17_alter_sanpham_mota_text.sql`
+
 Chạy backend:
 ```bash
 uvicorn main:app --reload
@@ -118,3 +122,19 @@ npm run lint
 
 Private project
 
+- Đảm bảo backend và MySQL đều đang chạy.
+
+## Export DB (.sql) để gửi team
+
+### Cách nhanh (MySQL Workbench)
+- Server → Data Export → chọn schema `QuanLyBanHang` → Export to Self-Contained File (`.sql`).
+
+### Cách CLI (mysqldump)
+
+```bash
+mysqldump -u root -p QuanLyBanHang > QuanLyBanHang_export.sql
+```
+
+## Tác giả
+
+MinhPhan92

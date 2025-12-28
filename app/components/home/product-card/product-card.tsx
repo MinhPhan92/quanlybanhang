@@ -3,6 +3,7 @@
 import { Heart, ShoppingCart } from "lucide-react"
 import { useState } from "react"
 import Link from "next/link"
+import { useCart } from "@/app/contexts/CartContext"
 import styles from "./product-card.module.css"
 
 import { Product } from "@/app/lib/api/products"
@@ -13,21 +14,28 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const [isFavorite, setIsFavorite] = useState(false)
+  const { addToCart } = useCart()
 
   const formattedPrice = new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
   }).format(product.GiaSP || 0)
 
-  // Parse attributes from MoTa if it's JSON
-  let attributes: Record<string, any> = {}
-  if (product.MoTa) {
-    try {
-      attributes = JSON.parse(product.MoTa)
-    } catch {
-      // If not JSON, use as is
+  // Safe MoTa parsing helper
+  const parseMoTa = (moTa: string | undefined): Record<string, any> => {
+    if (!moTa) return {}
+    if (typeof moTa === "string") {
+      try {
+        return JSON.parse(moTa)
+      } catch {
+        return {}
+      }
     }
+    return typeof moTa === "object" ? moTa : {}
   }
+
+  // Parse attributes from MoTa if it's JSON
+  const attributes = parseMoTa(product.MoTa)
 
   return (
     <Link href={`/product/${product.MaSP}`}>
@@ -42,6 +50,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {/* Heart Button */}
           <button
+            type="button"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
@@ -80,9 +89,21 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {/* Add to Cart Button */}
           <button
-            onClick={(e) => {
+            type="button"
+            onClick={async (e) => {
               e.preventDefault()
               e.stopPropagation()
+              try {
+                await addToCart({
+                  id: product.MaSP,
+                  name: product.TenSP,
+                  price: product.GiaSP || 0,
+                  image: attributes.image || "/placeholder.svg",
+                })
+              } catch (error) {
+                // Error is already handled in CartContext
+                console.error("Failed to add to cart:", error)
+              }
             }}
             className={styles.addToCartButton}
           >

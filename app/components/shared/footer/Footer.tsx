@@ -12,7 +12,7 @@ export default function Footer() {
               <div className={styles.companyBadge}>
                 <span className={styles.companyBadgeText}>GD</span>
               </div>
-              <span className={styles.companyName}>GiaĐụcPlus</span>
+              <span className={styles.companyName}>GiaDungPlus</span>
             </div>
             <p className={styles.companyDescription}>
               Cung cấp những sản phẩm gia dụng chất lượng cao nhất cho gia đình Việt Nam.
@@ -83,7 +83,7 @@ export default function Footer() {
               </li>
               <li className={styles.contactItem}>
                 <Mail size={16} className={styles.contactIcon} />
-                <span className={styles.contactText}>support@giaduc.vn</span>
+                <span className={styles.contactText}>support@giadung.vn</span>
               </li>
               <li className={styles.contactItem}>
                 <MapPin size={16} className={styles.contactIcon} />
@@ -95,7 +95,7 @@ export default function Footer() {
 
         {/* Bottom */}
         <div className={styles.bottom}>
-          <p className={styles.copyright}>&copy; 2025 GiaĐụcPlus. Tất cả quyền được bảo lưu.</p>
+          <p className={styles.copyright}>&copy; 2025 Gia Dụng Plus. Tất cả quyền được bảo lưu.</p>
         </div>
       </div>
     </footer>

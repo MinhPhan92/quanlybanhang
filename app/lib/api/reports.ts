@@ -34,6 +34,11 @@ export const reportsApi = {
     return apiClient(`${API_ENDPOINTS.REPORT.REVENUE}?start_date=${startDate}&end_date=${endDate}`);
   },
 
+  // Some FE checklists use Vietnamese alias endpoint. Keep both for compatibility.
+  getDoanhThu: async (startDate: string, endDate: string): Promise<{ total_revenue: number }> => {
+    return apiClient(`${API_ENDPOINTS.REPORT.DOANHTHU}?start_date=${startDate}&end_date=${endDate}`);
+  },
+
   getOrders: async (startDate: string, endDate: string): Promise<{ total_orders: number }> => {
     return apiClient(`${API_ENDPOINTS.REPORT.ORDERS}?start_date=${startDate}&end_date=${endDate}`);
   },

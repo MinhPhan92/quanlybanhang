@@ -30,6 +30,22 @@ def revenue_report(
     ).scalar() or 0
     return {"total_revenue": float(total)}
 
+
+# Alias endpoint for Vietnamese naming (used by team checklist)
+@router.get("/doanhthu", response_model=dict, summary="Báo cáo doanh thu (alias của /revenue)")
+def doanhthu_report(
+    start_date: str,
+    end_date: str,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    return revenue_report(
+        start_date=start_date,
+        end_date=end_date,
+        db=db,
+        current_user=current_user,
+    )
+
 # Orders report (total orders in a period)
 
 

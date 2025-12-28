@@ -59,7 +59,9 @@ class SanPham(Base):
     TenSP = Column(String(100))
     GiaSP = Column(Numeric(10, 2))
     SoLuongTonKho = Column(Integer)
-    MoTa = Column(String(255))
+    # MoTa stores either free-form description text OR JSON-encoded attributes.
+    # Use TEXT to avoid truncation (attributes/description can exceed 255 chars).
+    MoTa = Column(Text)
     MaDanhMuc = Column(Integer, ForeignKey(
         "DanhMuc.MaDanhMuc", onupdate="CASCADE", ondelete="SET NULL"))
     IsDelete = Column(Boolean, default=False)
@@ -225,3 +227,18 @@ class Project(Base):
     
     # Relationships
     nhanvien_create = relationship("NhanVien")
+
+
+class LienHe(Base):
+    """Contact form submissions - public access, no authentication required"""
+    __tablename__ = "LienHe"
+    MaLienHe = Column(Integer, primary_key=True, autoincrement=True)
+    HoTen = Column(String(100), nullable=False)
+    Email = Column(String(100), nullable=False)
+    SoDienThoai = Column(String(15), nullable=True)
+    ChuDe = Column(String(200), nullable=False)
+    NoiDung = Column(Text, nullable=False)
+    TrangThai = Column(String(50), default="ChuaXuLy")  # ChuaXuLy, DangXuLy, DaXuLy
+    NgayGui = Column(DateTime, default=datetime.utcnow)
+    GhiChu = Column(Text, nullable=True)  # Admin notes
+    IsDelete = Column(Boolean, default=False)

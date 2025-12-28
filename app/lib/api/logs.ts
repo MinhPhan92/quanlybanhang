@@ -61,7 +61,8 @@ export const logsApi = {
     if (filters.limit) params.append("limit", filters.limit.toString());
 
     const queryString = params.toString();
-    return apiClient(`/api/logs/systemlog${queryString ? `?${queryString}` : ""}`);
+    // apiClient base already includes /api
+    return apiClient(`/logs/systemlog${queryString ? `?${queryString}` : ""}`);
   },
 
   getActivityLogs: async (filters: LogFilters = {}): Promise<LogListResponse<ActivityLog>> => {
@@ -76,7 +77,7 @@ export const logsApi = {
     if (filters.limit) params.append("limit", filters.limit.toString());
 
     const queryString = params.toString();
-    return apiClient(`/api/logs/activitylog${queryString ? `?${queryString}` : ""}`);
+    return apiClient(`/logs/activitylog${queryString ? `?${queryString}` : ""}`);
   },
 };
 

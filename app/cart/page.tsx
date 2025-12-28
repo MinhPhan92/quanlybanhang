@@ -1,55 +1,17 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { X, Plus, Minus, ShoppingCart } from "lucide-react"
 import Header from "../components/shared/header/Header"
 import Footer from "../components/shared/footer/Footer"
+import { useCart } from "../contexts/CartContext"
 import styles from "./cart.module.css"
 
-interface CartItem {
-  id: number
-  name: string
-  price: number
-  image: string
-  quantity: number
-}
-
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: 1,
-      name: "Lò nướng thông minh",
-      price: 5990000,
-      image: "/smart-oven.png",
-      quantity: 1,
-    },
-    {
-      id: 2,
-      name: "Máy giặt tự động",
-      price: 8500000,
-      image: "/automatic-washing-machine.jpg",
-      quantity: 2,
-    },
-    {
-      id: 3,
-      name: "Tủ lạnh 2 cánh",
-      price: 12500000,
-      image: "/double-door-refrigerator.jpg",
-      quantity: 1,
-    },
-  ])
-
-  const updateQuantity = (id: number, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      removeItem(id)
-    } else {
-      setCartItems(cartItems.map((item) => (item.id === id ? { ...item, quantity: newQuantity } : item)))
-    }
-  }
+  const { cartItems, updateQuantity, removeFromCart } = useCart()
 
   const removeItem = (id: number) => {
-    setCartItems(cartItems.filter((item) => item.id !== id))
+    removeFromCart(id)
   }
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)

@@ -44,7 +44,8 @@ export interface OrderDetail extends Order {
 
 export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
-    return apiClient("/donhang/");
+    // apiClient base already includes /api
+    return apiClient("/donhang");
   },
 
   getOne: async (id: number): Promise<OrderDetail> => {

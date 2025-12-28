@@ -9,18 +9,32 @@ import {
   Package,
   Users,
   DollarSign,
-  TrendingUp,
-  AlertCircle,
   Clock,
 } from "lucide-react";
 import styles from "./dashboard.module.css";
+import { StatCard } from "./components/StatCard";
+import { SectionCard } from "./components/SectionCard";
+import { RecentOrdersTable } from "./components/RecentOrdersTable";
+import { SimpleBarChart } from "./components/SimpleBarChart";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [rangeLoading, setRangeLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState<string>(() => {
+    const now = new Date();
+    const first = new Date(now.getFullYear(), now.getMonth(), 1);
+    return first.toISOString().slice(0, 10);
+  });
+  const [endDate, setEndDate] = useState<string>(() => {
+    const now = new Date();
+    return now.toISOString().slice(0, 10);
+  });
+  const [rangeRevenue, setRangeRevenue] = useState<number | null>(null);
+  const [rangeOrders, setRangeOrders] = useState<number | null>(null);
 
   useEffect(() => {
     // Check authentication
@@ -47,11 +61,43 @@ export default function DashboardPage() {
       setError(null);
       const data = await reportsApi.getDashboardSummary();
       setSummary(data);
+      // Also fetch range metrics (defaults to month-to-date)
+      void loadRangeMetrics(startDate, endDate);
     } catch (err: any) {
       console.error("Error loading dashboard data:", err);
-      setError(err.message || "Không thể tải dữ liệu dashboard");
+      // Safe fallback so UI can still be shown for demo
+      setSummary({
+        orders_today: 0,
+        total_products: 0,
+        total_customers: 0,
+        recent_orders: [],
+        monthly_sales: [],
+        new_products: [],
+      });
+      setError(err.message || "Không thể tải dữ liệu dashboard (đang dùng dữ liệu mock)");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRangeMetrics = async (s: string, e: string) => {
+    try {
+      setRangeLoading(true);
+      // Prefer /doanhthu if available, fallback to /revenue
+      let revenue: { total_revenue: number } | null = null;
+      try {
+        revenue = await reportsApi.getDoanhThu(s, e);
+      } catch {
+        revenue = await reportsApi.getRevenue(s, e);
+      }
+      const orders = await reportsApi.getOrders(s, e);
+      setRangeRevenue(revenue?.total_revenue ?? 0);
+      setRangeOrders(orders.total_orders ?? 0);
+    } catch (err) {
+      setRangeRevenue(null);
+      setRangeOrders(null);
+    } finally {
+      setRangeLoading(false);
     }
   };
 
@@ -106,6 +152,19 @@ export default function DashboardPage() {
     }
   };
 
+  const monthlySalesForChart =
+    (summary.monthly_sales || []).length > 0
+      ? summary.monthly_sales.map((m) => ({
+          label: m.name,
+          value: m.sales || 0,
+          tooltip: `${m.name}: ${formatCurrency(m.sales || 0)}`,
+        }))
+      : [
+          { label: "T-2", value: 0 },
+          { label: "T-1", value: 0 },
+          { label: "T0", value: 0 },
+        ];
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -116,115 +175,89 @@ export default function DashboardPage() {
       </div>
 
       <div className={styles.statsGrid}>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ backgroundColor: "#3b82f6" }}>
-            <Clock size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <h3 className={styles.statLabel}>Đơn hàng hôm nay</h3>
-            <p className={styles.statValue}>{summary.orders_today}</p>
-          </div>
-        </div>
+        <StatCard
+          icon={<Clock size={24} />}
+          iconBg="#3b82f6"
+          label="Đơn hàng hôm nay"
+          value={summary.orders_today}
+        />
 
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ backgroundColor: "#f59e0b" }}>
-            <Package size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <h3 className={styles.statLabel}>Tổng sản phẩm</h3>
-            <p className={styles.statValue}>{summary.total_products}</p>
-          </div>
-        </div>
+        <StatCard
+          icon={<Package size={24} />}
+          iconBg="#f59e0b"
+          label="Tổng sản phẩm"
+          value={summary.total_products}
+        />
 
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ backgroundColor: "#8b5cf6" }}>
-            <Users size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <h3 className={styles.statLabel}>Tổng khách hàng</h3>
-            <p className={styles.statValue}>{summary.total_customers}</p>
-          </div>
-        </div>
+        <StatCard
+          icon={<Users size={24} />}
+          iconBg="#8b5cf6"
+          label="Tổng khách hàng"
+          value={summary.total_customers}
+        />
 
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ backgroundColor: "#10b981" }}>
-            <DollarSign size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <h3 className={styles.statLabel}>Doanh thu tháng này</h3>
-            <p className={styles.statValue}>
-              {formatCurrency(summary.monthly_sales[summary.monthly_sales.length - 1]?.sales || 0)}
-            </p>
-          </div>
-        </div>
+        <StatCard
+          icon={<DollarSign size={24} />}
+          iconBg="#10b981"
+          label="Doanh thu (khoảng chọn)"
+          value={rangeRevenue === null ? "—" : formatCurrency(rangeRevenue)}
+          subValue={
+            rangeOrders === null
+              ? "Không có dữ liệu đơn hàng theo khoảng"
+              : `Số đơn: ${rangeOrders}`
+          }
+        />
       </div>
 
       {/* Recent Orders */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>Đơn hàng gần đây</h2>
-        <div className={styles.tableContainer}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Mã đơn</th>
-                <th>Khách hàng</th>
-                <th>Tổng tiền</th>
-                <th>Trạng thái</th>
-                <th>Ngày tạo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {summary.recent_orders.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className={styles.emptyCell}>
-                    Chưa có đơn hàng nào
-                  </td>
-                </tr>
-              ) : (
-                summary.recent_orders.map((order) => (
-                  <tr key={order.id}>
-                    <td>{order.code}</td>
-                    <td>{order.customer_name}</td>
-                    <td>{formatCurrency(order.total)}</td>
-                    <td>
-                      <span className={`${styles.statusBadge} ${styles[order.status.toLowerCase()] || ""}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td>{formatDate(order.created_at)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <SectionCard
+        title="Đơn hàng gần đây"
+        right={
+          <div className={styles.filters}>
+            <input
+              className={styles.input}
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+            <input
+              className={styles.input}
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+            <button
+              className={styles.primaryButton}
+              disabled={rangeLoading}
+              onClick={() => void loadRangeMetrics(startDate, endDate)}
+            >
+              {rangeLoading ? "Đang tải..." : "Áp dụng"}
+            </button>
+          </div>
+        }
+      >
+        <RecentOrdersTable
+          orders={summary.recent_orders}
+          formatCurrency={formatCurrency}
+          formatDate={formatDate}
+        />
+      </SectionCard>
 
       {/* Monthly Sales Chart */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>Doanh thu theo tháng</h2>
-        <div className={styles.chartContainer}>
-          {summary.monthly_sales.map((month, index) => (
-            <div key={index} className={styles.chartBar}>
-              <div className={styles.chartBarFill} style={{ 
-                height: `${Math.max((month.sales / Math.max(...summary.monthly_sales.map(m => m.sales || 1))) * 100, 5)}%` 
-              }}></div>
-              <div className={styles.chartBarLabel}>
-                <span>{month.name}</span>
-                <span className={styles.chartBarValue}>{formatCurrency(month.sales)}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <SectionCard title="Doanh thu theo tháng (3 tháng gần nhất)">
+        <SimpleBarChart data={monthlySalesForChart} formatValue={formatCurrency} />
+      </SectionCard>
 
       {/* New Products */}
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>Sản phẩm mới</h2>
+      <SectionCard title="Sản phẩm mới">
         <div className={styles.productsGrid}>
           {summary.new_products.map((product) => (
             <div key={product.id} className={styles.productCard}>
-              <img src={product.image} alt={product.name} className={styles.productImage} />
+              <img
+                src={product.image}
+                alt={product.name}
+                className={styles.productImage}
+              />
               <div className={styles.productInfo}>
                 <h3 className={styles.productName}>{product.name}</h3>
                 <p className={styles.productPrice}>{product.price}₫</p>
@@ -232,7 +265,7 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
-      </div>
+      </SectionCard>
 
       {/* Quick Actions */}
       <div className={styles.quickActions}>
