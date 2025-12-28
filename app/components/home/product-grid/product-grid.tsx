@@ -18,8 +18,11 @@ export default function ProductGrid() {
       setLoading(true)
       const data = await productsApi.getAll(1, 8, true)
       setProducts((data.products || []).filter((p) => !p.IsDelete).slice(0, 8))
-    } catch (error) {
-      console.error("Error loading products:", error)
+    } catch (error: any) {
+      // Only log error if it's not a 404 (which is already logged in axios)
+      if (!error.message?.includes("Không tìm thấy")) {
+        console.error("Error loading products:", error)
+      }
       setProducts([])
     } finally {
       setLoading(false)

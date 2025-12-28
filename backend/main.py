@@ -43,6 +43,7 @@ from backend.routes import (
     alert,
     project,
     logs,
+    giohang,
 )
 
 # =====================================================
@@ -183,6 +184,7 @@ app.include_router(config.router, prefix="/api", tags=["Config"])
 app.include_router(alert.router, prefix="/api", tags=["Alerts"])
 app.include_router(project.router, prefix="/api", tags=["Dự án"])
 app.include_router(logs.router, prefix="/api", tags=["Logs"])
+app.include_router(giohang.router, prefix="/api", tags=["Giỏ hàng"])
 
 # =====================================================
 # 🧩 6. Sự kiện khởi động - tạo bảng CSDL nếu chưa có

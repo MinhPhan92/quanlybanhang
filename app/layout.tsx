@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GiaĐụcPlus - Hệ thống Quản Lý Bán Hàng",
+  title: "Gia Dụng Plus - Hệ thống Quản Lý Bán Hàng",
   description: "Hệ thống quản lý bán hàng tích hợp AI & phân quyền",
 };
 

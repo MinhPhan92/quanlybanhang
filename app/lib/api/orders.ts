@@ -27,17 +27,46 @@ export interface StatusUpdateResponse {
   inventory_updated: boolean;
 }
 
+export interface OrderItem {
+  MaSP: number;
+  TenSP: string;
+  SoLuong: number;
+  DonGia: number;
+  GiamGia?: number;
+  image?: string;
+}
+
+export interface OrderDetail extends Order {
+  items?: OrderItem[];
+  shippingAddress?: string;
+  paymentMethod?: string;
+}
+
 export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
-    return apiClient("/api/donhang");
+    return apiClient("/donhang/");
   },
 
-  getOne: async (id: number): Promise<Order> => {
-    return apiClient(`/api/donhang/${id}`);
+  getOne: async (id: number): Promise<OrderDetail> => {
+    return apiClient(`/donhang/${id}`);
+  },
+
+  create: async (orderData: {
+    NgayDat: string;
+    TongTien: number;
+    TrangThai: string;
+    MaKH?: number;
+    MaNV?: number;
+    voucher_code?: string;
+  }): Promise<{ MaDonHang: number; TongTien: number; voucher_applied?: boolean }> => {
+    return apiClient("/donhang/", {
+      method: "POST",
+      body: JSON.stringify(orderData),
+    });
   },
 
   updateStatus: async (id: number, newStatus: string): Promise<StatusUpdateResponse> => {
-    return apiClient(`/api/donhang/${id}/status`, {
+    return apiClient(`/donhang/${id}/status`, {
       method: "PUT",
       body: JSON.stringify({ new_status: newStatus }),
     });

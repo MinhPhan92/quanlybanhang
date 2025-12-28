@@ -49,29 +49,29 @@ export const productsApi = {
       limit: limit.toString(),
       include_attributes: includeAttributes.toString(),
     });
-    return apiClient(`/api/sanpham?${params.toString()}`);
+    return apiClient(`/sanpham/?${params.toString()}`);
   },
 
   getOne: async (id: number): Promise<Product> => {
-    return apiClient(`/api/sanpham/${id}`);
+    return apiClient(`/sanpham/${id}`);
   },
 
   create: async (data: ProductCreateRequest): Promise<Product> => {
-    return apiClient("/api/sanpham", {
+    return apiClient("/sanpham/", {
       method: "POST",
       body: JSON.stringify(data),
     });
   },
 
   update: async (id: number, data: ProductUpdateRequest): Promise<Product> => {
-    return apiClient(`/api/sanpham/${id}`, {
+    return apiClient(`/sanpham/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
   },
 
   delete: async (id: number): Promise<{ message: string }> => {
-    return apiClient(`/api/sanpham/${id}`, {
+    return apiClient(`/sanpham/${id}`, {
       method: "DELETE",
     });
   },
@@ -79,7 +79,7 @@ export const productsApi = {
 
 export const categoriesApi = {
   getAll: async (): Promise<Category[]> => {
-    return apiClient("/api/danhmuc");
+    return apiClient("/danhmuc/");
   },
 };
 

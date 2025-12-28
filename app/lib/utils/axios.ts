@@ -23,7 +23,12 @@ export const apiClient = async (
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "An error occurred" }));
+    let error: any;
+    try {
+      error = await response.json();
+    } catch {
+      error = { detail: "An error occurred" };
+    }
     
     // Handle 401 Unauthorized - redirect to login
     if (response.status === 401 && typeof window !== "undefined") {
@@ -35,7 +40,23 @@ export const apiClient = async (
       throw new Error("Session expired. Please login again.");
     }
     
-    throw new Error(error.detail || error.message || "Request failed");
+    // Handle 404 Not Found - provide more context
+    if (response.status === 404) {
+      const errorMessage = error.detail || error.message || "Không tìm thấy dữ liệu";
+      // For public endpoints (products, categories), log as warning instead of error
+      if (endpoint.includes("/sanpham") || endpoint.includes("/danhmuc")) {
+        console.warn(`[apiClient] 404 ${endpoint}: ${errorMessage}`);
+        throw new Error(errorMessage);
+      }
+      // For other endpoints, log error but don't spam console
+      console.error(`[apiClient] 404 ${endpoint}: ${errorMessage}`);
+      throw new Error(errorMessage);
+    }
+    
+    // Handle other errors
+    const errorMessage = error.detail || error.message || "Request failed";
+    console.error(`[apiClient] ${response.status} ${endpoint}: ${errorMessage}`);
+    throw new Error(errorMessage);
   }
 
   return response.json();
