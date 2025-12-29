@@ -137,18 +137,66 @@ def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: d
 
 @router.get("/", response_model=list)
 def get_all_donhang(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    dhs = db.query(DonHang).all()
-    return [dh.__dict__ for dh in dhs]
+    """
+    Lấy danh sách tất cả đơn hàng.
+    Chỉ Admin, Manager, và Employee mới có thể xem.
+    """
+    try:
+        dhs = db.query(DonHang).all()
+        # Properly serialize SQLAlchemy objects to dictionaries
+        result = []
+        for dh in dhs:
+            order_dict = {
+                "MaDonHang": dh.MaDonHang,
+                "NgayDat": dh.NgayDat.isoformat() if dh.NgayDat else None,
+                "TongTien": float(dh.TongTien) if dh.TongTien else 0.0,
+                "TrangThai": dh.TrangThai,
+                "MaKH": dh.MaKH,
+                "MaNV": dh.MaNV,
+                "KhuyenMai": dh.KhuyenMai,
+                "PhiShip": float(dh.PhiShip) if dh.PhiShip else None,
+                "MaShipper": dh.MaShipper,
+            }
+            result.append(order_dict)
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi lấy danh sách đơn hàng: {str(e)}"
+        )
 
 # Read one
 
 
 @router.get("/{madonhang}", response_model=dict)
 def get_donhang(madonhang: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    dh = db.query(DonHang).filter(DonHang.MaDonHang == madonhang).first()
-    if not dh:
-        raise HTTPException(status_code=404, detail="Đơn hàng không tồn tại")
-    return dh.__dict__
+    """
+    Lấy thông tin chi tiết một đơn hàng.
+    """
+    try:
+        dh = db.query(DonHang).filter(DonHang.MaDonHang == madonhang).first()
+        if not dh:
+            raise HTTPException(status_code=404, detail="Đơn hàng không tồn tại")
+        
+        # Properly serialize SQLAlchemy object to dictionary
+        return {
+            "MaDonHang": dh.MaDonHang,
+            "NgayDat": dh.NgayDat.isoformat() if dh.NgayDat else None,
+            "TongTien": float(dh.TongTien) if dh.TongTien else 0.0,
+            "TrangThai": dh.TrangThai,
+            "MaKH": dh.MaKH,
+            "MaNV": dh.MaNV,
+            "KhuyenMai": dh.KhuyenMai,
+            "PhiShip": float(dh.PhiShip) if dh.PhiShip else None,
+            "MaShipper": dh.MaShipper,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi lấy thông tin đơn hàng: {str(e)}"
+        )
 
 # Update
 

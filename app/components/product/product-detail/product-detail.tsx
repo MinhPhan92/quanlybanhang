@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Heart, Share2, Star, Loader2 } from "lucide-react"
 import { productsApi, Product } from "@/app/lib/api/products"
+import { reviewsApi, Review } from "@/app/lib/api/reviews"
 import { useCart } from "@/app/contexts/CartContext"
 import styles from "./product-detail.module.css"
 
@@ -20,10 +21,14 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1)
   const [isFavorite, setIsFavorite] = useState(false)
   const [activeImage, setActiveImage] = useState(0)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [averageRating, setAverageRating] = useState<number>(0)
+  const [reviewsLoading, setReviewsLoading] = useState(false)
 
   useEffect(() => {
     if (productId) {
       loadProduct()
+      loadReviews()
     } else {
       setError("Không tìm thấy sản phẩm")
       setLoading(false)
@@ -42,6 +47,21 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
       console.error("Error loading product:", err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadReviews = async () => {
+    if (!productId) return
+    try {
+      setReviewsLoading(true)
+      const data = await reviewsApi.getProductReviews(productId, 1, 10)
+      setReviews(data.reviews || [])
+      setAverageRating(data.average_rating || 0)
+    } catch (err: any) {
+      console.error("Error loading reviews:", err)
+      // Don't show error for reviews, just log it
+    } finally {
+      setReviewsLoading(false)
     }
   }
 
@@ -191,10 +211,19 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
         <div className={styles.rating}>
           <div className={styles.stars}>
             {[...Array(5)].map((_, i) => (
-              <Star key={i} size={16} fill="#fbbf24" color="#fbbf24" />
+              <Star
+                key={i}
+                size={16}
+                fill={i < Math.round(averageRating) ? "#fbbf24" : "none"}
+                color="#fbbf24"
+              />
             ))}
           </div>
-          <span className={styles.ratingText}>4.8/5 (128 đánh giá)</span>
+          <span className={styles.ratingText}>
+            {averageRating > 0
+              ? `${averageRating.toFixed(1)}/5 (${reviews.length} đánh giá)`
+              : "Chưa có đánh giá"}
+          </span>
         </div>
 
         {/* Price Section */}
@@ -274,12 +303,54 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
         </div>
 
         {/* Reviews Section */}
-        {/* TODO: Implement reviews API integration */}
         <div className={styles.reviewsSection}>
           <h2 className={styles.reviewsTitle}>Đánh giá từ khách hàng</h2>
-          <div className={styles.reviewsList}>
-            <p className={styles.noReviews}>Chưa có đánh giá nào</p>
-          </div>
+          {reviewsLoading ? (
+            <div className={styles.reviewsLoading}>
+              <Loader2 className={styles.spinner} />
+              <p>Đang tải đánh giá...</p>
+            </div>
+          ) : reviews.length > 0 ? (
+            <div className={styles.reviewsList}>
+              {reviews.map((review) => (
+                <div key={review.MaDanhGia} className={styles.reviewItem}>
+                  <div className={styles.reviewHeader}>
+                    <div className={styles.reviewerInfo}>
+                      <div className={styles.reviewerAvatar}>
+                        {review.TenKH?.[0]?.toUpperCase() || "K"}
+                      </div>
+                      <div>
+                        <p className={styles.reviewerName}>
+                          {review.TenKH || `Khách hàng ${review.MaKH}`}
+                        </p>
+                        <p className={styles.reviewDate}>
+                          {new Date(review.NgayDanhGia).toLocaleDateString("vi-VN")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className={styles.reviewRating}>
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={14}
+                          fill={i < review.DiemDanhGia ? "#fbbf24" : "none"}
+                          color="#fbbf24"
+                        />
+                      ))}
+                      <span className={styles.ratingValue}>{review.DiemDanhGia}/5</span>
+                    </div>
+                  </div>
+                  {review.NoiDung && (
+                    <p className={styles.reviewContent}>{review.NoiDung}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.noReviews}>
+              <p>Chưa có đánh giá nào cho sản phẩm này</p>
+            </div>
+          )}
         </div>
       </section>
     </div>

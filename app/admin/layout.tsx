@@ -17,6 +17,8 @@ import {
   LogOut,
   Menu,
   X,
+  BarChart3,
+  Warehouse,
 } from "lucide-react";
 import styles from "./admin-layout.module.css";
 
@@ -99,10 +101,22 @@ export default function AdminLayout({
       roles: ["Admin", "Manager", "NhanVien"],
     },
     {
+      icon: Warehouse,
+      label: "Tồn kho",
+      href: "/admin/inventory",
+      roles: ["Admin", "Manager"],
+    },
+    {
       icon: ShoppingCart,
       label: "Đơn hàng",
       href: "/admin/orders",
       roles: ["Admin", "Manager", "NhanVien"],
+    },
+    {
+      icon: BarChart3,
+      label: "Báo cáo",
+      href: "/admin/reports",
+      roles: ["Admin", "Manager"],
     },
     {
       icon: Users,

@@ -45,7 +45,8 @@ export interface OrderDetail extends Order {
 export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
     // apiClient base already includes /api
-    return apiClient("/donhang");
+    // Backend route requires trailing slash when redirect_slashes=False
+    return apiClient("/donhang/");
   },
 
   getOne: async (id: number): Promise<OrderDetail> => {

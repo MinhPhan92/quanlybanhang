@@ -44,5 +44,25 @@ export const API_ENDPOINTS = {
     BEST_SELLING: "/baocao/best_selling",
     LOW_INVENTORY: "/baocao/low_inventory",
   },
+  INVENTORY: {
+    LOW_STOCK: "/inventory/low-stock",
+    UPDATE_STOCK: "/inventory/update-stock",
+  },
+  ALERTS: {
+    LOW_STOCK: "/alerts/low-stock",
+  },
+  REVIEWS: {
+    BASE: "/reviews",
+    PRODUCT: (productId: number) => `/reviews/products/${productId}`,
+    MY_REVIEWS: "/reviews/my-reviews",
+  },
+  COMPLAINTS: {
+    BASE: "/complaints",
+    MY_COMPLAINTS: "/complaints/my-complaints",
+    ONE: (id: number) => `/complaints/${id}`,
+  },
+  PAYMENTS: {
+    HISTORY: (orderId: number) => `/thanhtoan/history/${orderId}`,
+  },
 };
 
