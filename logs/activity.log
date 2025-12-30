@@ -259,3 +259,228 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2025-11-28 13:07:37,370 - INFO - POST /api/chatbot/chat completed in 2237ms
 2025-11-28 13:07:47,469 - INFO - HTTP Request: POST http://localhost:11434/api/generate "HTTP/1.1 200 OK"
 2025-11-28 13:07:47,471 - INFO - POST /api/chatbot/ask completed in 4183ms
+2025-12-17 11:27:03,370 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 11:32:37,722 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 11:37:07,486 - INFO - POST /api/auth/login completed in 3ms
+2025-12-17 11:37:27,176 - INFO - POST /api/auth/login completed in 8ms
+2025-12-17 11:37:40,913 - INFO - POST /api/auth/login completed in 2ms
+2025-12-17 11:38:01,960 - INFO - POST /api/auth/login completed in 40ms
+2025-12-17 11:39:12,054 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 404 Not Found"
+2025-12-17 11:39:12,055 - INFO - POST /api/chatbot/ask completed in 407ms
+2025-12-17 11:44:04,020 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 11:47:48,812 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 11:48:16,727 - INFO - Root endpoint accessed.
+2025-12-17 11:48:16,727 - INFO - GET / completed in 1ms
+2025-12-17 11:50:31,986 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 11:50:31,999 - INFO - POST /api/chatbot/ask completed in 1242ms
+2025-12-17 11:50:46,041 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 11:50:46,045 - INFO - POST /api/chatbot/ask completed in 1012ms
+2025-12-17 12:00:36,224 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 12:00:36,231 - INFO - POST /api/chatbot/ask completed in 12402ms
+2025-12-17 12:01:23,393 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 12:02:06,922 - INFO - POST /api/chatbot/ask completed in 33ms
+2025-12-17 12:06:45,028 - INFO - POST /api/chatbot/ask completed in 7ms
+2025-12-17 12:06:57,908 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 12:07:00,684 - INFO - POST /api/chatbot/ask completed in 50ms
+2025-12-17 12:08:01,520 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 12:08:11,819 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 12:08:14,595 - INFO - POST /api/chatbot/ask completed in 34ms
+2025-12-17 12:10:13,442 - INFO - POST /api/chatbot/ask completed in 3ms
+2025-12-17 12:10:21,564 - INFO - POST /api/chatbot/ask completed in 5ms
+2025-12-17 12:10:27,436 - INFO - POST /api/chatbot/ask completed in 3ms
+2025-12-17 12:10:35,525 - INFO - POST /api/chatbot/ask completed in 26ms
+2025-12-17 12:10:48,759 - INFO - POST /api/chatbot/ask completed in 5ms
+2025-12-17 12:11:00,518 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 12:11:00,533 - INFO - POST /api/chatbot/ask completed in 5868ms
+2025-12-17 12:11:17,625 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 12:11:17,628 - INFO - POST /api/chatbot/ask completed in 929ms
+2025-12-17 12:11:22,908 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 12:11:22,911 - INFO - POST /api/chatbot/ask completed in 872ms
+2025-12-17 12:11:41,610 - INFO - POST /api/chatbot/ask completed in 3ms
+2025-12-17 12:11:49,192 - INFO - POST /api/chatbot/ask completed in 3ms
+2025-12-17 12:11:58,424 - INFO - POST /api/chatbot/ask completed in 2ms
+2025-12-17 14:36:06,591 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 14:36:26,639 - INFO - POST /api/auth/login completed in 60ms
+2025-12-17 14:37:18,800 - INFO - POST /api/chatbot/ask completed in 1ms
+2025-12-17 14:37:32,790 - INFO - POST /api/chatbot/ask completed in 6ms
+2025-12-17 14:39:23,388 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 14:39:23,398 - INFO - POST /api/chatbot/ask completed in 5759ms
+2025-12-17 14:39:34,600 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 14:39:34,604 - INFO - POST /api/chatbot/ask completed in 978ms
+2025-12-17 14:39:46,899 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 14:39:46,901 - INFO - POST /api/chatbot/ask completed in 918ms
+2025-12-17 14:39:59,632 - INFO - POST /api/chatbot/ask completed in 3ms
+2025-12-17 14:40:11,944 - INFO - POST /api/chatbot/ask completed in 3ms
+2025-12-17 14:40:22,804 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 14:40:22,808 - INFO - POST /api/chatbot/ask completed in 960ms
+2025-12-17 14:40:38,145 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 14:40:38,147 - INFO - POST /api/chatbot/ask completed in 985ms
+2025-12-17 14:40:54,158 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 14:40:54,162 - INFO - POST /api/chatbot/ask completed in 1004ms
+2025-12-17 14:41:04,794 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 14:41:04,797 - INFO - POST /api/chatbot/ask completed in 906ms
+2025-12-17 14:41:16,362 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 14:41:16,371 - INFO - POST /api/chatbot/ask completed in 1316ms
+2025-12-17 14:41:28,514 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 14:41:28,529 - INFO - POST /api/chatbot/ask completed in 1308ms
+2025-12-17 14:41:45,683 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 14:41:45,688 - INFO - POST /api/chatbot/ask completed in 896ms
+2025-12-17 14:42:27,259 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 14:42:27,260 - INFO - POST /api/chatbot/ask completed in 1855ms
+2025-12-17 14:43:31,945 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 14:43:31,950 - INFO - POST /api/chatbot/ask completed in 948ms
+2025-12-17 14:46:08,037 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 15:53:29,024 - INFO - POST /api/chatbot/ask completed in 31ms
+2025-12-17 15:54:18,822 - INFO - POST /api/auth/login completed in 30ms
+2025-12-17 15:54:47,761 - INFO - POST /api/chatbot/ask completed in 1ms
+2025-12-17 15:55:01,246 - INFO - POST /api/chatbot/ask completed in 1ms
+2025-12-17 15:55:20,108 - INFO - POST /api/auth/login completed in 16ms
+2025-12-17 15:55:42,941 - INFO - POST /api/auth/login completed in 2ms
+2025-12-17 15:55:51,315 - INFO - POST /api/auth/login completed in 1ms
+2025-12-17 15:56:10,038 - INFO - POST /api/auth/login completed in 1ms
+2025-12-17 15:56:49,014 - INFO - POST /api/auth/login completed in 1ms
+2025-12-17 15:57:01,287 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 15:57:17,890 - INFO - POST /api/auth/login completed in 44ms
+2025-12-17 15:57:49,879 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 15:57:49,890 - INFO - POST /api/chatbot/ask completed in 5685ms
+2025-12-17 15:58:03,638 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 15:59:12,136 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 15:59:27,886 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 15:59:33,213 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 15:59:33,222 - INFO - POST /api/chatbot/ask completed in 1323ms
+2025-12-17 15:59:39,113 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 15:59:39,115 - INFO - POST /api/chatbot/ask completed in 1060ms
+2025-12-17 15:59:44,447 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 15:59:44,450 - INFO - POST /api/chatbot/ask completed in 891ms
+2025-12-17 15:59:50,539 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-17 15:59:50,542 - INFO - POST /api/chatbot/ask completed in 1296ms
+2025-12-17 16:04:09,587 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 16:06:01,888 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 16:06:33,168 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 16:06:37,724 - INFO - POST /api/chatbot/ask completed in 59ms
+2025-12-17 16:19:17,191 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 16:19:48,049 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-17 16:21:58,432 - INFO - POST /api/chatbot/ask completed in 31ms
+2025-12-18 12:32:56,526 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-18 12:33:51,912 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-18 12:34:08,889 - INFO - POST /api/auth/login completed in 2ms
+2025-12-18 12:34:14,074 - INFO - POST /api/auth/login completed in 22ms
+2025-12-18 12:36:28,081 - INFO - POST /api/chatbot/ask completed in 7ms
+2025-12-18 12:39:59,170 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-18 12:39:59,182 - INFO - POST /api/chatbot/ask completed in 18057ms
+2025-12-18 12:46:14,265 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-18 12:46:14,266 - INFO - POST /api/chatbot/chat completed in 3052ms
+2025-12-18 12:54:14,560 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-18 12:55:07,958 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-18 12:55:27,479 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-18 12:55:36,841 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-18 12:55:54,690 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-18 12:55:54,692 - INFO - POST /api/chatbot/chat completed in 2845ms
+2025-12-18 12:56:17,527 - INFO - POST /api/chatbot/chat completed in 1ms
+2025-12-18 12:57:15,083 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-18 12:57:15,084 - INFO - POST /api/chatbot/chat completed in 2539ms
+2025-12-18 13:00:19,625 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-18 13:01:06,441 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-18 13:01:06,442 - INFO - POST /api/chatbot/chat completed in 18469ms
+2025-12-18 13:02:28,526 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-18 13:02:28,527 - INFO - POST /api/chatbot/chat completed in 3112ms
+2025-12-18 13:04:26,084 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-18 13:04:26,085 - INFO - POST /api/chatbot/chat completed in 7917ms
+2025-12-18 13:06:04,550 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-18 13:06:04,551 - INFO - POST /api/chatbot/chat completed in 1861ms
+2025-12-18 13:07:06,829 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-18 13:07:06,829 - INFO - POST /api/chatbot/chat completed in 2173ms
+2025-12-18 13:07:27,044 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-18 13:07:27,045 - INFO - POST /api/chatbot/chat completed in 1875ms
+2025-12-18 13:28:08,908 - INFO - POST /api/chatbot/ask completed in 42ms
+2025-12-18 13:28:55,199 - INFO - HTTP Request: POST http://100.78.4.22:11434/api/generate "HTTP/1.1 200 OK"
+2025-12-18 13:28:55,210 - INFO - POST /api/chatbot/ask completed in 12935ms
+2025-12-22 09:19:42,939 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-22 09:19:42,941 - INFO - Chatbot knowledge loaded successfully.
+2025-12-22 09:30:17,965 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-22 09:30:17,965 - INFO - Chatbot knowledge loaded successfully.
+2025-12-22 09:31:30,461 - INFO - POST /api/auth/login completed in 101ms
+2025-12-22 09:32:09,583 - INFO - POST /api/chatbot/chat completed in 2312ms
+2025-12-22 09:33:24,624 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 400 Bad Request"
+2025-12-22 09:33:24,625 - INFO - POST /api/chatbot/chat completed in 251ms
+2025-12-22 09:37:04,123 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-22 09:37:04,123 - INFO - Chatbot knowledge loaded successfully.
+2025-12-22 09:39:28,095 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-22 09:39:28,096 - INFO - Chatbot knowledge loaded successfully.
+2025-12-22 09:41:08,042 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-22 09:41:08,043 - INFO - POST /api/chatbot/chat completed in 9515ms
+2025-12-22 09:42:32,448 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-22 09:42:32,448 - INFO - Chatbot knowledge loaded successfully.
+2025-12-22 09:43:31,214 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-22 09:43:31,214 - INFO - Chatbot knowledge loaded successfully.
+2025-12-22 09:43:39,351 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-22 09:43:39,352 - INFO - POST /api/chatbot/chat completed in 2212ms
+2025-12-22 09:44:11,420 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-22 09:44:11,421 - INFO - POST /api/chatbot/chat completed in 9064ms
+2025-12-22 09:49:45,473 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-22 09:49:45,474 - INFO - POST /api/chatbot/chat completed in 6536ms
+2025-12-22 09:50:10,707 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-22 09:50:10,708 - INFO - POST /api/chatbot/chat completed in 6468ms
+2025-12-22 09:53:07,319 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-22 09:53:07,320 - INFO - POST /api/chatbot/chat completed in 4288ms
+2025-12-22 09:53:55,610 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-22 09:53:55,611 - INFO - POST /api/chatbot/chat completed in 10929ms
+2025-12-22 09:54:25,628 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-22 09:54:25,630 - INFO - POST /api/chatbot/chat completed in 2857ms
+2025-12-22 09:57:38,196 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-22 09:57:38,197 - INFO - POST /api/chatbot/chat completed in 5006ms
+2025-12-22 10:07:45,166 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-22 10:07:45,167 - INFO - POST /api/chatbot/chat completed in 8142ms
+2025-12-30 14:10:24,999 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-30 14:10:25,008 - INFO - Chatbot knowledge loaded successfully.
+2025-12-30 14:12:40,586 - INFO - POST /api/auth/login completed in 99ms
+2025-12-30 14:13:24,673 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 14:13:24,674 - INFO - POST /api/chatbot/chat completed in 8397ms
+2025-12-30 14:15:02,709 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 14:15:02,710 - INFO - POST /api/chatbot/chat completed in 1396ms
+2025-12-30 14:28:58,842 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-30 14:28:58,842 - INFO - Chatbot knowledge loaded successfully.
+2025-12-30 14:40:00,308 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-30 14:40:00,317 - INFO - Chatbot knowledge loaded successfully.
+2025-12-30 14:42:35,272 - INFO - POST /api/auth/login completed in 51ms
+2025-12-30 14:43:08,557 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 14:43:08,558 - INFO - POST /api/chatbot/chat completed in 5198ms
+2025-12-30 14:44:55,112 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-30 14:44:55,122 - INFO - Chatbot knowledge loaded successfully.
+2025-12-30 14:45:13,992 - INFO - POST /api/auth/login completed in 45ms
+2025-12-30 14:46:10,221 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 14:46:10,223 - INFO - POST /api/chatbot/chat completed in 15338ms
+2025-12-30 14:48:57,636 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-30 14:48:57,646 - INFO - Chatbot knowledge loaded successfully.
+2025-12-30 14:49:44,229 - INFO - POST /api/auth/login completed in 45ms
+2025-12-30 14:50:13,451 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 14:50:13,451 - INFO - POST /api/chatbot/chat completed in 7008ms
+2025-12-30 14:53:39,769 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 14:53:39,769 - INFO - POST /api/chatbot/chat completed in 11149ms
+2025-12-30 14:55:41,533 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-30 14:55:41,542 - INFO - Chatbot knowledge loaded successfully.
+2025-12-30 14:55:59,075 - INFO - POST /api/auth/login completed in 43ms
+2025-12-30 14:56:56,423 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 14:56:56,424 - INFO - POST /api/chatbot/chat completed in 23693ms
+2025-12-30 14:57:25,145 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 14:57:25,146 - INFO - POST /api/chatbot/chat completed in 3730ms
+2025-12-30 14:57:57,793 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 14:57:57,793 - INFO - POST /api/chatbot/chat completed in 20238ms
+2025-12-30 15:00:21,928 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 15:00:21,930 - INFO - POST /api/chatbot/chat completed in 29967ms
+2025-12-30 15:01:11,036 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 15:01:11,037 - INFO - POST /api/chatbot/chat completed in 4233ms
+2025-12-30 15:01:31,636 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 15:01:31,637 - INFO - POST /api/chatbot/chat completed in 3246ms
+2025-12-30 15:02:05,051 - INFO - \u2705 Database tables checked/created successfully.
+2025-12-30 15:02:05,059 - INFO - Chatbot knowledge loaded successfully.
+2025-12-30 15:03:29,946 - INFO - POST /api/auth/login completed in 44ms
+2025-12-30 15:07:08,810 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 15:07:08,812 - INFO - POST /api/chatbot/chat completed in 4386ms
+2025-12-30 15:07:21,369 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 15:07:21,370 - INFO - POST /api/chatbot/chat completed in 2415ms
+2025-12-30 15:08:04,886 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 15:08:04,887 - INFO - POST /api/chatbot/chat completed in 3471ms
+2025-12-30 15:08:29,964 - INFO - HTTP Request: POST http://127.0.0.1:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-30 15:08:29,965 - INFO - POST /api/chatbot/chat completed in 9507ms
+2025-12-30 15:58:24,489 - INFO - POST /api/chatbot/ask completed in 58ms

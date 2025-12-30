@@ -37,6 +37,8 @@ from backend.routes import (
     chatbot,
 )
 
+from backend.routes.chatbot import load_chatbot_knowledge
+
 # =====================================================
 # 🚀 1. Khởi tạo ứng dụng FastAPI
 # =====================================================
@@ -203,3 +205,8 @@ def api_status(current_user: dict = Depends(get_current_user)):
         "version": "1.0.0",
         "user": current_user,
     }
+    
+@app.on_event("startup")
+def startup_event():
+    load_chatbot_knowledge()
+    logging.info("Chatbot knowledge loaded successfully.")
