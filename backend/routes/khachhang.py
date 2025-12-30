@@ -4,7 +4,7 @@ from backend.database import get_db
 from backend.models import KhachHang
 from backend.routes.deps import get_current_user
 
-router = APIRouter(prefix="/khachhang", tags=["KhachHang"])
+router = APIRouter(tags=["KhachHang"])
 
 # Create
 

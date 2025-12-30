@@ -124,3 +124,29 @@ class ProductResponse(BaseModel):
 class ProductListResponse(BaseModel):
     products: List[ProductResponse]
     total: int
+
+# =====================================================
+# 📋 Contact (LienHe) Schemas
+# =====================================================
+
+class ContactCreateRequest(BaseModel):
+    HoTen: str
+    Email: str
+    SoDienThoai: Optional[str] = None
+    ChuDe: str
+    NoiDung: str
+
+class ContactResponse(BaseModel):
+    MaLienHe: int
+    HoTen: str
+    Email: str
+    SoDienThoai: Optional[str] = None
+    ChuDe: str
+    NoiDung: str
+    TrangThai: str
+    NgayGui: datetime
+    GhiChu: Optional[str] = None
+
+class ContactListResponse(BaseModel):
+    contacts: List[ContactResponse]
+    total: int

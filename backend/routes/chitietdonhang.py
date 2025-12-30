@@ -4,7 +4,7 @@ from backend.database import get_db
 from backend.models import DonHang_SanPham, DonHang, SanPham
 from backend.routes.deps import get_current_user
 
-router = APIRouter(prefix="/chitietdonhang", tags=["ChiTietDonHang"])
+router = APIRouter(tags=["ChiTietDonHang"])
 
 # Add products to order
 

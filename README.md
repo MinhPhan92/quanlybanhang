@@ -1,69 +1,139 @@
-# 🛒 Hệ Thống Quản Lý Bán Hàng
+# Quản Lý Bán Hàng - E-commerce Platform
 
-**E-commerce Management System** - FastAPI Backend với MySQL Database
+Hệ thống quản lý bán hàng đồ gia dụng được xây dựng với Next.js và FastAPI.
 
-## Hướng dẫn chạy dự án
+## 🚀 Tính năng
 
-### 1. Cài đặt các package cần thiết
+### Frontend (Next.js)
+- **Trang chủ**: Hiển thị sản phẩm nổi bật
+- **Cửa hàng**: Duyệt và tìm kiếm sản phẩm
+- **Chi tiết sản phẩm**: Xem thông tin chi tiết, đánh giá
+- **Giỏ hàng**: Quản lý sản phẩm trong giỏ hàng
+- **Thanh toán**: Quy trình checkout hoàn chỉnh
+- **Đơn hàng**: 
+  - Lịch sử đơn hàng
+  - Chi tiết đơn hàng
+  - Theo dõi đơn hàng
+  - Hóa đơn/Receipt
+- **Tài khoản**:
+  - Đăng nhập/Đăng ký
+  - Quên mật khẩu/Đặt lại mật khẩu
+  - Quản lý địa chỉ
+  - Hồ sơ người dùng
+- **Admin Dashboard**: Quản lý sản phẩm, đơn hàng, khách hàng, nhân viên
+
+### Backend (FastAPI)
+- RESTful API với JWT authentication
+- Quản lý sản phẩm, danh mục
+- Quản lý đơn hàng và thanh toán
+- Quản lý giỏ hàng
+- Quản lý khách hàng và nhân viên
+- Hệ thống khuyến mãi/voucher
+- Activity logging
+- Inventory management
+
+## 📋 Yêu cầu
+
+- Node.js 18+ 
+- Python 3.8+
+- MySQL/MariaDB
+
+## 🛠️ Cài đặt
+
+### Backend
 
 ```bash
-pip install fastapi uvicorn sqlalchemy pymysql passlib python-jose
+cd backend
+pip install -r requirements.txt
 ```
 
-### 2. Khởi tạo database MySQL
+Tạo file `.env` trong thư mục `backend`:
+```
+DATABASE_URL=mysql+pymysql://user:password@localhost:3306/db_name
+SECRET_KEY=your-secret-key
+```
 
 - Chạy file `db/db-ban-do-gia-dung.sql` trên MySQL để tạo database và các bảng.
+- Nếu DB hiện tại đang bị giới hạn mô tả sản phẩm (cột `SanPham.MoTa`), hãy chạy migration:
+  - `db/migrations/2025-12-17_alter_sanpham_mota_text.sql`
 
-### 3. Cấu hình kết nối database
+Chạy backend:
+```bash
+uvicorn main:app --reload
+```
 
-- Sửa thông tin kết nối trong `backend/database.py` cho phù hợp với MySQL của bạn.
+Backend sẽ chạy tại `http://localhost:8000`
 
-### 4. Chạy backend FastAPI
+### Frontend
 
-- Mở terminal tại thư mục dự án hoặc thư mục `backend`:
-  - Nếu ở thư mục dự án (project root):
+```bash
+npm install
+```
 
-      ```bash
-      uvicorn backend.main:app --reload
-      ```
+Tạo file `.env.local`:
+```
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+```
 
-  - Nếu ở thư mục `backend`:
+Chạy frontend:
+```bash
+npm run dev
+```
 
-      ```bash
-      uvicorn main:app --reload
-      ```
+Frontend sẽ chạy tại `http://localhost:3000`
 
-### 5. Truy cập Swagger UI để test API
+## 📁 Cấu trúc dự án
 
-- Mở trình duyệt và truy cập: [http://localhost:8000/docs](http://localhost:8000/docs)
+```
+quanlybanhang/
+├── app/                    # Next.js app directory
+│   ├── admin/             # Admin dashboard pages
+│   ├── components/         # React components
+│   ├── contexts/           # React contexts (Auth, Cart)
+│   ├── lib/               # Utilities and API clients
+│   └── [pages]/           # Public pages
+├── backend/                # FastAPI backend
+│   ├── routes/            # API routes
+│   ├── models.py          # Database models
+│   ├── database.py        # Database connection
+│   └── main.py            # FastAPI app
+├── public/                 # Static assets
+└── db/                     # Database scripts
+```
 
-### 6. Chạy frontend để test chức năng
+## 🔐 Authentication
 
-- Mở terminal tại thư mục `frontend`:
+Hệ thống sử dụng JWT tokens cho authentication. Token được lưu trong `localStorage` sau khi đăng nhập.
 
-  ```bash
-  python -m http.server 8080
-  ```
+## 📝 API Documentation
 
-- Truy cập [http://localhost:8080/index.html](http://localhost:8080/index.html) để sử dụng giao diện test CRUD.
+API documentation có sẵn tại:
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
 
-## Ghi chú
+## 🧪 Testing
 
-- Nếu sử dụng Live Server hoặc chạy frontend trên port khác, hãy đảm bảo đã bật CORS trong `main.py`:
+Chạy linter:
+```bash
+npm run lint
+```
 
-  ```python
-  from fastapi.middleware.cors import CORSMiddleware
+## 📄 License
 
-  app.add_middleware(
-      CORSMiddleware,
-      allow_origins=["*"],
-      allow_credentials=True,
-      allow_methods=["*"],
-      allow_headers=["*"],
-  )
-  ```
+Private project
 
 - Đảm bảo backend và MySQL đều đang chạy.
+
+## Export DB (.sql) để gửi team
+
+### Cách nhanh (MySQL Workbench)
+- Server → Data Export → chọn schema `QuanLyBanHang` → Export to Self-Contained File (`.sql`).
+
+### Cách CLI (mysqldump)
+
+```bash
+mysqldump -u root -p QuanLyBanHang > QuanLyBanHang_export.sql
+```
 
 ## Tác giả
 

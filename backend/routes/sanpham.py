@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models import SanPham, DanhMuc
-from backend.routes.deps import get_current_user
+from backend.routes.deps import get_current_user, get_current_user_optional
 from backend.schemas import (
     ProductCreateRequest, 
     ProductUpdateRequest, 
@@ -13,7 +13,7 @@ from backend.utils.activity_logger import log_activity
 import json
 from typing import Optional
 
-router = APIRouter(prefix="/sanpham", tags=["SanPham"])
+router = APIRouter(tags=["SanPham"])
 
 # =====================================================
 # 🧩 Helper Functions for JSON Attributes
@@ -146,33 +146,67 @@ def get_all_sanpham(
     include_attributes: bool = False,
     page: int = 1,
     limit: int = 10,
-    db: Session = Depends(get_db), 
-    current_user: dict = Depends(get_current_user)
+    madanhmuc: Optional[int] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    search: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: Optional[dict] = Depends(get_current_user_optional),
 ):
     """
-    Lấy danh sách sản phẩm với tùy chọn bao gồm thuộc tính.
-    Để tối ưu hiệu suất, có thể bỏ qua việc giải mã thuộc tính.
+    Lấy danh sách sản phẩm với tùy chọn bao gồm thuộc tính và bộ lọc.
+
+    - Public access - không yêu cầu đăng nhập.
+    - Hỗ trợ bộ lọc theo:
+        * madanhmuc: mã danh mục
+        * min_price, max_price: khoảng giá
+        * search: tìm kiếm theo tên sản phẩm (TenSP)
+
+    Ví dụ:
+    /api/sanpham/?madanhmuc=1
+    /api/sanpham/?min_price=0&max_price=2000000
+    /api/sanpham/?search=tu&madanhmuc=1
     """
     try:
-        # Get total count
-        total = db.query(SanPham).filter(SanPham.IsDelete == False).count()
-        
+        # Base query (chỉ lấy sản phẩm chưa xóa)
+        query = db.query(SanPham).filter(SanPham.IsDelete == False)
+
+        # Áp dụng bộ lọc danh mục nếu có
+        if madanhmuc is not None:
+            query = query.filter(SanPham.MaDanhMuc == madanhmuc)
+
+        # Áp dụng bộ lọc giá nếu có
+        if min_price is not None:
+            query = query.filter(SanPham.GiaSP >= min_price)
+        if max_price is not None:
+            query = query.filter(SanPham.GiaSP <= max_price)
+
+        # Áp dụng bộ lọc tìm kiếm theo tên sản phẩm nếu có
+        if search:
+            like_pattern = f"%{search}%"
+            query = query.filter(SanPham.TenSP.ilike(like_pattern))
+
+        # Đếm tổng sau khi áp dụng filter
+        total = query.count()
+
         # Apply pagination
         offset = (page - 1) * limit
-        sps = db.query(SanPham).filter(SanPham.IsDelete == False).offset(offset).limit(limit).all()
-        
+        sps = query.offset(offset).limit(limit).all()
+
         # Format products with optional attributes decoding
         products = []
         for sp in sps:
-            product_data = format_product_response(sp, include_attributes=include_attributes)
+            product_data = format_product_response(
+                sp, include_attributes=include_attributes
+            )
             products.append(ProductResponse(**product_data))
-        
+
         return ProductListResponse(products=products, total=total)
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Lỗi lấy danh sách sản phẩm: {str(e)}"
+            detail=f"Lỗi lấy danh sách sản phẩm: {str(e)}",
         )
 
 # Read one
@@ -182,10 +216,11 @@ def get_all_sanpham(
 def get_sanpham(
     masp: int, 
     db: Session = Depends(get_db), 
-    current_user: dict = Depends(get_current_user)
+    current_user: Optional[dict] = Depends(get_current_user_optional)
 ):
     """
     Xem chi tiết sản phẩm với thuộc tính đã giải mã.
+    Public access - không yêu cầu đăng nhập.
     """
     try:
         sp = db.query(SanPham).filter(
