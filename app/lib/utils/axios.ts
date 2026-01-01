@@ -94,6 +94,21 @@ export const apiClient = async (
       throw new Error(errorMessage);
     }
     
+    // Handle 403 Forbidden - usually validation errors, log as warning
+    if (response.status === 403) {
+      const errorMessage = error.detail || error.message || "Không có quyền truy cập";
+      // For review endpoints, this is expected validation (user hasn't purchased)
+      if (endpoint.includes("/reviews")) {
+        console.warn(`[apiClient] 403 ${endpoint}: ${errorMessage}`);
+      } else if (endpoint.includes("/donhang") && errorMessage.includes("Permission denied")) {
+        // For order creation, this might be a role issue - log as warning
+        console.warn(`[apiClient] 403 ${endpoint}: ${errorMessage}`);
+      } else {
+        console.error(`[apiClient] 403 ${endpoint}: ${errorMessage}`);
+      }
+      throw new Error(errorMessage);
+    }
+    
     // Handle other errors
     const errorMessage = error.detail || error.message || `Request failed (${response.status})`;
     console.error(`[apiClient] ${response.status} ${endpoint}: ${errorMessage}`);

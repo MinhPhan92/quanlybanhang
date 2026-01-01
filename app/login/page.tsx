@@ -26,16 +26,41 @@ export default function LoginPage() {
   }, [isAuthenticated, user]);
 
   const handleRedirect = (role: string) => {
-    if (role === "Admin" || role === "Manager") {
-      router.push("/admin"); // Redirect to admin page (project management)
+    // Handle both "NhanVien" and "Employee" role names
+    if (role === "Admin" || role === "Manager" || role === "NhanVien" || role === "Employee") {
+      router.push("/admin"); // Redirect to admin page for Admin, Manager, and Employee
     } else {
-      router.push("/"); // Redirect to home for other roles
+      router.push("/"); // Redirect to home for customers
     }
+  };
+
+  const validateForm = (): boolean => {
+    if (!formData.username.trim()) {
+      setError("Vui lòng nhập tên đăng nhập");
+      return false;
+    }
+
+    if (!formData.password.trim()) {
+      setError("Vui lòng nhập mật khẩu");
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự");
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -66,7 +91,8 @@ export default function LoginPage() {
     } catch (err: any) {
       // If status check fails, clear token
       localStorage.removeItem("token");
-      setError(err.message || "Đăng nhập thất bại. Vui lòng thử lại.");
+      const errorMessage = err.message || "Đăng nhập thất bại. Vui lòng thử lại.";
+      setError(errorMessage);
       console.error("Login error:", err);
     } finally {
       setLoading(false);

@@ -91,5 +91,16 @@ export const authApi = {
     const user = authApi.getCurrentUser();
     return user?.role === "Admin";
   },
+
+  changePassword: async (data: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<{ message: string }> => {
+    return apiClient("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify(data),
+      auth: true,
+    });
+  },
 };
 

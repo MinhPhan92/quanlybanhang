@@ -2,19 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { Users, Search } from "lucide-react";
+import { customersApi, Customer } from "@/app/lib/api/customers";
 import styles from "./customers.module.css";
-
-interface Customer {
-  MaKH: number;
-  TenKH: string;
-  SdtKH: string;
-  EmailKH: string;
-  DiaChiKH: string;
-}
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -24,12 +18,12 @@ export default function CustomersPage() {
   const loadCustomers = async () => {
     try {
       setLoading(true);
-      // TODO: Implement API call
-      // const data = await customersApi.getAll();
-      // setCustomers(data);
-      setCustomers([]);
-    } catch (error) {
-      console.error("Error loading customers:", error);
+      setError(null);
+      const data = await customersApi.getAll();
+      setCustomers(data || []);
+    } catch (err: any) {
+      console.error("Error loading customers:", err);
+      setError(err.message || "Không thể tải danh sách khách hàng");
     } finally {
       setLoading(false);
     }
@@ -60,6 +54,13 @@ export default function CustomersPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
+
+      {error && (
+        <div className={styles.errorBanner}>
+          <p>{error}</p>
+          <button onClick={loadCustomers}>Thử lại</button>
+        </div>
+      )}
 
       {loading ? (
         <div className={styles.loadingContainer}>

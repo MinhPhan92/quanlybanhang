@@ -169,6 +169,7 @@
   gap: 0.5rem;
 }
 
+.viewButton,
 .editButton,
 .deleteButton {
   padding: 0.5rem;
@@ -179,6 +180,15 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+}
+
+.viewButton {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.viewButton:hover {
+  background: #ffe0b2;
 }
 
 .editButton {

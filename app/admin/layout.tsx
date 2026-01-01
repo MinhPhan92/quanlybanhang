@@ -148,12 +148,6 @@ export default function AdminLayout({
       href: "/admin/employees",
       roles: ["Admin"],
     },
-    {
-      icon: Settings,
-      label: "Cấu hình hệ thống",
-      href: "/admin/settings",
-      roles: ["Admin"],
-    },
   ].filter((item) => item.roles.includes(user.role || ""));
 
   return (

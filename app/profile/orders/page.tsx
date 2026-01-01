@@ -170,25 +170,65 @@ export default function OrdersPage() {
               </div>
 
               <div className={styles.orderBody}>
-                <div className={styles.orderDetails}>
-                  <div className={styles.detailItem}>
-                    <DollarSign size={16} />
-                    <span>
-                      <strong>Tổng tiền:</strong> {formatCurrency(order.TongTien)}
-                    </span>
-                  </div>
-                  {order.PhiShip && (
-                    <div className={styles.detailItem}>
-                      <Truck size={16} />
-                      <span>
-                        <strong>Phí ship:</strong> {formatCurrency(order.PhiShip)}
-                      </span>
+                <div className={styles.orderProducts}>
+                  <p className={styles.productsLabel}>Sản phẩm:</p>
+                  {order.items && order.items.length > 0 ? (
+                    <div className={styles.productsList}>
+                      {order.items.map((item, idx) => (
+                        <div key={idx} className={styles.productItem}>
+                          <span className={styles.productName}>{item.TenSP}</span>
+                          <span className={styles.productQty}>× {item.SoLuong}</span>
+                          <span className={styles.productPrice}>
+                            {formatCurrency(item.DonGia * item.SoLuong - (item.GiamGia || 0))}
+                          </span>
+                        </div>
+                      ))}
                     </div>
+                  ) : (
+                    <p className={styles.noProducts}>Chưa có sản phẩm trong đơn hàng này</p>
                   )}
-                  {order.KhuyenMai && (
+                </div>
+                <div className={styles.orderDetails}>
+                  {order.items && order.items.length > 0 ? (
+                    <>
+                      <div className={styles.detailItem}>
+                        <span>
+                          <strong>Tạm tính:</strong>{" "}
+                          {formatCurrency(
+                            order.items.reduce((sum, item) => {
+                              return sum + (item.DonGia * item.SoLuong - (item.GiamGia || 0));
+                            }, 0)
+                          )}
+                        </span>
+                      </div>
+                      {order.PhiShip !== undefined && order.PhiShip !== null && (
+                        <div className={styles.detailItem}>
+                          <Truck size={16} />
+                          <span>
+                            <strong>Phí ship:</strong>{" "}
+                            {order.PhiShip === 0 ? "Miễn phí" : formatCurrency(order.PhiShip)}
+                          </span>
+                        </div>
+                      )}
+                      {order.KhuyenMai && (
+                        <div className={styles.detailItem}>
+                          <span>
+                            <strong>Mã giảm giá:</strong> {order.KhuyenMai}
+                          </span>
+                        </div>
+                      )}
+                      <div className={styles.detailItem}>
+                        <DollarSign size={16} />
+                        <span>
+                          <strong>Tổng tiền:</strong> {formatCurrency(order.TongTien)}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
                     <div className={styles.detailItem}>
+                      <DollarSign size={16} />
                       <span>
-                        <strong>Mã giảm giá:</strong> {order.KhuyenMai}
+                        <strong>Tổng tiền:</strong> {formatCurrency(order.TongTien)}
                       </span>
                     </div>
                   )}

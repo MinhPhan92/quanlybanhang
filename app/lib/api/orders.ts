@@ -11,6 +11,7 @@ export interface Order {
   KhuyenMai?: string;
   PhiShip?: number;
   MaShipper?: number;
+  items?: OrderItem[]; // Include items in order list
 }
 
 export interface StatusUpdateRequest {
@@ -60,6 +61,12 @@ export const ordersApi = {
     MaKH?: number;
     MaNV?: number;
     voucher_code?: string;
+    items?: Array<{
+      MaSP: number;
+      SoLuong: number;
+      DonGia: number;
+      GiamGia?: number;
+    }>;
   }): Promise<{ MaDonHang: number; TongTien: number; voucher_applied?: boolean }> => {
     return apiClient("/donhang/", {
       method: "POST",

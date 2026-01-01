@@ -51,8 +51,10 @@ export default function ReportsPage() {
         return;
       }
       
+      // Load reports on mount
       loadReports();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, isLoading, user, router]);
 
   const loadReports = async () => {
@@ -116,6 +118,7 @@ export default function ReportsPage() {
   };
 
   const handleDateRangeChange = () => {
+    // Reload reports with updated date range
     loadReports();
   };
 

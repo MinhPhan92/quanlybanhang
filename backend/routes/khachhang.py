@@ -6,6 +6,17 @@ from backend.routes.deps import get_current_user
 
 router = APIRouter(tags=["KhachHang"])
 
+def serialize_khachhang(kh: KhachHang) -> dict:
+    """Serialize KhachHang object to dictionary, excluding SQLAlchemy internal state."""
+    return {
+        "MaKH": kh.MaKH,
+        "TenKH": kh.TenKH,
+        "SdtKH": kh.SdtKH,
+        "EmailKH": kh.EmailKH,
+        "DiaChiKH": kh.DiaChiKH,
+        "IsDelete": bool(kh.IsDelete) if kh.IsDelete is not None else False
+    }
+
 # Create
 
 
@@ -36,7 +47,7 @@ def create_khachhang(khachhang: dict, db: Session = Depends(get_db),
 def get_all_khachhang(db: Session = Depends(get_db),
                       current_user: dict = Depends(get_current_user)):
     khs = db.query(KhachHang).filter(KhachHang.IsDelete == 0).all()
-    return [kh.__dict__ for kh in khs]
+    return [serialize_khachhang(kh) for kh in khs]
 
 # Read one
 
@@ -48,7 +59,7 @@ def get_khachhang(makh: int, db: Session = Depends(get_db),
                                     makh, KhachHang.IsDelete == 0).first()
     if not kh:
         raise HTTPException(status_code=404, detail="Khách hàng không tồn tại")
-    return kh.__dict__
+    return serialize_khachhang(kh)
 
 # Update
 
@@ -66,7 +77,7 @@ def update_khachhang(makh: int, khachhang: dict, db: Session = Depends(get_db),
             setattr(kh, key, value)
     db.commit()
     db.refresh(kh)
-    return kh.__dict__
+    return serialize_khachhang(kh)
 
 # Delete (soft delete)
 

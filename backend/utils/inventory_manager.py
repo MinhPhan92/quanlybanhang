@@ -38,8 +38,8 @@ class InventoryManager:
             Tuple[bool, str]: (success, message)
         """
         try:
-            # Start transaction
-            db.begin()
+            # Note: Don't call db.begin() - SQLAlchemy sessions are already transactional
+            # The calling function will handle commit/rollback
             
             # Get order details
             order = db.query(DonHang).filter(DonHang.MaDonHang == order_id).first()
@@ -59,7 +59,6 @@ class InventoryManager:
             
             if action == "none":
                 # No inventory change needed
-                db.commit()
                 return True, "No inventory change required"
             
             # Process inventory changes for each item
@@ -97,23 +96,20 @@ class InventoryManager:
                     f"New stock: {product.SoLuongTonKho}"
                 )
             
-            # Update order status
-            order.TrangThai = new_status
-            
-            # Commit transaction
-            db.commit()
+            # Note: Don't update order.TrangThai here - the calling function handles it
+            # Note: Don't commit here - the calling function will commit after all operations
             
             return True, f"Inventory updated successfully for order {order_id}"
             
         except InventoryError as e:
-            # Rollback transaction on inventory error
-            db.rollback()
+            # Don't rollback here - let the caller handle it
+            # Changes won't be persisted if caller does rollback
             logging.error(f"Inventory error for order {order_id}: {str(e)}")
             return False, str(e)
             
         except Exception as e:
-            # Rollback transaction on any other error
-            db.rollback()
+            # Don't rollback here - let the caller handle it
+            # Changes won't be persisted if caller does rollback
             logging.error(f"Unexpected error for order {order_id}: {str(e)}")
             return False, f"Unexpected error: {str(e)}"
     
@@ -244,7 +240,8 @@ class InventoryManager:
             Tuple[bool, str]: (success, message)
         """
         try:
-            db.begin()
+            # Note: Don't call db.begin() - SQLAlchemy sessions are already transactional
+            # This method commits its own changes since it's called from routes that don't commit
             
             product = db.query(SanPham).filter(SanPham.MaSP == product_id).first()
             if not product:

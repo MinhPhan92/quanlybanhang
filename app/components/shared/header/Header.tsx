@@ -126,7 +126,10 @@ export default function Header() {
             </button>
             {isAuthenticated ? (
               <div className={styles.userMenu}>
-                <span className={styles.userName}>{user?.username}</span>
+                <Link href="/profile/orders" className={styles.userName} title="Đơn hàng của tôi">
+                  <User size={18} style={{ marginRight: "4px" }} />
+                  {user?.username}
+                </Link>
                 <button
                   type="button"
                   onClick={handleLogout}

@@ -135,18 +135,72 @@
   font-size: 0.875rem;
 }
 
+.orderProducts {
+  padding: 1rem 0;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  margin: 1rem 0;
+}
+
+.productsLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.productsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.productItem {
+  padding: 0.25rem 0.5rem;
+  background-color: #f3f4f6;
+  border-radius: 0.25rem;
+}
+
+.moreProducts {
+  color: #9ca3af;
+  font-style: italic;
+}
+
 .orderFooter {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   padding-top: 1rem;
   border-top: 1px solid #e5e7eb;
+  gap: 1rem;
+}
+
+.orderTotalSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-end;
+}
+
+.orderSubtotal,
+.orderShipping {
+  font-size: 0.875rem;
+  color: #6b7280;
 }
 
 .orderTotal {
   font-size: 1.25rem;
   font-weight: 700;
   color: #ff8c42;
+}
+
+.noProducts {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-style: italic;
+  margin: 0;
 }
 
 .viewDetails {

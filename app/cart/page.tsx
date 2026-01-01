@@ -5,13 +5,28 @@ import { X, Plus, Minus, ShoppingCart } from "lucide-react"
 import Header from "../components/shared/header/Header"
 import Footer from "../components/shared/footer/Footer"
 import { useCart } from "../contexts/CartContext"
+import { useAuth } from "../contexts/AuthContext"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 import styles from "./cart.module.css"
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart } = useCart()
+  const { isAuthenticated } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login")
+    }
+  }, [isAuthenticated, router])
 
   const removeItem = (id: number) => {
     removeFromCart(id)
+  }
+
+  if (!isAuthenticated) {
+    return null
   }
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -60,11 +75,19 @@ export default function CartPage() {
                   </div>
 
                   <div className={styles.quantityControl}>
-                    <button className={styles.quantityBtn} onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                    <button
+                      type="button"
+                      className={styles.quantityBtn}
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                    >
                       <Minus size={16} />
                     </button>
                     <span className={styles.quantity}>{item.quantity}</span>
-                    <button className={styles.quantityBtn} onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                    <button
+                      type="button"
+                      className={styles.quantityBtn}
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                    >
                       <Plus size={16} />
                     </button>
                   </div>
@@ -110,7 +133,9 @@ export default function CartPage() {
                 <span className={styles.totalAmount}>{(total / 1000000).toFixed(1)}M đ</span>
               </div>
 
-              <button className={styles.checkoutBtn}>Thanh toán</button>
+              <Link href="/checkout" className={styles.checkoutBtn}>
+                Thanh toán
+              </Link>
 
               <Link href="/shop" className={styles.continueShoppingLink}>
                 Tiếp tục mua sắm

@@ -8,6 +8,7 @@ from backend.utils.inventory_manager import InventoryManager, InventoryError
 from pydantic import BaseModel
 from typing import Optional
 from backend.utils.activity_logger import log_activity
+from datetime import datetime, date
 
 router = APIRouter(tags=["DonHang"])
 
@@ -50,10 +51,25 @@ class DeliveryUpdateResponse(BaseModel):
 
 @router.post("/", response_model=dict)
 def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    # Role check: Only Admin, Manager, and Employee can create orders
-    if current_user.get("role") not in ["Admin", "Manager", "Employee"]:
+    # Role check: Admin, Manager, Employee, and Customers can create orders
+    user_role = current_user.get("role")
+    if user_role not in ["Admin", "Manager", "Employee", "KhachHang"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
+    
+    # For customers, ensure MaKH matches their own ID
+    # Token uses "user_id" for customer ID, role can be "Customer" or "KhachHang"
+    if user_role in ["KhachHang", "Customer"]:
+        customer_id = current_user.get("user_id") or current_user.get("MaKH")
+        if customer_id:
+            # Auto-set MaKH from token for security
+            donhang["MaKH"] = customer_id
+        elif not donhang.get("MaKH"):
+            # If no MaKH provided and can't get from token, raise error
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không tìm thấy thông tin khách hàng"
+            )
     
     # Extract voucher code from payload
     voucher_code = donhang.get("voucher_code")
@@ -86,18 +102,67 @@ def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: d
         # Mark voucher as used (in real system, this would update database)
         VoucherData.use_voucher(voucher_code)
     
+    # Parse NgayDat - convert ISO datetime string to date object
+    ngay_dat_str = donhang.get("NgayDat")
+    if ngay_dat_str:
+        # If it's an ISO datetime string, parse it and extract date
+        if isinstance(ngay_dat_str, str):
+            try:
+                # Parse ISO datetime string and extract date part
+                ngay_dat = datetime.fromisoformat(ngay_dat_str.replace('Z', '+00:00'))
+                ngay_dat = ngay_dat.date()  # Convert to date object
+            except (ValueError, AttributeError):
+                # If parsing fails, try to use current date
+                ngay_dat = date.today()
+        elif isinstance(ngay_dat_str, date):
+            ngay_dat = ngay_dat_str
+        else:
+            ngay_dat = date.today()
+    else:
+        ngay_dat = date.today()
+    
+    # Get shipping fee and tax from request (if provided)
+    phi_ship = donhang.get("PhiShip")
+    if phi_ship is None:
+        # Calculate shipping based on subtotal if not provided
+        phi_ship = 0 if original_amount >= 10000000 else 100000
+    
     # Create order with voucher information
     new_dh = DonHang(
-        NgayDat=donhang.get("NgayDat"),
+        NgayDat=ngay_dat,
         TongTien=final_amount,  # Use final amount after discount
         TrangThai=donhang.get("TrangThai"),
         MaKH=donhang.get("MaKH"),
         MaNV=donhang.get("MaNV"),
-        KhuyenMai=applied_voucher  # Store voucher code
+        KhuyenMai=applied_voucher,  # Store voucher code
+        PhiShip=phi_ship  # Store shipping fee
     )
     db.add(new_dh)
     db.commit()
     db.refresh(new_dh)
+
+    # Add order items if provided
+    items = donhang.get("items", [])
+    if items:
+        from backend.models import DonHang_SanPham
+        for item in items:
+            # Validate required fields
+            ma_sp = item.get("MaSP")
+            if not ma_sp:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"MaSP is required for order item. Received item: {item}"
+                )
+            
+            order_item = DonHang_SanPham(
+                MaDonHang=new_dh.MaDonHang,
+                MaSP=ma_sp,
+                SoLuong=item.get("SoLuong", 1),
+                DonGia=item.get("DonGia", 0),
+                GiamGia=item.get("GiamGia", 0)
+            )
+            db.add(order_item)
+        db.commit()
 
     # Activity log
     try:
@@ -139,13 +204,41 @@ def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: d
 def get_all_donhang(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     """
     Lấy danh sách tất cả đơn hàng.
-    Chỉ Admin, Manager, và Employee mới có thể xem.
+    Admin, Manager, Employee xem tất cả. Customer chỉ xem đơn hàng của mình.
     """
     try:
-        dhs = db.query(DonHang).all()
-        # Properly serialize SQLAlchemy objects to dictionaries
+        from backend.models import DonHang_SanPham, SanPham
+        
+        user_role = current_user.get("role")
+        user_id = current_user.get("user_id")
+        
+        # Filter by customer if they're a customer
+        if user_role in ["KhachHang", "Customer"]:
+            dhs = db.query(DonHang).filter(DonHang.MaKH == user_id).all()
+        else:
+            dhs = db.query(DonHang).all()
+        
+        # Properly serialize SQLAlchemy objects to dictionaries with items
         result = []
         for dh in dhs:
+            # Get order items
+            order_items = db.query(DonHang_SanPham, SanPham).join(
+                SanPham, DonHang_SanPham.MaSP == SanPham.MaSP
+            ).filter(
+                DonHang_SanPham.MaDonHang == dh.MaDonHang
+            ).all()
+            
+            # Format order items
+            items = []
+            for order_item, product in order_items:
+                items.append({
+                    "MaSP": order_item.MaSP,
+                    "TenSP": product.TenSP if product else f"Sản phẩm #{order_item.MaSP}",
+                    "SoLuong": order_item.SoLuong,
+                    "DonGia": float(order_item.DonGia) if order_item.DonGia else 0.0,
+                    "GiamGia": float(order_item.GiamGia) if order_item.GiamGia else 0.0,
+                })
+            
             order_dict = {
                 "MaDonHang": dh.MaDonHang,
                 "NgayDat": dh.NgayDat.isoformat() if dh.NgayDat else None,
@@ -156,6 +249,7 @@ def get_all_donhang(db: Session = Depends(get_db), current_user: dict = Depends(
                 "KhuyenMai": dh.KhuyenMai,
                 "PhiShip": float(dh.PhiShip) if dh.PhiShip else None,
                 "MaShipper": dh.MaShipper,
+                "items": items,  # Include order items
             }
             result.append(order_dict)
         return result
@@ -171,12 +265,43 @@ def get_all_donhang(db: Session = Depends(get_db), current_user: dict = Depends(
 @router.get("/{madonhang}", response_model=dict)
 def get_donhang(madonhang: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     """
-    Lấy thông tin chi tiết một đơn hàng.
+    Lấy thông tin chi tiết một đơn hàng bao gồm danh sách sản phẩm.
     """
     try:
+        from backend.models import DonHang_SanPham, SanPham
+        
         dh = db.query(DonHang).filter(DonHang.MaDonHang == madonhang).first()
         if not dh:
             raise HTTPException(status_code=404, detail="Đơn hàng không tồn tại")
+        
+        # Check permission: customers can only view their own orders
+        user_role = current_user.get("role")
+        user_id = current_user.get("user_id")
+        if user_role in ["KhachHang", "Customer"]:
+            if dh.MaKH != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Bạn không có quyền xem đơn hàng này"
+                )
+        
+        # Get order items with product details
+        order_items = db.query(DonHang_SanPham, SanPham).join(
+            SanPham, DonHang_SanPham.MaSP == SanPham.MaSP
+        ).filter(
+            DonHang_SanPham.MaDonHang == madonhang
+        ).all()
+        
+        # Format order items
+        items = []
+        for order_item, product in order_items:
+            items.append({
+                "MaSP": order_item.MaSP,
+                "TenSP": product.TenSP if product else f"Sản phẩm #{order_item.MaSP}",
+                "SoLuong": order_item.SoLuong,
+                "DonGia": float(order_item.DonGia) if order_item.DonGia else 0.0,
+                "GiamGia": float(order_item.GiamGia) if order_item.GiamGia else 0.0,
+                "image": None  # Can be extended to include product image if available
+            })
         
         # Properly serialize SQLAlchemy object to dictionary
         return {
@@ -189,6 +314,7 @@ def get_donhang(madonhang: int, db: Session = Depends(get_db), current_user: dic
             "KhuyenMai": dh.KhuyenMai,
             "PhiShip": float(dh.PhiShip) if dh.PhiShip else None,
             "MaShipper": dh.MaShipper,
+            "items": items,  # Include order items
         }
     except HTTPException:
         raise

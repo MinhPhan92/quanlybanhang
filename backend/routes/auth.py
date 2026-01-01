@@ -59,10 +59,12 @@ def create_access_token_from_account(account: TaiKhoan, user, expires_minutes: i
     # Xác định user_id và username dựa trên loại user
     if hasattr(user, 'MaNV'):  # NhanVien
         user_id = user.MaNV
-        username = user.SdtNV or user.TenNV
+        # Use account.Username instead of phone number
+        username = account.Username
     elif hasattr(user, 'MaKH'):  # KhachHang
         user_id = user.MaKH
-        username = user.SdtKH or user.TenKH
+        # Use account.Username instead of phone number
+        username = account.Username
     else:
         user_id = account.MaTK
         username = account.Username

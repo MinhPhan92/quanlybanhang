@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Edit, Trash2, X, Save, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Edit, Trash2, X, Save, Loader2, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { productsApi, categoriesApi, Product, ProductCreateRequest, ProductUpdateRequest, Category } from "@/app/lib/api/products";
 import { useAuth } from "@/app/contexts/AuthContext";
 import styles from "./products.module.css";
@@ -300,6 +300,13 @@ export default function ProductsPage() {
                   <td>{product.TenDanhMuc || "—"}</td>
                   <td>
                     <div className={styles.actions}>
+                      <button
+                        onClick={() => router.push(`/product/${product.MaSP}`)}
+                        className={styles.viewButton}
+                        title="Xem chi tiết & đánh giá"
+                      >
+                        <Star size={16} />
+                      </button>
                       <button
                         onClick={() => handleOpenModal(product)}
                         className={styles.editButton}

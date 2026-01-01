@@ -166,13 +166,56 @@ export default function OrdersPage() {
                       {getStatusLabel(order.TrangThai)}
                     </div>
                   </div>
+                  <div className={styles.orderProducts}>
+                    <p className={styles.productsLabel}>Sản phẩm:</p>
+                    {order.items && order.items.length > 0 ? (
+                      <div className={styles.productsList}>
+                        {order.items.slice(0, 3).map((item, idx) => (
+                          <span key={idx} className={styles.productItem}>
+                            {item.TenSP} × {item.SoLuong}
+                          </span>
+                        ))}
+                        {order.items.length > 3 && (
+                          <span className={styles.moreProducts}>
+                            +{order.items.length - 3} sản phẩm khác
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <p className={styles.noProducts}>Chưa có sản phẩm</p>
+                    )}
+                  </div>
                   <div className={styles.orderFooter}>
-                    <span className={styles.orderTotal}>
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      }).format(order.TongTien)}
-                    </span>
+                    <div className={styles.orderTotalSection}>
+                      {order.items && order.items.length > 0 && (
+                        <>
+                          <span className={styles.orderSubtotal}>
+                            Tạm tính: {new Intl.NumberFormat("vi-VN", {
+                              style: "currency",
+                              currency: "VND",
+                            }).format(
+                              order.items.reduce((sum, item) => {
+                                return sum + (item.DonGia * item.SoLuong - (item.GiamGia || 0));
+                              }, 0)
+                            )}
+                          </span>
+                          {order.PhiShip !== undefined && order.PhiShip !== null && (
+                            <span className={styles.orderShipping}>
+                              Phí ship: {order.PhiShip === 0 ? "Miễn phí" : new Intl.NumberFormat("vi-VN", {
+                                style: "currency",
+                                currency: "VND",
+                              }).format(order.PhiShip)}
+                            </span>
+                          )}
+                        </>
+                      )}
+                      <span className={styles.orderTotal}>
+                        Tổng: {new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(order.TongTien)}
+                      </span>
+                    </div>
                     <span className={styles.viewDetails}>Xem chi tiết →</span>
                   </div>
                 </Link>

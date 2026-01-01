@@ -63,11 +63,15 @@ export default function FeedbackPage() {
       setError(null);
 
       if (activeTab === "reviews") {
-        // For reviews, we need to get reviews by product
-        // Since we don't have a "get all reviews" endpoint, we'll need to fetch by product
-        // For now, let's show a message that this requires product selection
-        // In a real scenario, you'd have a product selector or fetch from multiple products
-        setReviews([]);
+        // Load all reviews for admin
+        try {
+          const data = await reviewsApi.getAll(1, 100);
+          setReviews(data.reviews || []);
+        } catch (err: any) {
+          console.error("Error loading reviews:", err);
+          setError(err.message || "Không thể tải danh sách đánh giá");
+          setReviews([]);
+        }
       } else {
         const data = await complaintsApi.getAll(statusFilter || undefined);
         setComplaints(data.complaints || []);
@@ -85,8 +89,11 @@ export default function FeedbackPage() {
 
     try {
       await reviewsApi.deleteReview(reviewId);
-      alert("Đã xóa đánh giá thành công");
-      loadData();
+      // Reload reviews after deletion
+      if (activeTab === "reviews") {
+        const data = await reviewsApi.getAll(1, 100);
+        setReviews(data.reviews || []);
+      }
     } catch (err: any) {
       alert(err.message || "Lỗi xóa đánh giá");
     }
@@ -96,8 +103,14 @@ export default function FeedbackPage() {
     if (!selectedComplaint) return;
 
     try {
-      await complaintsApi.update(selectedComplaint.MaKhieuNai, processData);
-      alert("Đã cập nhật khiếu nại thành công");
+      // Note: TrangThai and PhanHoi are not saved in database
+      // Only NoiDung can be updated, but we'll still call the API for consistency
+      // The backend will accept the request but only update NoiDung if provided
+      await complaintsApi.update(selectedComplaint.MaKhieuNai, {
+        NoiDung: selectedComplaint.NoiDung, // Keep existing content
+        ...processData, // Include TrangThai and PhanHoi for API compatibility
+      });
+      alert("Lưu ý: Trạng thái và phản hồi không được lưu trong database. Chỉ nội dung khiếu nại có thể được cập nhật.");
       setShowProcessModal(false);
       setSelectedComplaint(null);
       setProcessData({ TrangThai: "Processing", PhanHoi: "" });
@@ -215,18 +228,78 @@ export default function FeedbackPage() {
       <div className={styles.content}>
         {activeTab === "reviews" ? (
           <div className={styles.reviewsSection}>
-            <div className={styles.infoBox}>
-              <p>
-                <strong>Lưu ý:</strong> Để xem đánh giá, vui lòng chọn sản phẩm từ trang{" "}
-                <a href="/admin/products">Quản lý sản phẩm</a> hoặc xem trực tiếp trên trang chi tiết sản phẩm.
-              </p>
-            </div>
-            <div className={styles.emptyState}>
-              <MessageSquare size={48} />
-              <p>Chọn sản phẩm để xem đánh giá</p>
-              <a href="/admin/products" className={styles.linkButton}>
-                Đi đến Quản lý sản phẩm
-              </a>
+            {/* Reviews Table */}
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Sản phẩm</th>
+                    <th>Khách hàng</th>
+                    <th>Đánh giá</th>
+                    <th>Nội dung</th>
+                    <th>Ngày đánh giá</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reviews.length > 0 ? (
+                    reviews
+                      .filter((r) =>
+                        searchTerm
+                          ? (r.TenSP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            r.TenKH?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            r.NoiDung?.toLowerCase().includes(searchTerm.toLowerCase()))
+                          : true
+                      )
+                      .map((review) => (
+                        <tr key={review.MaDanhGia}>
+                          <td>{review.MaDanhGia}</td>
+                          <td>
+                            <a
+                              href={`/shop/${review.MaSP}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.productLink}
+                            >
+                              {review.TenSP || `SP${review.MaSP}`}
+                            </a>
+                          </td>
+                          <td>{review.TenKH || `KH${review.MaKH}`}</td>
+                          <td>
+                            <div className={styles.rating}>
+                              {renderStars(review.DiemDanhGia)}
+                              <span className={styles.ratingValue}>
+                                {review.DiemDanhGia}/5
+                              </span>
+                            </div>
+                          </td>
+                          <td className={styles.contentCell}>
+                            {review.NoiDung || "—"}
+                          </td>
+                          <td>{formatDate(review.NgayDanhGia)}</td>
+                          <td>
+                            <button
+                              onClick={() => handleDeleteReview(review.MaDanhGia)}
+                              className={styles.deleteButton}
+                              title="Xóa đánh giá"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className={styles.emptyCell}>
+                        {searchTerm
+                          ? "Không tìm thấy đánh giá"
+                          : "Chưa có đánh giá nào"}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         ) : (
@@ -302,13 +375,37 @@ export default function FeedbackPage() {
                           </td>
                           <td>{formatDate(complaint.NgayTao)}</td>
                           <td>
-                            <button
-                              onClick={() => openProcessModal(complaint)}
-                              className={styles.processButton}
-                            >
-                              <Edit size={16} />
-                              Xử lý
-                            </button>
+                            <div className={styles.actionButtons}>
+                              {complaint.TrangThai !== "Resolved" && complaint.TrangThai !== "Closed" && (
+                                <button
+                                  onClick={async () => {
+                                    if (!confirm("Đánh dấu khiếu nại này là đã xử lý?")) return
+                                    try {
+                                      await complaintsApi.update(complaint.MaKhieuNai, {
+                                        TrangThai: "Resolved",
+                                      })
+                                      alert("Đã đánh dấu khiếu nại là đã xử lý")
+                                      loadData()
+                                    } catch (err: any) {
+                                      alert(err.message || "Lỗi cập nhật khiếu nại")
+                                    }
+                                  }}
+                                  className={styles.processedButton}
+                                  title="Đánh dấu đã xử lý"
+                                >
+                                  <CheckCircle size={16} />
+                                  Đã xử lý
+                                </button>
+                              )}
+                              <button
+                                onClick={() => openProcessModal(complaint)}
+                                className={styles.processButton}
+                                title="Xử lý chi tiết"
+                              >
+                                <Edit size={16} />
+                                Xử lý
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))

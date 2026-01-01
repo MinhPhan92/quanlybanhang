@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Heart, Share2, Star, Loader2 } from "lucide-react"
+import { Heart, Share2, Star, Loader2, MessageSquare } from "lucide-react"
 import { productsApi, Product } from "@/app/lib/api/products"
 import { reviewsApi, Review } from "@/app/lib/api/reviews"
 import { useCart } from "@/app/contexts/CartContext"
+import { useAuth } from "@/app/contexts/AuthContext"
+import { useToast } from "@/app/contexts/ToastContext"
 import styles from "./product-detail.module.css"
 
 interface ProductDetailProps {
@@ -15,6 +17,8 @@ interface ProductDetailProps {
 export default function ProductDetail({ productId }: ProductDetailProps) {
   const router = useRouter()
   const { addToCart } = useCart()
+  const { isAuthenticated } = useAuth()
+  const { showToast } = useToast()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -24,6 +28,14 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
   const [reviews, setReviews] = useState<Review[]>([])
   const [averageRating, setAverageRating] = useState<number>(0)
   const [reviewsLoading, setReviewsLoading] = useState(false)
+  const [isAdding, setIsAdding] = useState(false)
+  const [activeTab, setActiveTab] = useState<"description" | "specifications" | "reviews">("description")
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    content: "",
+  })
+  const [submittingReview, setSubmittingReview] = useState(false)
 
   useEffect(() => {
     if (productId) {
@@ -66,8 +78,29 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
   }
 
   const handleQuantityChange = (e: any) => {
-    const value = Number.parseInt(e.target.value)
-    if (value > 0) setQuantity(value)
+    const value = Number.parseInt(e.target.value) || 1
+    const stock = product?.SoLuongTonKho || 0
+    if (value > 0 && value <= stock) {
+      setQuantity(value)
+    } else if (value > stock) {
+      setQuantity(stock)
+      showToast(`Chỉ còn ${stock} sản phẩm trong kho`, "warning")
+    }
+  }
+
+  const handleQuantityIncrease = () => {
+    const stock = product?.SoLuongTonKho || 0
+    if (quantity < stock) {
+      setQuantity(quantity + 1)
+    } else {
+      showToast(`Chỉ còn ${stock} sản phẩm trong kho`, "warning")
+    }
+  }
+
+  const handleQuantityDecrease = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1)
+    }
   }
 
   // Safe MoTa parsing helper
@@ -86,6 +119,24 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
   const handleAddToCart = async () => {
     if (!product) return
 
+    if (!isAuthenticated) {
+      showToast("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng", "warning")
+      router.push("/login")
+      return
+    }
+
+    const stock = product.SoLuongTonKho || 0
+    if (stock <= 0) {
+      showToast("Sản phẩm đã hết hàng", "error")
+      return
+    }
+
+    if (quantity > stock) {
+      showToast(`Chỉ còn ${stock} sản phẩm trong kho`, "error")
+      setQuantity(stock)
+      return
+    }
+
     // Parse attributes to get image
     const attributes = parseMoTa(product.MoTa)
     const productImages = attributes.images
@@ -96,6 +147,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
       ? [attributes.image]
       : ["/placeholder.svg"]
 
+    setIsAdding(true)
     try {
       await addToCart(
         {
@@ -106,19 +158,40 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
         },
         quantity
       )
-    } catch (error) {
-      // Error is already handled in CartContext
-      console.error("Failed to add to cart:", error)
+      showToast("Đã thêm sản phẩm vào giỏ hàng", "success")
+    } catch (error: any) {
+      showToast(error.message || "Không thể thêm sản phẩm vào giỏ hàng", "error")
+    } finally {
+      setIsAdding(false)
     }
   }
 
   const handleBuyNow = async () => {
+    if (!product) return
+
+    if (!isAuthenticated) {
+      showToast("Vui lòng đăng nhập để mua hàng", "warning")
+      router.push("/login")
+      return
+    }
+
+    const stock = product.SoLuongTonKho || 0
+    if (stock <= 0) {
+      showToast("Sản phẩm đã hết hàng", "error")
+      return
+    }
+
+    if (quantity > stock) {
+      showToast(`Chỉ còn ${stock} sản phẩm trong kho`, "error")
+      setQuantity(stock)
+      return
+    }
+
     try {
       await handleAddToCart()
       router.push("/checkout")
-    } catch (error) {
-      // Error is already handled in handleAddToCart
-      console.error("Failed to buy now:", error)
+    } catch (error: any) {
+      showToast(error.message || "Không thể thực hiện mua ngay", "error")
     }
   }
 
@@ -259,13 +332,237 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
           </div>
         )}
 
-        {/* Description */}
-        {product.MoTa && !product.MoTa.startsWith("{") && (
-          <div className={styles.description}>
-            <h2 className={styles.descriptionTitle}>Mô tả sản phẩm</h2>
-            <p className={styles.descriptionText}>{product.MoTa}</p>
+        {/* Tabs */}
+        <div className={styles.tabsContainer}>
+          <div className={styles.tabs}>
+            <button
+              type="button"
+              className={`${styles.tab} ${activeTab === "description" ? styles.tabActive : ""}`}
+              onClick={() => setActiveTab("description")}
+            >
+              Mô tả
+            </button>
+            <button
+              type="button"
+              className={`${styles.tab} ${activeTab === "specifications" ? styles.tabActive : ""}`}
+              onClick={() => setActiveTab("specifications")}
+            >
+              Thông số kỹ thuật
+            </button>
+            <button
+              type="button"
+              className={`${styles.tab} ${activeTab === "reviews" ? styles.tabActive : ""}`}
+              onClick={() => setActiveTab("reviews")}
+            >
+              Đánh giá ({reviews.length})
+            </button>
           </div>
-        )}
+
+          {/* Tab Content */}
+          <div className={styles.tabContent}>
+            {activeTab === "description" && (
+              <div className={styles.description}>
+                {product.MoTa && !product.MoTa.startsWith("{") ? (
+                  <p className={styles.descriptionText}>{product.MoTa}</p>
+                ) : (
+                  <p className={styles.descriptionText}>
+                    Sản phẩm chất lượng cao với thiết kế hiện đại, phù hợp cho mọi không gian gia đình.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {activeTab === "specifications" && (
+              <div className={styles.specifications}>
+                {Object.keys(attributes).length > 0 ? (
+                  <div className={styles.specsGrid}>
+                    {Object.entries(attributes)
+                      .filter(([key]) => !["image", "images"].includes(key))
+                      .map(([key, value]) => (
+                        <div key={key} className={styles.specItem}>
+                          <span className={styles.specLabel}>{key}:</span>
+                          <span className={styles.specValue}>{String(value)}</span>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className={styles.noSpecs}>Chưa có thông số kỹ thuật</p>
+                )}
+              </div>
+            )}
+
+            {activeTab === "reviews" && (
+              <div className={styles.reviewsSection}>
+                {/* Write Review Button */}
+                {isAuthenticated && (
+                  <div className={styles.writeReviewSection}>
+                    {!showReviewForm ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!isAuthenticated) {
+                            showToast("Vui lòng đăng nhập để viết đánh giá", "warning")
+                            router.push("/login")
+                            return
+                          }
+                          setShowReviewForm(true)
+                        }}
+                        className={styles.writeReviewButton}
+                      >
+                        <MessageSquare size={18} />
+                        Viết đánh giá
+                      </button>
+                    ) : (
+                      <div className={styles.reviewForm}>
+                        <h3 className={styles.reviewFormTitle}>Viết đánh giá của bạn</h3>
+                        <div className={styles.ratingInput}>
+                          <label>Đánh giá:</label>
+                          <div className={styles.starRating}>
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                                className={styles.starButton}
+                              >
+                                <Star
+                                  size={24}
+                                  fill={star <= reviewForm.rating ? "#fbbf24" : "none"}
+                                  color="#fbbf24"
+                                />
+                              </button>
+                            ))}
+                            <span className={styles.ratingText}>{reviewForm.rating}/5</span>
+                          </div>
+                        </div>
+                        <div className={styles.reviewContentInput}>
+                          <label htmlFor="reviewContent">Nội dung đánh giá:</label>
+                          <textarea
+                            id="reviewContent"
+                            value={reviewForm.content}
+                            onChange={(e) => setReviewForm({ ...reviewForm, content: e.target.value })}
+                            placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+                            rows={4}
+                            className={styles.reviewTextarea}
+                          />
+                        </div>
+                        <div className={styles.reviewFormActions}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowReviewForm(false)
+                              setReviewForm({ rating: 5, content: "" })
+                            }}
+                            className={styles.cancelReviewButton}
+                            disabled={submittingReview}
+                          >
+                            Hủy
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!productId) return
+                              setSubmittingReview(true)
+                              try {
+                                await reviewsApi.createReview({
+                                  MaSP: productId,
+                                  DiemDanhGia: reviewForm.rating,
+                                  NoiDung: reviewForm.content || undefined,
+                                })
+                                showToast("Đánh giá đã được gửi thành công", "success")
+                                setShowReviewForm(false)
+                                setReviewForm({ rating: 5, content: "" })
+                                await loadReviews()
+                              } catch (err: any) {
+                                const errorMessage = err.message || "Không thể gửi đánh giá. Vui lòng thử lại."
+                                const lowerMessage = errorMessage.toLowerCase()
+                                
+                                // Check for various error messages about purchasing
+                                if (
+                                  lowerMessage.includes("mua") || 
+                                  lowerMessage.includes("purchase") ||
+                                  lowerMessage.includes("đã mua") ||
+                                  lowerMessage.includes("chỉ có thể đánh giá")
+                                ) {
+                                  showToast("Bạn cần mua sản phẩm này trước khi đánh giá", "error")
+                                } else if (
+                                  lowerMessage.includes("login") || 
+                                  lowerMessage.includes("đăng nhập") ||
+                                  lowerMessage.includes("unauthorized") ||
+                                  lowerMessage.includes("403")
+                                ) {
+                                  showToast("Vui lòng đăng nhập để viết đánh giá", "error")
+                                  router.push("/login")
+                                } else {
+                                  // Show the actual error message from backend
+                                  showToast(errorMessage, "error")
+                                }
+                              } finally {
+                                setSubmittingReview(false)
+                              }
+                            }}
+                            className={styles.submitReviewButton}
+                            disabled={submittingReview}
+                          >
+                            {submittingReview ? "Đang gửi..." : "Gửi đánh giá"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Reviews List */}
+                {reviewsLoading ? (
+                  <div className={styles.reviewsLoading}>
+                    <Loader2 className={styles.spinner} />
+                    <p>Đang tải đánh giá...</p>
+                  </div>
+                ) : reviews.length > 0 ? (
+                  <div className={styles.reviewsList}>
+                    {reviews.map((review) => (
+                      <div key={review.MaDanhGia} className={styles.reviewItem}>
+                        <div className={styles.reviewHeader}>
+                          <div className={styles.reviewerInfo}>
+                            <div className={styles.reviewerAvatar}>
+                              {review.TenKH?.[0]?.toUpperCase() || "K"}
+                            </div>
+                            <div>
+                              <p className={styles.reviewerName}>
+                                {review.TenKH || `Khách hàng ${review.MaKH}`}
+                              </p>
+                              <p className={styles.reviewDate}>
+                                {new Date(review.NgayDanhGia).toLocaleDateString("vi-VN")}
+                              </p>
+                            </div>
+                          </div>
+                          <div className={styles.reviewRating}>
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                size={14}
+                                fill={i < review.DiemDanhGia ? "#fbbf24" : "none"}
+                                color="#fbbf24"
+                              />
+                            ))}
+                            <span className={styles.ratingValue}>{review.DiemDanhGia}/5</span>
+                          </div>
+                        </div>
+                        {review.NoiDung && (
+                          <p className={styles.reviewContent}>{review.NoiDung}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles.noReviews}>
+                    <p>Chưa có đánh giá nào cho sản phẩm này</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Purchase Section */}
         <div className={styles.purchase}>
@@ -273,85 +570,60 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
             <label htmlFor="quantity" className={styles.quantityLabel}>
               Số lượng:
             </label>
-            <input
-              type="number"
-              id="quantity"
-              min="1"
-              max="100"
-              value={quantity}
-              onChange={handleQuantityChange}
-              className={styles.quantityInput}
-            />
+            <div className={styles.quantityControls}>
+              <button
+                type="button"
+                onClick={handleQuantityDecrease}
+                disabled={quantity <= 1}
+                className={styles.quantityBtn}
+              >
+                -
+              </button>
+              <input
+                type="number"
+                id="quantity"
+                min="1"
+                max={product.SoLuongTonKho || 100}
+                value={quantity}
+                onChange={handleQuantityChange}
+                className={styles.quantityInput}
+              />
+              <button
+                type="button"
+                onClick={handleQuantityIncrease}
+                disabled={quantity >= (product.SoLuongTonKho || 0)}
+                className={styles.quantityBtn}
+              >
+                +
+              </button>
+            </div>
+            {product.SoLuongTonKho !== undefined && (
+              <span className={styles.stockInfo}>
+                Còn {product.SoLuongTonKho} sản phẩm
+              </span>
+            )}
           </div>
 
           <div className={styles.buttons}>
             <button
               type="button"
               onClick={handleAddToCart}
-              className={styles.addToCartBtn}
+              disabled={isAdding || (product.SoLuongTonKho || 0) <= 0}
+              className={`${styles.addToCartBtn} ${isAdding || (product.SoLuongTonKho || 0) <= 0 ? styles.disabled : ""}`}
             >
-              Thêm vào giỏ hàng
+              {isAdding ? "Đang thêm..." : "Thêm vào giỏ hàng"}
             </button>
             <button
               type="button"
               onClick={handleBuyNow}
-              className={styles.buyNowBtn}
+              disabled={isAdding || (product.SoLuongTonKho || 0) <= 0}
+              className={`${styles.buyNowBtn} ${isAdding || (product.SoLuongTonKho || 0) <= 0 ? styles.disabled : ""}`}
             >
               Mua ngay
             </button>
           </div>
         </div>
 
-        {/* Reviews Section */}
-        <div className={styles.reviewsSection}>
-          <h2 className={styles.reviewsTitle}>Đánh giá từ khách hàng</h2>
-          {reviewsLoading ? (
-            <div className={styles.reviewsLoading}>
-              <Loader2 className={styles.spinner} />
-              <p>Đang tải đánh giá...</p>
-            </div>
-          ) : reviews.length > 0 ? (
-            <div className={styles.reviewsList}>
-              {reviews.map((review) => (
-                <div key={review.MaDanhGia} className={styles.reviewItem}>
-                  <div className={styles.reviewHeader}>
-                    <div className={styles.reviewerInfo}>
-                      <div className={styles.reviewerAvatar}>
-                        {review.TenKH?.[0]?.toUpperCase() || "K"}
-                      </div>
-                      <div>
-                        <p className={styles.reviewerName}>
-                          {review.TenKH || `Khách hàng ${review.MaKH}`}
-                        </p>
-                        <p className={styles.reviewDate}>
-                          {new Date(review.NgayDanhGia).toLocaleDateString("vi-VN")}
-                        </p>
-                      </div>
-                    </div>
-                    <div className={styles.reviewRating}>
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          size={14}
-                          fill={i < review.DiemDanhGia ? "#fbbf24" : "none"}
-                          color="#fbbf24"
-                        />
-                      ))}
-                      <span className={styles.ratingValue}>{review.DiemDanhGia}/5</span>
-                    </div>
-                  </div>
-                  {review.NoiDung && (
-                    <p className={styles.reviewContent}>{review.NoiDung}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className={styles.noReviews}>
-              <p>Chưa có đánh giá nào cho sản phẩm này</p>
-            </div>
-          )}
-        </div>
       </section>
     </div>
   )
