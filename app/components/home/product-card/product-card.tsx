@@ -16,10 +16,12 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [isFavorite, setIsFavorite] = useState(false)
   const { addToCart } = useCart()
 
-  const formattedPrice = new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(product.GiaSP || 0)
+  const formattedPrice = (value: number) =>
+    new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+      maximumFractionDigits: 0,
+    }).format(value)
 
   // Safe MoTa parsing helper
   const parseMoTa = (moTa: string | undefined): Record<string, any> => {
@@ -38,7 +40,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const attributes = parseMoTa(product.MoTa)
 
   return (
-    <Link href={`/product/${product.MaSP}`}>
+    <Link href={`/product/${product.MaSP}`} className={styles.link}>
       <div className={styles.card}>
         {/* Image Container */}
         <div className={styles.imageContainer}>
@@ -49,7 +51,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
 
           {/* Heart Button */}
-          <button
+          {/* <button
             type="button"
             onClick={(e) => {
               e.preventDefault()
@@ -64,7 +66,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               fill={isFavorite ? "#ef4444" : "none"}
               color={isFavorite ? "#ef4444" : "#1f2937"}
             />
-          </button>
+          </button> */}
 
           {/* Category Badge */}
           {product.TenDanhMuc && (
@@ -79,12 +81,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           <h3 className={styles.name}>{product.TenSP}</h3>
 
           <div className={styles.priceSection}>
-            <span className={styles.price}>{formattedPrice}</span>
-            {product.SoLuongTonKho !== undefined && (
+            <span className={styles.price}>{formattedPrice(product.GiaSP || 0)}</span>
+            {/* {product.SoLuongTonKho !== undefined && (
               <span className={styles.stock}>
                 Còn {product.SoLuongTonKho} sản phẩm
               </span>
-            )}
+            )} */}
           </div>
 
           {/* Add to Cart Button */}
