@@ -4,7 +4,10 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+  /* background: linear-gradient(135deg, #f2d9c2 0%, #ecb27f 100%); */
+  background: #f2d9c2;
+
 }
 
 .card {
@@ -14,6 +17,7 @@
   width: 100%;
   max-width: 500px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  border: 1px solid #000000;
 }
 
 .title {
@@ -78,8 +82,9 @@
 
 .submitButton {
   padding: 0.875rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+  background-color: #ff8c42;
+  color: #ffffff;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
@@ -106,12 +111,14 @@
 }
 
 .loginLink a {
-  color: #667eea;
+  /* color: #667eea; */
+  color: #ff8c42;
   text-decoration: none;
   font-weight: 500;
 }
 
 .loginLink a:hover {
   text-decoration: underline;
+  color: #f25d00;
 }
 
