@@ -1,3 +1,9 @@
+.link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
 .card {
   background-color: #ffffff;
   border-radius: 0.5rem;
@@ -5,6 +11,9 @@
   border: 1px solid #e5e7eb;
   transition: box-shadow 0.3s;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .card:hover {
@@ -15,12 +24,12 @@
   position: relative;
   overflow: hidden;
   background-color: #f3f4f6;
-  height: 12rem;
+  height: 13rem;
 }
 
 @media (min-width: 640px) {
   .imageContainer {
-    height: 14rem;
+    height: 15rem;
   }
 }
 
@@ -90,14 +99,20 @@
 
 .content {
   padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .name {
   font-weight: 600;
   color: #1f2937;
   font-size: 0.875rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   line-height: 1.5;
+  min-height: 3rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -114,7 +129,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
+  min-height: 1.75rem;
 }
 
 .price {

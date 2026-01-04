@@ -23,10 +23,12 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { showToast } = useToast()
   const router = useRouter()
 
-  const formattedPrice = new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(product.GiaSP || 0)
+  const formattedPrice = (value: number) =>
+    new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+      maximumFractionDigits: 0,
+    }).format(value)
 
   // Safe MoTa parsing helper
   const parseMoTa = (moTa: string | undefined): Record<string, any> => {
@@ -79,7 +81,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   }
 
   return (
-    <Link href={`/product/${product.MaSP}`}>
+    <Link href={`/product/${product.MaSP}`} className={styles.link}>
       <div className={styles.card}>
         {/* Image Container */}
         <div className={styles.imageContainer}>
@@ -90,7 +92,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
 
           {/* Heart Button */}
-          <button
+          {/* <button
             type="button"
             onClick={(e) => {
               e.preventDefault()
@@ -105,7 +107,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               fill={isFavorite ? "#ef4444" : "none"}
               color={isFavorite ? "#ef4444" : "#1f2937"}
             />
-          </button>
+          </button> */}
 
           {/* Category Badge */}
           {product.TenDanhMuc && (
@@ -127,12 +129,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           <h3 className={styles.name}>{product.TenSP}</h3>
 
           <div className={styles.priceSection}>
-            <span className={styles.price}>{formattedPrice}</span>
-            {stock > 0 && (
+            <span className={styles.price}>{formattedPrice(product.GiaSP || 0)}</span>
+            {/* {product.SoLuongTonKho !== undefined && (
               <span className={styles.stock}>
                 Còn {stock} sản phẩm
               </span>
-            )}
+            )} */}
           </div>
 
           {/* Add to Cart Button */}

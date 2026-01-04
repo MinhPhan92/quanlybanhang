@@ -21,6 +21,13 @@ export default function CartPage() {
     }
   }, [isAuthenticated, router])
 
+  const formattedPrice = (value: number) =>
+    new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+      maximumFractionDigits: 0,
+    }).format(value)
+
   const removeItem = (id: number) => {
     removeFromCart(id)
   }
@@ -71,7 +78,7 @@ export default function CartPage() {
 
                   <div className={styles.itemInfo}>
                     <h3 className={styles.itemName}>{item.name}</h3>
-                    <p className={styles.itemPrice}>{(item.price / 1000000).toFixed(1)}M đ</p>
+                    <p className={styles.itemPrice}>{formattedPrice(item.price)}</p>
                   </div>
 
                   <div className={styles.quantityControl}>
@@ -91,9 +98,7 @@ export default function CartPage() {
                       <Plus size={16} />
                     </button>
                   </div>
-
-                  <div className={styles.itemTotal}>{((item.price * item.quantity) / 1000000).toFixed(1)}M đ</div>
-
+                  {/* <div className={styles.itemTotal}>{formattedPrice(item.price * item.quantity)}</div> */}
                   <button className={styles.removeBtn} onClick={() => removeItem(item.id)}>
                     <X size={18} />
                   </button>
@@ -107,7 +112,7 @@ export default function CartPage() {
 
               <div className={styles.summaryRow}>
                 <span>Tạm tính:</span>
-                <span>{(subtotal / 1000000).toFixed(1)}M đ</span>
+                <span>{formattedPrice(subtotal)}</span>
               </div>
 
               <div className={styles.summaryRow}>
@@ -116,21 +121,21 @@ export default function CartPage() {
                   {shipping === 0 ? (
                     <span className={styles.free}>Miễn phí</span>
                   ) : (
-                    `${(shipping / 1000).toFixed(0)}k đ`
+                    formattedPrice(shipping)
                   )}
                 </span>
               </div>
 
               <div className={styles.summaryRow}>
                 <span>Thuế:</span>
-                <span>{(tax / 1000000).toFixed(1)}M đ</span>
+                <span>{formattedPrice(tax)}</span>
               </div>
 
               <div className={styles.divider}></div>
 
               <div className={styles.totalRow}>
                 <span>Tổng cộng:</span>
-                <span className={styles.totalAmount}>{(total / 1000000).toFixed(1)}M đ</span>
+                <span className={styles.totalAmount}>{formattedPrice(total)}</span>
               </div>
 
               <Link href="/checkout" className={styles.checkoutBtn}>

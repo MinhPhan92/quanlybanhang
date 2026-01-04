@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 # ⚙️ Cấu hình kết nối (sửa theo thông tin MySQL của bạn)
 DB_USER = "root"
-DB_PASSWORD = "Phanducminh0902%40"  # nếu có mật khẩu thì điền vào
+DB_PASSWORD = "123456"  # nếu có mật khẩu thì điền vào
 DB_HOST = "localhost"
 DB_NAME = "QuanLyBanHang"
 

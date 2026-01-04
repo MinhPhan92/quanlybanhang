@@ -1,10 +1,16 @@
 .container {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-sizing: border-box;
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+  /* background: linear-gradient(135deg, #f2d9c2 0%, #ecb27f 100%); */
+  /* background: #e0a46f;  */
+  background: #f2d9c2;
+
+
 }
 
 .loginCard {
@@ -12,6 +18,7 @@
   max-width: 450px;
   background: white;
   border-radius: 16px;
+  border: 1px solid #000000;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   padding: 2.5rem;
   animation: slideUp 0.3s ease-out;
@@ -39,10 +46,13 @@
   justify-content: center;
   width: 64px;
   height: 64px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+  /* color: white; */
+  background-color: #ff8c42;
+  color: #ffffff;
   border-radius: 16px;
   margin-bottom: 1rem;
-  color: white;
+
 }
 
 .title {
@@ -150,8 +160,10 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 0.875rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white; */
+  background-color: #ff8c42;
+  color: #ffffff;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
@@ -203,14 +215,15 @@
 }
 
 .link {
-  color: #667eea;
+  /* color: #667eea; */
+  color: #ff8c42;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
 .link:hover {
-  color: #764ba2;
+  color: #f25d00;
   text-decoration: underline;
 }
 
