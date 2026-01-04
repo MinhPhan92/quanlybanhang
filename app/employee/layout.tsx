@@ -8,21 +8,14 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
-  Users,
-  MessageSquare,
   Tag,
-  FileText,
-  Settings,
-  UserCog,
   LogOut,
   Menu,
   X,
-  BarChart3,
-  Warehouse,
 } from "lucide-react";
-import styles from "./admin-layout.module.css";
+import styles from "./employee-layout.module.css";
 
-export default function AdminLayout({
+export default function EmployeeLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -51,8 +44,8 @@ export default function AdminLayout({
       return;
     }
 
-    // Allow Admin, Manager, Employee, and NhanVien roles
-    const allowedRoles = ["Admin", "Manager", "Employee", "NhanVien"];
+    // Only allow Employee and NhanVien roles
+    const allowedRoles = ["Employee", "NhanVien"];
     if (user && !allowedRoles.includes(user.role || "")) {
       router.push("/");
       return;
@@ -77,82 +70,34 @@ export default function AdminLayout({
     return null;
   }
 
-  // Allow Admin, Manager, Employee, and NhanVien roles
-  const allowedRoles = ["Admin", "Manager", "Employee", "NhanVien"];
+  // Only allow Employee and NhanVien roles
+  const allowedRoles = ["Employee", "NhanVien"];
   if (!allowedRoles.includes(user.role || "")) {
     return null;
   }
-
-  const isAdminOnly = user.role === "Admin";
 
   const menuItems = [
     {
       icon: LayoutDashboard,
       label: "Dashboard",
-      href: "/admin/dashboard",
-      roles: ["Admin", "Manager", "Employee", "NhanVien"],
-    },
-    {
-      icon: Package,
-      label: "Sản phẩm",
-      href: "/admin/products",
-      roles: ["Admin", "Manager", "Employee", "NhanVien"],
-    },
-    {
-      icon: Tag,
-      label: "Danh mục",
-      href: "/admin/categories",
-      roles: ["Admin", "Manager", "Employee", "NhanVien"],
-    },
-    {
-      icon: Warehouse,
-      label: "Tồn kho",
-      href: "/admin/inventory",
-      roles: ["Admin", "Manager"],
+      href: "/employee/dashboard",
     },
     {
       icon: ShoppingCart,
       label: "Đơn hàng",
-      href: "/admin/orders",
-      roles: ["Admin", "Manager", "Employee", "NhanVien"],
-    },
-    {
-      icon: BarChart3,
-      label: "Báo cáo",
-      href: "/admin/reports",
-      roles: ["Admin", "Manager"],
-    },
-    {
-      icon: Users,
-      label: "Khách hàng",
-      href: "/admin/customers",
-      roles: ["Admin", "Manager", "Employee", "NhanVien"],
-    },
-    {
-      icon: MessageSquare,
-      label: "Phản hồi & Khiếu nại",
-      href: "/admin/feedback",
-      roles: ["Admin", "Manager", "Employee", "NhanVien"],
+      href: "/employee/orders",
     },
     {
       icon: Tag,
-      label: "Khuyến mãi",
-      href: "/admin/promotions",
-      roles: ["Admin", "Manager", "Employee", "NhanVien"],
+      label: "Danh mục",
+      href: "/employee/categories",
     },
     {
-      icon: FileText,
-      label: "Nhật ký hệ thống",
-      href: "/admin/logs",
-      roles: ["Admin", "Manager"],
+      icon: Package,
+      label: "Sản phẩm",
+      href: "/employee/products",
     },
-    {
-      icon: UserCog,
-      label: "Quản lý nhân viên",
-      href: "/admin/employees",
-      roles: ["Admin"],
-    },
-  ].filter((item) => item.roles.includes(user.role || ""));
+  ];
 
   return (
     <div className={styles.container}>
@@ -161,7 +106,7 @@ export default function AdminLayout({
         className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`}
       >
         <div className={styles.sidebarHeader}>
-          <h2 className={styles.logo}>Admin Panel</h2>
+          <h2 className={styles.logo}>Nhân viên</h2>
           <button
             className={styles.toggleButton}
             onClick={() => setSidebarOpen(!sidebarOpen)}

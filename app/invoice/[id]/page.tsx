@@ -6,6 +6,7 @@ import Header from "@/app/components/shared/header/Header"
 import Footer from "@/app/components/shared/footer/Footer"
 import { ordersApi, OrderDetail } from "@/app/lib/api/orders"
 import { Download, Printer } from "lucide-react"
+import jsPDF from "jspdf"
 import styles from "./invoice.module.css"
 
 export default function InvoicePage() {
@@ -41,9 +42,143 @@ export default function InvoicePage() {
     window.print()
   }
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(amount)
+  }
+
   const handleDownload = () => {
-    // TODO: Implement PDF download
-    alert("Tính năng tải PDF sẽ được triển khai sớm")
+    if (!order) return
+
+    try {
+      const doc = new jsPDF()
+      let yPos = 20
+
+      // Company Info
+      doc.setFontSize(18)
+      doc.setFont("helvetica", "bold")
+      doc.text("Gia Dụng Plus", 20, yPos)
+      yPos += 8
+
+      doc.setFontSize(10)
+      doc.setFont("helvetica", "normal")
+      doc.text("123 Đường ABC, Hà Nội, Việt Nam", 20, yPos)
+      yPos += 5
+      doc.text("Điện thoại: 1900 1234", 20, yPos)
+      yPos += 5
+      doc.text("Email: support@giadung.vn", 20, yPos)
+      yPos += 10
+
+      // Invoice Title
+      doc.setFontSize(16)
+      doc.setFont("helvetica", "bold")
+      doc.text("HÓA ĐƠN BÁN HÀNG", 105, yPos, { align: "right" })
+      yPos += 8
+
+      // Invoice Details
+      doc.setFontSize(10)
+      doc.setFont("helvetica", "normal")
+      doc.text(`Mã đơn hàng: #${order.MaDonHang}`, 105, yPos, { align: "right" })
+      yPos += 5
+      doc.text(
+        `Ngày đặt: ${new Date(order.NgayDat).toLocaleDateString("vi-VN")}`,
+        105,
+        yPos,
+        { align: "right" }
+      )
+      yPos += 5
+      doc.text(`Trạng thái: ${order.TrangThai}`, 105, yPos, { align: "right" })
+      yPos += 15
+
+      // Table Header
+      doc.setFont("helvetica", "bold")
+      doc.setFontSize(10)
+      doc.text("Sản phẩm", 20, yPos)
+      doc.text("SL", 80, yPos)
+      doc.text("Đơn giá", 100, yPos)
+      doc.text("Giảm giá", 140, yPos)
+      doc.text("Thành tiền", 170, yPos)
+      yPos += 7
+
+      // Draw line
+      doc.setLineWidth(0.5)
+      doc.line(20, yPos - 2, 190, yPos - 2)
+      yPos += 3
+
+      // Order Items
+      doc.setFont("helvetica", "normal")
+      doc.setFontSize(9)
+      let subtotal = 0
+
+      if (order.items && order.items.length > 0) {
+        order.items.forEach((item) => {
+          if (yPos > 250) {
+            doc.addPage()
+            yPos = 20
+          }
+
+          const itemTotal = item.DonGia * item.SoLuong - (item.GiamGia || 0)
+          subtotal += itemTotal
+
+          // Product name (may need to wrap)
+          const productName = item.TenSP.length > 25 ? item.TenSP.substring(0, 22) + "..." : item.TenSP
+          doc.text(productName, 20, yPos)
+          doc.text(item.SoLuong.toString(), 80, yPos)
+          doc.text(formatCurrency(item.DonGia), 100, yPos)
+          doc.text(item.GiamGia ? formatCurrency(item.GiamGia) : "-", 140, yPos)
+          doc.text(formatCurrency(itemTotal), 170, yPos)
+          yPos += 7
+        })
+      } else {
+        doc.text("Không có sản phẩm", 20, yPos)
+        yPos += 7
+      }
+
+      yPos += 5
+
+      // Totals
+      doc.setFont("helvetica", "normal")
+      doc.setFontSize(10)
+      doc.text("Tạm tính:", 140, yPos)
+      doc.text(formatCurrency(subtotal), 170, yPos, { align: "right" })
+      yPos += 7
+
+      if (order.PhiShip) {
+        doc.text("Phí vận chuyển:", 140, yPos)
+        doc.text(formatCurrency(order.PhiShip), 170, yPos, { align: "right" })
+        yPos += 7
+      }
+
+      if (order.KhuyenMai) {
+        doc.text(`Mã giảm giá (${order.KhuyenMai}):`, 140, yPos)
+        doc.text("-", 170, yPos, { align: "right" })
+        yPos += 7
+      }
+
+      // Total
+      doc.setFont("helvetica", "bold")
+      doc.setFontSize(12)
+      doc.text("Tổng cộng:", 140, yPos)
+      doc.text(formatCurrency(order.TongTien || 0), 170, yPos, { align: "right" })
+      yPos += 15
+
+      // Footer
+      doc.setFont("helvetica", "normal")
+      doc.setFontSize(9)
+      doc.text("Cảm ơn bạn đã mua sắm tại Gia Dụng Plus!", 105, yPos, { align: "center" })
+      yPos += 5
+      doc.text("Hóa đơn này có giá trị pháp lý và được lưu trữ trong hệ thống.", 105, yPos, {
+        align: "center",
+      })
+
+      // Save PDF
+      doc.save(`HoaDon_${order.MaDonHang}_${new Date().toISOString().split("T")[0]}.pdf`)
+    } catch (error) {
+      console.error("Error generating PDF:", error)
+      alert("Không thể tạo file PDF. Vui lòng thử lại.")
+    }
   }
 
   if (loading) {

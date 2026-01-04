@@ -103,6 +103,9 @@ export const apiClient = async (
       } else if (endpoint.includes("/donhang") && errorMessage.includes("Permission denied")) {
         // For order creation, this might be a role issue - log as warning
         console.warn(`[apiClient] 403 ${endpoint}: ${errorMessage}`);
+      } else if (endpoint.includes("/danhmuc") || endpoint.includes("/sanpham")) {
+        // For category/product endpoints, log as warning (expected permission checks)
+        console.warn(`[apiClient] 403 ${endpoint}: ${errorMessage}`);
       } else {
         console.error(`[apiClient] 403 ${endpoint}: ${errorMessage}`);
       }

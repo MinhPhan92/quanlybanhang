@@ -61,7 +61,8 @@ def create_complaint(
     Chỉ khách hàng mới có thể tạo khiếu nại.
     """
     # Role check: Only customers can create complaints
-    if current_user.get("role") != "KhachHang":
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Customer", "KhachHang"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Chỉ khách hàng mới có thể tạo khiếu nại"
@@ -118,7 +119,8 @@ def get_my_complaints(
     Lấy danh sách khiếu nại của khách hàng hiện tại.
     """
     # Role check: Only customers can view their complaints
-    if current_user.get("role") != "KhachHang":
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Customer", "KhachHang"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Chỉ khách hàng mới có thể xem khiếu nại của mình"
@@ -169,7 +171,8 @@ def get_all_complaints(
     Admin, Manager và Employee có thể xem.
     """
     # Role check: Admin, Manager, and Employee can view all complaints
-    if current_user.get("role") not in ["Admin", "Manager", "NhanVien"]:
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Chỉ Admin, Manager và Nhân viên mới có thể xem tất cả khiếu nại"

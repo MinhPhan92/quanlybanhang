@@ -5,14 +5,19 @@ import Link from "next/link"
 import styles from "./related-products.module.css"
 import { Heart } from "lucide-react"
 import { productsApi, Product } from "@/app/lib/api/products"
+import { useCart } from "@/app/contexts/CartContext"
+import { useToast } from "@/app/contexts/ToastContext"
 
 interface RelatedProductsProps {
   currentProductId: number | null
 }
 
 export default function RelatedProducts({ currentProductId }: RelatedProductsProps) {
+  const { addToCart } = useCart()
+  const { showToast } = useToast()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [addingToCart, setAddingToCart] = useState<number | null>(null)
 
   useEffect(() => {
     loadRelatedProducts()
@@ -96,7 +101,41 @@ export default function RelatedProducts({ currentProductId }: RelatedProductsPro
                   <span className={styles.price}>{formatPrice(product.GiaSP || 0)}</span>
                 </div>
 
-                <button className={styles.addBtn}>Thêm vào giỏ</button>
+                <button 
+                  className={styles.addBtn}
+                  onClick={async () => {
+                    if (addingToCart === product.MaSP) return
+                    try {
+                      setAddingToCart(product.MaSP)
+                      // Parse attributes for image
+                      let attributes: Record<string, any> = {}
+                      if (product.MoTa) {
+                        try {
+                          attributes = JSON.parse(product.MoTa)
+                        } catch {
+                          // If not JSON, use as is
+                        }
+                      }
+                      const productImage = attributes.image || attributes.images?.[0] || "/placeholder.svg"
+                      
+                      await addToCart({
+                        id: product.MaSP,
+                        name: product.TenSP,
+                        price: product.GiaSP || 0,
+                        image: productImage,
+                      }, 1)
+                      showToast("Đã thêm sản phẩm vào giỏ hàng", "success")
+                    } catch (error: any) {
+                      console.error("Error adding to cart:", error)
+                      showToast(error.message || "Không thể thêm sản phẩm vào giỏ hàng", "error")
+                    } finally {
+                      setAddingToCart(null)
+                    }
+                  }}
+                  disabled={addingToCart === product.MaSP}
+                >
+                  {addingToCart === product.MaSP ? "Đang thêm..." : "Thêm vào giỏ"}
+                </button>
               </div>
             </article>
           )

@@ -88,8 +88,9 @@ def create_sanpham(
     Tạo sản phẩm mới với thuộc tính JSON.
     Thuộc tính sẽ được mã hóa JSON và lưu vào cột MoTa.
     """
-    # Role check: Only Admin and Manager can create products
-    if current_user.get("role") not in ["Admin", "Manager"]:
+    # Role check: Admin, Manager, and Employee can create products
+    user_role = current_user.get("role")
+    if user_role not in ["Admin", "Manager", "Employee", "NhanVien"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
             detail="Permission denied"
@@ -260,8 +261,9 @@ def update_sanpham(
     Cập nhật sản phẩm với thuộc tính JSON mới.
     Thuộc tính sẽ được mã hóa JSON và cập nhật vào cột MoTa.
     """
-    # Role check: Only Admin and Manager can update products
-    if current_user.get("role") not in ["Admin", "Manager"]:
+    # Role check: Admin, Manager, and Employee can update products
+    user_role = current_user.get("role")
+    if user_role not in ["Admin", "Manager", "Employee", "NhanVien"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
             detail="Permission denied"

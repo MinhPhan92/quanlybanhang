@@ -12,7 +12,8 @@ router = APIRouter(tags=["ThanhToan"])
 @router.post("/", response_model=dict)
 def add_payment_voucher(data: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     # Role check: Only Admin, Manager, and Employee can add payment vouchers
-    if current_user.get("role") not in ["Admin", "Manager", "Employee"]:
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     

@@ -27,8 +27,10 @@ export default function LoginPage() {
 
   const handleRedirect = (role: string) => {
     // Handle both "NhanVien" and "Employee" role names
-    if (role === "Admin" || role === "Manager" || role === "NhanVien" || role === "Employee") {
-      router.push("/admin"); // Redirect to admin page for Admin, Manager, and Employee
+    if (role === "Admin" || role === "Manager") {
+      router.push("/admin/dashboard"); // Redirect to admin dashboard for Admin and Manager
+    } else if (role === "NhanVien" || role === "Employee") {
+      router.push("/employee/dashboard"); // Redirect to employee dashboard for Employee
     } else {
       router.push("/"); // Redirect to home for customers
     }

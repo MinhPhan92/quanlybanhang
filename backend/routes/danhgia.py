@@ -26,7 +26,8 @@ def create_review(
     Chỉ khách hàng đã mua sản phẩm mới có thể đánh giá.
     """
     # Role check: Only customers can create reviews
-    if current_user.get("role") != "KhachHang":
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Customer", "KhachHang"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Chỉ khách hàng mới có thể tạo đánh giá"
@@ -211,7 +212,8 @@ def get_all_reviews(
     Chỉ Admin và Manager mới có thể xem.
     """
     # Role check: Only Admin and Manager can view all reviews
-    if current_user.get("role") not in ["Admin", "Manager", "NhanVien"]:
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Chỉ Admin, Manager và Nhân viên mới có thể xem tất cả đánh giá"
@@ -273,7 +275,8 @@ def get_my_reviews(
     Lấy danh sách đánh giá của khách hàng hiện tại.
     """
     # Role check: Only customers can view their reviews
-    if current_user.get("role") != "KhachHang":
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Customer", "KhachHang"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Chỉ khách hàng mới có thể xem đánh giá của mình"

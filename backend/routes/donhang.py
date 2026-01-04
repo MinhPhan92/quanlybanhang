@@ -52,13 +52,14 @@ class DeliveryUpdateResponse(BaseModel):
 @router.post("/", response_model=dict)
 def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     # Role check: Admin, Manager, Employee, and Customers can create orders
-    user_role = current_user.get("role")
-    if user_role not in ["Admin", "Manager", "Employee", "KhachHang"]:
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien", "Customer", "KhachHang"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     
     # For customers, ensure MaKH matches their own ID
     # Token uses "user_id" for customer ID, role can be "Customer" or "KhachHang"
+    user_role = current_user.get("role")
     if user_role in ["KhachHang", "Customer"]:
         customer_id = current_user.get("user_id") or current_user.get("MaKH")
         if customer_id:
@@ -330,7 +331,8 @@ def get_donhang(madonhang: int, db: Session = Depends(get_db), current_user: dic
 @router.put("/{madonhang}", response_model=dict)
 def update_donhang(madonhang: int, donhang: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     # Role check: Only Admin, Manager, and Employee can update orders
-    if current_user.get("role") not in ["Admin", "Manager", "Employee"]:
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     
@@ -403,7 +405,8 @@ def update_order_status(
     Sử dụng transaction để đảm bảo tính nhất quán dữ liệu.
     """
     # Role check: Only Admin, Manager, and Employee can update order status
-    if current_user.get("role") not in ["Admin", "Manager", "Employee"]:
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
             detail="Permission denied"
@@ -487,7 +490,8 @@ def check_order_inventory(
     Kiểm tra tồn kho có đủ cho đơn hàng không.
     """
     # Role check: Only Admin, Manager, and Employee can check inventory
-    if current_user.get("role") not in ["Admin", "Manager", "Employee"]:
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
             detail="Permission denied"
@@ -546,7 +550,8 @@ def update_delivery(
     current_user: dict = Depends(get_current_user)
 ):
     # Role check: Only Admin, Manager, and Employee can update delivery info
-    if current_user.get("role") not in ["Admin", "Manager", "Employee"]:
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Permission denied"

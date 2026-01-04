@@ -12,7 +12,8 @@ router = APIRouter(tags=["ChiTietDonHang"])
 @router.post("/", response_model=dict)
 def add_product_to_order(data: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     # Role check: Only Admin, Manager, and Employee can add products to orders
-    if current_user.get("role") not in ["Admin", "Manager", "Employee"]:
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     
@@ -71,7 +72,8 @@ def update_total_price(madonhang: int, db: Session):
 @router.put("/", response_model=dict)
 def update_product_in_order(data: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     # Role check: Only Admin, Manager, and Employee can update order details
-    if current_user.get("role") not in ["Admin", "Manager", "Employee"]:
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     

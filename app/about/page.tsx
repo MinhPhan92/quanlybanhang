@@ -1,8 +1,13 @@
+"use client"
+
+import { useRouter } from "next/navigation"
 import Header from "@/app/components/shared/header/Header"
 import Footer from "@/app/components/shared/footer/Footer"
 import styles from "./about.module.css"
 
 export default function AboutPage() {
+  const router = useRouter()
+  
   return (
     <div>
       <Header />
@@ -173,7 +178,7 @@ export default function AboutPage() {
             <p className={styles.ctaText}>
               Khám phá hàng ngàn sản phẩm gia dụng chất lượng cao tại giá cạnh tranh nhất
             </p>
-            <button className={styles.ctaButton}>Mua Sắm Ngay</button>
+            <button onClick={() => router.push("/shop")} className={styles.ctaButton}>Mua Sắm Ngay</button>
           </div>
         </section>
       </main>
