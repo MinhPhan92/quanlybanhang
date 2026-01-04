@@ -108,6 +108,18 @@
   font-weight: 600;
 }
 
+.priceChanged {
+  color: #f59e0b;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.stockWarning {
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin-top: 0.25rem;
+}
+
 @media (min-width: 640px) {
   .itemPrice {
     font-size: 1rem;
@@ -135,8 +147,13 @@
   transition: color 0.2s;
 }
 
-.quantityBtn:hover {
+.quantityBtn:hover:not(:disabled) {
   color: #ff8c42;
+}
+
+.quantityBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .quantity {
@@ -180,8 +197,13 @@
   transition: color 0.2s;
 }
 
-.removeBtn:hover {
+.removeBtn:hover:not(:disabled) {
   color: #dc2626;
+}
+
+.removeBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* Order Summary */

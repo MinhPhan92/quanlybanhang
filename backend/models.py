@@ -11,6 +11,7 @@ from sqlalchemy import (
     Boolean,
     Enum as SAEnum,
 )
+from sqlalchemy.dialects.mysql import INTEGER as MySQLInteger
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
@@ -62,6 +63,7 @@ class SanPham(Base):
     # MoTa stores either free-form description text OR JSON-encoded attributes.
     # Use TEXT to avoid truncation (attributes/description can exceed 255 chars).
     MoTa = Column(Text)
+    HinhAnh = Column(String(500))  # URL hoặc đường dẫn ảnh sản phẩm
     MaDanhMuc = Column(Integer, ForeignKey(
         "DanhMuc.MaDanhMuc", onupdate="CASCADE", ondelete="SET NULL"))
     IsDelete = Column(Boolean, default=False)
@@ -214,31 +216,27 @@ class SystemConfig(Base):
     UpdatedAt = Column(DateTime, default=datetime.utcnow)
 
 
-class Project(Base):
-    __tablename__ = "Project"
-    MaProject = Column(Integer, primary_key=True, autoincrement=True)
-    TenProject = Column(String(200), nullable=False)
-    MoTa = Column(Text, nullable=True)
-    TrangThai = Column(String(50), default="Active")  # Active, Inactive, Completed
-    NgayTao = Column(DateTime, default=datetime.utcnow)
-    NgayCapNhat = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    MaNVCreate = Column(Integer, ForeignKey("NhanVien.MaNV", onupdate="CASCADE", ondelete="SET NULL"), nullable=True)
-    IsDelete = Column(Boolean, default=False)
+# =====================================================
+# 📋 Mock Payment Transaction (QR Payment Gateway)
+# =====================================================
+# Transaction statuses: CREATED, SUCCESS, FAILED, CANCELED
+
+class PaymentTransaction(Base):
+    """
+    Mock payment transaction for QR payment gateway.
+    This simulates a real payment gateway like VNPay/MoMo but fully internal.
+    """
+    __tablename__ = "PaymentTransaction"
+    TransactionId = Column(String(50), primary_key=True)  # UUID-like unique ID
+    # Use UNSIGNED INTEGER to match DonHang.MaDonHang type
+    MaDonHang = Column(MySQLInteger(unsigned=True), ForeignKey("DonHang.MaDonHang", onupdate="CASCADE", ondelete="CASCADE"))
+    Amount = Column(Numeric(12, 2), nullable=False)  # Amount to pay (locked to order.TongTien)
+    Status = Column(String(20), default="CREATED")  # CREATED, SUCCESS, FAILED, CANCELED
+    Signature = Column(String(255), nullable=True)  # Hash signature for verification
+    CreatedAt = Column(DateTime, default=datetime.utcnow)
+    UpdatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
-    nhanvien_create = relationship("NhanVien")
+    # Relationship to order
+    donhang = relationship("DonHang")
 
 
-class LienHe(Base):
-    """Contact form submissions - public access, no authentication required"""
-    __tablename__ = "LienHe"
-    MaLienHe = Column(Integer, primary_key=True, autoincrement=True)
-    HoTen = Column(String(100), nullable=False)
-    Email = Column(String(100), nullable=False)
-    SoDienThoai = Column(String(15), nullable=True)
-    ChuDe = Column(String(200), nullable=False)
-    NoiDung = Column(Text, nullable=False)
-    TrangThai = Column(String(50), default="ChuaXuLy")  # ChuaXuLy, DangXuLy, DaXuLy
-    NgayGui = Column(DateTime, default=datetime.utcnow)
-    GhiChu = Column(Text, nullable=True)  # Admin notes
-    IsDelete = Column(Boolean, default=False)

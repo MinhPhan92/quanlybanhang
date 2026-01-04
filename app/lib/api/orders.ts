@@ -49,6 +49,11 @@ export const ordersApi = {
     return apiClient("/donhang/");
   },
 
+  getMyOrders: async (): Promise<Order[]> => {
+    // Get orders for current logged-in customer
+    return apiClient("/donhang/my-orders");
+  },
+
   getOne: async (id: number): Promise<OrderDetail> => {
     return apiClient(`/donhang/${id}`);
   },
@@ -60,18 +65,30 @@ export const ordersApi = {
     MaKH?: number;
     MaNV?: number;
     voucher_code?: string;
-  }): Promise<{ MaDonHang: number; TongTien: number; voucher_applied?: boolean }> => {
+    items?: Array<{
+      MaSP: number;
+      SoLuong: number;
+      DonGia: number;
+      GiamGia?: number;
+    }>;
+  }): Promise<{
+    MaDonHang: number;
+    TongTien: number;
+    voucher_applied?: boolean;
+  }> => {
     return apiClient("/donhang/", {
       method: "POST",
       body: JSON.stringify(orderData),
     });
   },
 
-  updateStatus: async (id: number, newStatus: string): Promise<StatusUpdateResponse> => {
+  updateStatus: async (
+    id: number,
+    newStatus: string
+  ): Promise<StatusUpdateResponse> => {
     return apiClient(`/donhang/${id}/status`, {
       method: "PUT",
       body: JSON.stringify({ new_status: newStatus }),
     });
   },
 };
-

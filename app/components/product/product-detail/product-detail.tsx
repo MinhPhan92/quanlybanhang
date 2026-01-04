@@ -1,100 +1,97 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Heart, Share2, Star, Loader2 } from "lucide-react"
-import { productsApi, Product } from "@/app/lib/api/products"
-import { reviewsApi, Review } from "@/app/lib/api/reviews"
-import { useCart } from "@/app/contexts/CartContext"
-import styles from "./product-detail.module.css"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Heart, Share2, Star, Loader2 } from "lucide-react";
+import { productsApi, Product } from "@/app/lib/api/products";
+import { reviewsApi, Review } from "@/app/lib/api/reviews";
+import { useCart } from "@/app/contexts/CartContext";
+import styles from "./product-detail.module.css";
 
 interface ProductDetailProps {
-  productId: number | null
+  productId: number | null;
 }
 
 export default function ProductDetail({ productId }: ProductDetailProps) {
-  const router = useRouter()
-  const { addToCart } = useCart()
-  const [product, setProduct] = useState<Product | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [quantity, setQuantity] = useState(1)
-  const [isFavorite, setIsFavorite] = useState(false)
-  const [activeImage, setActiveImage] = useState(0)
-  const [reviews, setReviews] = useState<Review[]>([])
-  const [averageRating, setAverageRating] = useState<number>(0)
-  const [reviewsLoading, setReviewsLoading] = useState(false)
+  const router = useRouter();
+  const { addToCart } = useCart();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [averageRating, setAverageRating] = useState<number>(0);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
 
   useEffect(() => {
     if (productId) {
-      loadProduct()
-      loadReviews()
+      loadProduct();
+      loadReviews();
     } else {
-      setError("Không tìm thấy sản phẩm")
-      setLoading(false)
+      setError("Không tìm thấy sản phẩm");
+      setLoading(false);
     }
-  }, [productId])
+  }, [productId]);
 
   const loadProduct = async () => {
-    if (!productId) return
+    if (!productId) return;
     try {
-      setLoading(true)
-      setError(null)
-      const data = await productsApi.getOne(productId)
-      setProduct(data)
+      setLoading(true);
+      setError(null);
+      const data = await productsApi.getOne(productId);
+      setProduct(data);
     } catch (err: any) {
-      setError(err.message || "Không thể tải thông tin sản phẩm")
-      console.error("Error loading product:", err)
+      setError(err.message || "Không thể tải thông tin sản phẩm");
+      console.error("Error loading product:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadReviews = async () => {
-    if (!productId) return
+    if (!productId) return;
     try {
-      setReviewsLoading(true)
-      const data = await reviewsApi.getProductReviews(productId, 1, 10)
-      setReviews(data.reviews || [])
-      setAverageRating(data.average_rating || 0)
+      setReviewsLoading(true);
+      const data = await reviewsApi.getProductReviews(productId, 1, 10);
+      setReviews(data.reviews || []);
+      setAverageRating(data.average_rating || 0);
     } catch (err: any) {
-      console.error("Error loading reviews:", err)
+      console.error("Error loading reviews:", err);
       // Don't show error for reviews, just log it
     } finally {
-      setReviewsLoading(false)
+      setReviewsLoading(false);
     }
-  }
+  };
 
   const handleQuantityChange = (e: any) => {
-    const value = Number.parseInt(e.target.value)
-    if (value > 0) setQuantity(value)
-  }
+    const value = Number.parseInt(e.target.value);
+    if (value > 0) setQuantity(value);
+  };
 
   // Safe MoTa parsing helper
   const parseMoTa = (moTa: string | undefined): Record<string, any> => {
-    if (!moTa) return {}
+    if (!moTa) return {};
     if (typeof moTa === "string") {
       try {
-        return JSON.parse(moTa)
+        return JSON.parse(moTa);
       } catch {
-        return {}
+        return {};
       }
     }
-    return typeof moTa === "object" ? moTa : {}
-  }
+    return typeof moTa === "object" ? moTa : {};
+  };
 
   const handleAddToCart = async () => {
-    if (!product) return
+    if (!product) return;
 
-    // Parse attributes to get image
-    const attributes = parseMoTa(product.MoTa)
-    const productImages = attributes.images
-      ? Array.isArray(attributes.images)
-        ? attributes.images
-        : [attributes.images]
-      : attributes.image
-      ? [attributes.image]
-      : ["/placeholder.svg"]
+    // Parse attributes to get image (fallback)
+    const attributes = parseMoTa(product.MoTa);
+
+    // Ưu tiên dùng HinhAnh, nếu không có thì fallback về attributes.image
+    const productImage =
+      product.HinhAnh || attributes.image || "/placeholder.svg";
 
     try {
       await addToCart(
@@ -102,25 +99,25 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
           id: product.MaSP,
           name: product.TenSP,
           price: product.GiaSP || 0,
-          image: attributes.image || productImages[0] || "/placeholder.svg",
+          image: productImage,
         },
         quantity
-      )
+      );
     } catch (error) {
       // Error is already handled in CartContext
-      console.error("Failed to add to cart:", error)
+      console.error("Failed to add to cart:", error);
     }
-  }
+  };
 
   const handleBuyNow = async () => {
     try {
-      await handleAddToCart()
-      router.push("/checkout")
+      await handleAddToCart();
+      router.push("/checkout");
     } catch (error) {
       // Error is already handled in handleAddToCart
-      console.error("Failed to buy now:", error)
+      console.error("Failed to buy now:", error);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -128,7 +125,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
         <Loader2 className={styles.spinner} />
         <p>Đang tải thông tin sản phẩm...</p>
       </div>
-    )
+    );
   }
 
   if (error || !product) {
@@ -136,25 +133,27 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
       <div className={styles.errorContainer}>
         <p>{error || "Không tìm thấy sản phẩm"}</p>
       </div>
-    )
+    );
   }
 
   // Parse attributes from MoTa (safe parsing)
-  const attributes = parseMoTa(product.MoTa)
+  const attributes = parseMoTa(product.MoTa);
 
-  // Get images from attributes or use placeholder
-  const images = attributes.images
+  // Ưu tiên dùng HinhAnh, nếu không có thì fallback về attributes
+  const images = product.HinhAnh
+    ? [product.HinhAnh]
+    : attributes.images
     ? Array.isArray(attributes.images)
       ? attributes.images
       : [attributes.images]
     : attributes.image
     ? [attributes.image]
-    : ["/placeholder.svg"]
+    : ["/placeholder.svg"];
 
   const formattedPrice = new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-  }).format(product.GiaSP || 0)
+  }).format(product.GiaSP || 0);
 
   return (
     <div className={styles.container}>
@@ -162,7 +161,10 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
       <section className={styles.gallery}>
         {/* Main Image */}
         <div className={styles.mainImage}>
-          <img src={images[activeImage] || "/placeholder.svg"} alt="Sản phẩm chính" />
+          <img
+            src={images[activeImage] || "/placeholder.svg"}
+            alt="Sản phẩm chính"
+          />
         </div>
 
         {/* Thumbnails */}
@@ -171,7 +173,9 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
             <button
               type="button"
               key={idx}
-              className={`${styles.thumbnail} ${activeImage === idx ? styles.active : ""}`}
+              className={`${styles.thumbnail} ${
+                activeImage === idx ? styles.active : ""
+              }`}
               onClick={() => setActiveImage(idx)}
             >
               <img src={img || "/placeholder.svg"} alt={`Hình ${idx + 1}`} />
@@ -199,9 +203,17 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
               onClick={() => setIsFavorite(!isFavorite)}
               title="Thêm vào danh sách yêu thích"
             >
-              <Heart size={24} fill={isFavorite ? "#ff8c42" : "none"} color={isFavorite ? "#ff8c42" : "#1f2937"} />
+              <Heart
+                size={24}
+                fill={isFavorite ? "#ff8c42" : "none"}
+                color={isFavorite ? "#ff8c42" : "#1f2937"}
+              />
             </button>
-            <button type="button" className={styles.shareBtn} title="Chia sẻ sản phẩm">
+            <button
+              type="button"
+              className={styles.shareBtn}
+              title="Chia sẻ sản phẩm"
+            >
               <Share2 size={24} />
             </button>
           </div>
@@ -251,9 +263,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
               .map(([key, value]) => (
                 <div key={key} className={styles.highlight}>
                   <span className={styles.highlightLabel}>{key}</span>
-                  <span className={styles.highlightValue}>
-                    {String(value)}
-                  </span>
+                  <span className={styles.highlightValue}>{String(value)}</span>
                 </div>
               ))}
           </div>
@@ -324,7 +334,9 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
                           {review.TenKH || `Khách hàng ${review.MaKH}`}
                         </p>
                         <p className={styles.reviewDate}>
-                          {new Date(review.NgayDanhGia).toLocaleDateString("vi-VN")}
+                          {new Date(review.NgayDanhGia).toLocaleDateString(
+                            "vi-VN"
+                          )}
                         </p>
                       </div>
                     </div>
@@ -337,7 +349,9 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
                           color="#fbbf24"
                         />
                       ))}
-                      <span className={styles.ratingValue}>{review.DiemDanhGia}/5</span>
+                      <span className={styles.ratingValue}>
+                        {review.DiemDanhGia}/5
+                      </span>
                     </div>
                   </div>
                   {review.NoiDung && (
@@ -354,5 +368,5 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
         </div>
       </section>
     </div>
-  )
+  );
 }

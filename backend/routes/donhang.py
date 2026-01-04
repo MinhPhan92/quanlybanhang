@@ -50,10 +50,20 @@ class DeliveryUpdateResponse(BaseModel):
 
 @router.post("/", response_model=dict)
 def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    # Role check: Only Admin, Manager, and Employee can create orders
-    if current_user.get("role") not in ["Admin", "Manager", "Employee"]:
+    # Role check: Admin, Manager, Employee can create any orders
+    # KhachHang can only create orders for themselves
+    user_role = current_user.get("role")
+    
+    if user_role not in ["Admin", "Manager", "Employee", "KhachHang"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
+    
+    # If customer is creating order, ensure MaKH matches their account
+    if user_role == "KhachHang":
+        # Get customer ID from token (stored as user_id for customers)
+        customer_id_from_token = current_user.get("user_id")
+        # Override MaKH to prevent customers from creating orders for others
+        donhang["MaKH"] = customer_id_from_token
     
     # Extract voucher code from payload
     voucher_code = donhang.get("voucher_code")
@@ -98,6 +108,21 @@ def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: d
     db.add(new_dh)
     db.commit()
     db.refresh(new_dh)
+
+    # Save order items with price snapshot (DonGia)
+    items = donhang.get("items", [])
+    if items:
+        from backend.models import DonHang_SanPham
+        for item in items:
+            order_item = DonHang_SanPham(
+                MaDonHang=new_dh.MaDonHang,
+                MaSP=item["MaSP"],
+                SoLuong=item["SoLuong"],
+                DonGia=item["DonGia"],  # Price snapshot at order time
+                GiamGia=item.get("GiamGia", 0)
+            )
+            db.add(order_item)
+        db.commit()
 
     # Activity log
     try:
@@ -165,6 +190,55 @@ def get_all_donhang(db: Session = Depends(get_db), current_user: dict = Depends(
             detail=f"Lỗi lấy danh sách đơn hàng: {str(e)}"
         )
 
+# Get customer's own orders
+@router.get("/my-orders", response_model=list)
+def get_my_orders(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    """
+    Lấy danh sách đơn hàng của khách hàng hiện tại.
+    """
+    try:
+        # Get customer ID from current user
+        user_role = current_user.get("role")
+        if user_role != "KhachHang":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, 
+                detail="Endpoint này chỉ dành cho khách hàng"
+            )
+        
+        customer_id = current_user.get("user_id")
+        if not customer_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không tìm thấy thông tin khách hàng"
+            )
+        
+        # Get orders for this customer
+        dhs = db.query(DonHang).filter(DonHang.MaKH == customer_id).order_by(DonHang.NgayDat.desc()).all()
+        
+        # Serialize to dictionaries
+        result = []
+        for dh in dhs:
+            order_dict = {
+                "MaDonHang": dh.MaDonHang,
+                "NgayDat": dh.NgayDat.isoformat() if dh.NgayDat else None,
+                "TongTien": float(dh.TongTien) if dh.TongTien else 0.0,
+                "TrangThai": dh.TrangThai,
+                "MaKH": dh.MaKH,
+                "MaNV": dh.MaNV,
+                "KhuyenMai": dh.KhuyenMai,
+                "PhiShip": float(dh.PhiShip) if dh.PhiShip else None,
+                "MaShipper": dh.MaShipper,
+            }
+            result.append(order_dict)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi lấy lịch sử đơn hàng: {str(e)}"
+        )
+
 # Read one
 
 
@@ -178,6 +252,26 @@ def get_donhang(madonhang: int, db: Session = Depends(get_db), current_user: dic
         if not dh:
             raise HTTPException(status_code=404, detail="Đơn hàng không tồn tại")
         
+        # Get order items with product details
+        from backend.models import DonHang_SanPham, SanPham
+        order_items = db.query(DonHang_SanPham, SanPham).join(
+            SanPham, DonHang_SanPham.MaSP == SanPham.MaSP
+        ).filter(
+            DonHang_SanPham.MaDonHang == madonhang
+        ).all()
+        
+        # Format items list
+        items = []
+        for order_item, product in order_items:
+            items.append({
+                "MaSP": order_item.MaSP,
+                "TenSP": product.TenSP,
+                "SoLuong": order_item.SoLuong,
+                "DonGia": float(order_item.DonGia),  # Price at order time (snapshot)
+                "GiamGia": float(order_item.GiamGia) if order_item.GiamGia else 0.0,
+                "image": product.HinhAnh
+            })
+        
         # Properly serialize SQLAlchemy object to dictionary
         return {
             "MaDonHang": dh.MaDonHang,
@@ -189,6 +283,7 @@ def get_donhang(madonhang: int, db: Session = Depends(get_db), current_user: dic
             "KhuyenMai": dh.KhuyenMai,
             "PhiShip": float(dh.PhiShip) if dh.PhiShip else None,
             "MaShipper": dh.MaShipper,
+            "items": items
         }
     except HTTPException:
         raise

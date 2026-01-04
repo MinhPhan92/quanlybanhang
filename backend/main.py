@@ -46,10 +46,10 @@ from backend.routes import (
     config,
     alert,
     chatbot,
-    project,
     logs,
-    contact,
     giohang,
+    mock_payment,  # Mock QR Payment Gateway
+    upload,  # Upload ảnh sản phẩm
 )
 
 from backend.routes.chatbot import load_chatbot_knowledge
@@ -237,10 +237,10 @@ app.include_router(khieunai.router, prefix="/api", tags=["Khiếu nại"])
 app.include_router(config.router, prefix="/api", tags=["Config"])
 app.include_router(alert.router, prefix="/api", tags=["Alerts"])
 app.include_router(chatbot.router, prefix="/api", tags=["Chatbot"])
-app.include_router(project.router, prefix="/api", tags=["Dự án"])
 app.include_router(logs.router, prefix="/api", tags=["Logs"])
-app.include_router(contact.router, prefix="/api/lienhe", tags=["Liên hệ"])
 app.include_router(giohang.router, prefix="/api", tags=["Giỏ hàng"])
+app.include_router(mock_payment.router, prefix="/api/payment", tags=["Mock Payment"])  # QR Payment Gateway
+app.include_router(upload.router, prefix="/api/upload", tags=["Upload"])  # Upload ảnh
 
 # =====================================================
 # 🏠 7. Route gốc - kiểm tra kết nối backend

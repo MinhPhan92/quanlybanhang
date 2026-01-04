@@ -1,11 +1,30 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Header from "../components/shared/header/Header"
-import Footer from "../components/shared/footer/Footer"
-import styles from "./checkout.module.css"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Header from "../components/shared/header/Header";
+import Footer from "../components/shared/footer/Footer";
+import { useAuth } from "../contexts/AuthContext";
+import { useCart } from "../contexts/CartContext";
+import { ordersApi } from "@/app/lib/api/orders";
+import { paymentsApi, CreateTransactionResponse } from "@/app/lib/api/payments";
+import { Loader2, QrCode, CreditCard, Truck, Wallet } from "lucide-react";
+import styles from "./checkout.module.css";
+
+// =====================================================
+// 📋 Mock QR Payment Checkout Page
+// =====================================================
+// Flow:
+// 1. User fills shipping info and selects payment method
+// 2. If QR payment selected, creates order and transaction
+// 3. Displays QR code with payment URL
+// 4. User can open mock payment page to complete payment
 
 export default function CheckoutPage() {
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { cartItems, getTotalPrice, clearCart } = useCart();
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -13,34 +32,219 @@ export default function CheckoutPage() {
     address: "",
     city: "",
     postalCode: "",
-    paymentMethod: "card",
-  })
+    paymentMethod: "qr", // Default to QR payment
+  });
 
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e:any) => {
-    const { name, value } = e.target
+  // QR Payment state
+  const [showQRPayment, setShowQRPayment] = useState(false);
+  const [transactionData, setTransactionData] =
+    useState<CreateTransactionResponse | null>(null);
+  const [orderId, setOrderId] = useState<number | null>(null);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login?redirect=/checkout");
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  // Pre-fill user info if available
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || "",
+        email: prev.email || "",
+        phone: prev.phone || "",
+      }));
+    }
+  }, [user]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
+    }));
+  };
+
+  // Calculate totals
+  const subtotal = getTotalPrice();
+  const shipping = subtotal >= 10000000 ? 0 : 30000;
+  const tax = subtotal * 0.1;
+  const total = subtotal + shipping + tax;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      // Validate cart is not empty
+      if (cartItems.length === 0) {
+        setError(
+          "Giỏ hàng trống. Vui lòng thêm sản phẩm trước khi thanh toán."
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Create order with items (price snapshot)
+      const orderData = {
+        NgayDat: new Date().toISOString().split("T")[0],
+        TongTien: total,
+        TrangThai: "Chờ thanh toán", // PENDING_PAYMENT
+        MaKH: user?.MaKH,
+        items: cartItems.map((item) => ({
+          MaSP: item.MaSP,
+          SoLuong: item.quantity,
+          DonGia: item.GiaSP, // Price snapshot at checkout time
+          GiamGia: 0,
+        })),
+      };
+
+      const orderResponse = await ordersApi.create(orderData);
+      const newOrderId = orderResponse.MaDonHang;
+      setOrderId(newOrderId);
+
+      // If QR payment selected, create transaction
+      if (formData.paymentMethod === "qr") {
+        const txnResponse = await paymentsApi.createTransaction(newOrderId);
+        setTransactionData(txnResponse);
+        setShowQRPayment(true);
+      } else if (formData.paymentMethod === "cod") {
+        // For COD, just show success message
+        clearCart();
+        router.push(`/order/success?orderId=${newOrderId}`);
+      } else {
+        // For other methods, redirect to order success (mock)
+        clearCart();
+        router.push(`/order/success?orderId=${newOrderId}`);
+      }
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+      setError(err.message || "Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Generate QR code URL (using external QR API for simplicity)
+  const getQRCodeUrl = (data: string) => {
+    const fullUrl =
+      typeof window !== "undefined" ? `${window.location.origin}${data}` : data;
+    const encoded = encodeURIComponent(fullUrl);
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encoded}`;
+  };
+
+  // Handle opening mock payment page
+  const handleOpenMockPayment = () => {
+    if (transactionData?.paymentUrl) {
+      window.open(transactionData.paymentUrl, "_blank");
+    }
+  };
+
+  // Loading state
+  if (authLoading) {
+    return (
+      <>
+        <Header />
+        <main className={styles.main}>
+          <div className={styles.loadingContainer}>
+            <Loader2 className={styles.spinner} size={48} />
+            <p>Đang tải...</p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
   }
 
-  const handleSubmit = (e:any) => {
-    e.preventDefault()
-    setIsSubmitted(true)
-    setTimeout(() => setIsSubmitted(false), 3000)
+  // QR Payment Modal/View
+  if (showQRPayment && transactionData) {
+    return (
+      <>
+        <Header />
+        <main className={styles.main}>
+          <div className={styles.container}>
+            <div className={styles.qrPaymentSection}>
+              <div className={styles.qrCard}>
+                <div className={styles.qrHeader}>
+                  <QrCode size={32} />
+                  <h1>Thanh Toán QR</h1>
+                </div>
+
+                <div className={styles.qrContent}>
+                  {/* QR Code */}
+                  <div className={styles.qrCodeWrapper}>
+                    <img
+                      src={getQRCodeUrl(transactionData.paymentUrl)}
+                      alt="QR Payment Code"
+                      className={styles.qrImage}
+                    />
+                  </div>
+
+                  {/* Transaction Info */}
+                  <div className={styles.transactionInfo}>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Mã đơn hàng:</span>
+                      <span className={styles.infoValue}>
+                        #{transactionData.orderId}
+                      </span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Mã giao dịch:</span>
+                      <span className={styles.infoValue}>
+                        {transactionData.transactionId}
+                      </span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Số tiền:</span>
+                      <span className={styles.infoValueAmount}>
+                        {transactionData.amount.toLocaleString("vi-VN")}₫
+                      </span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Trạng thái:</span>
+                      <span className={styles.statusWaiting}>
+                        Chờ thanh toán
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Instructions */}
+                  <div className={styles.instructions}>
+                    <p>📱 Quét mã QR hoặc nhấn nút bên dưới để thanh toán</p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className={styles.qrActions}>
+                    <button
+                      onClick={handleOpenMockPayment}
+                      className={styles.payNowBtn}
+                    >
+                      <Wallet size={20} />
+                      Mở Trang Thanh Toán
+                    </button>
+                    <button
+                      onClick={() => router.push(`/orders`)}
+                      className={styles.viewOrderBtn}
+                    >
+                      Xem Đơn Hàng
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
   }
-
-  const cartItems = [
-    { id: 1, name: "Lò vi sóng thông minh", price: 2500000, quantity: 1, image: "/public/smart-microwave.jpg" },
-    { id: 2, name: "Nồi áp suất điện", price: 1800000, quantity: 2, image: "/public/electric-pressure-cooker.jpg" },
-  ]
-
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const shipping = subtotal >= 10000000 ? 0 : 300000
-  const tax = subtotal * 0.1
-  const total = subtotal + shipping + tax
 
   return (
     <>
@@ -49,15 +253,11 @@ export default function CheckoutPage() {
         <div className={styles.container}>
           <h1 className={styles.title}>Thanh Toán</h1>
 
+          {error && <div className={styles.errorMessage}>⚠️ {error}</div>}
+
           <div className={styles.content}>
             {/* Form */}
             <div className={styles.formSection}>
-              {isSubmitted && (
-                <div className={styles.successMessage}>
-                  ✓ Đơn hàng đã được xác nhận! Chúng tôi sẽ liên hệ với bạn trong 24 giờ.
-                </div>
-              )}
-
               <form onSubmit={handleSubmit} className={styles.form}>
                 {/* Thông tin giao hàng */}
                 <section className={styles.section}>
@@ -126,14 +326,13 @@ export default function CheckoutPage() {
                       />
                     </div>
                     <div className={styles.formGroup}>
-                      <label className={styles.label}>Mã bưu điện *</label>
+                      <label className={styles.label}>Mã bưu điện</label>
                       <input
                         type="text"
                         name="postalCode"
                         value={formData.postalCode}
                         onChange={handleChange}
                         className={styles.input}
-                        required
                       />
                     </div>
                   </div>
@@ -141,10 +340,39 @@ export default function CheckoutPage() {
 
                 {/* Phương thức thanh toán */}
                 <section className={styles.section}>
-                  <h2 className={styles.sectionTitle}>Phương thức thanh toán</h2>
+                  <h2 className={styles.sectionTitle}>
+                    Phương thức thanh toán
+                  </h2>
 
                   <div className={styles.paymentMethods}>
-                    <label className={styles.paymentOption}>
+                    <label
+                      className={`${styles.paymentOption} ${
+                        formData.paymentMethod === "qr" ? styles.selected : ""
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="qr"
+                        checked={formData.paymentMethod === "qr"}
+                        onChange={handleChange}
+                      />
+                      <QrCode size={24} />
+                      <div>
+                        <span className={styles.paymentName}>
+                          Thanh toán QR Code
+                        </span>
+                        <span className={styles.paymentDesc}>
+                          Quét mã QR để thanh toán nhanh
+                        </span>
+                      </div>
+                    </label>
+
+                    <label
+                      className={`${styles.paymentOption} ${
+                        formData.paymentMethod === "card" ? styles.selected : ""
+                      }`}
+                    >
                       <input
                         type="radio"
                         name="paymentMethod"
@@ -152,19 +380,22 @@ export default function CheckoutPage() {
                         checked={formData.paymentMethod === "card"}
                         onChange={handleChange}
                       />
-                      <span>Thẻ tín dụng / Ghi nợ</span>
+                      <CreditCard size={24} />
+                      <div>
+                        <span className={styles.paymentName}>
+                          Thẻ tín dụng / Ghi nợ
+                        </span>
+                        <span className={styles.paymentDesc}>
+                          Visa, Mastercard, JCB
+                        </span>
+                      </div>
                     </label>
-                    <label className={styles.paymentOption}>
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="bank"
-                        checked={formData.paymentMethod === "bank"}
-                        onChange={handleChange}
-                      />
-                      <span>Chuyển khoản ngân hàng</span>
-                    </label>
-                    <label className={styles.paymentOption}>
+
+                    <label
+                      className={`${styles.paymentOption} ${
+                        formData.paymentMethod === "cod" ? styles.selected : ""
+                      }`}
+                    >
                       <input
                         type="radio"
                         name="paymentMethod"
@@ -172,13 +403,32 @@ export default function CheckoutPage() {
                         checked={formData.paymentMethod === "cod"}
                         onChange={handleChange}
                       />
-                      <span>Thanh toán khi nhận hàng (COD)</span>
+                      <Truck size={24} />
+                      <div>
+                        <span className={styles.paymentName}>
+                          Thanh toán khi nhận hàng
+                        </span>
+                        <span className={styles.paymentDesc}>
+                          COD - Cash on Delivery
+                        </span>
+                      </div>
                     </label>
                   </div>
                 </section>
 
-                <button type="submit" className={styles.submitBtn}>
-                  Xác Nhận Đơn Hàng
+                <button
+                  type="submit"
+                  className={styles.submitBtn}
+                  disabled={isSubmitting || cartItems.length === 0}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className={styles.btnSpinner} size={20} />
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    "Tiến Hành Thanh Toán"
+                  )}
                 </button>
               </form>
             </div>
@@ -187,48 +437,61 @@ export default function CheckoutPage() {
             <div className={styles.orderSummary}>
               <h2 className={styles.summaryTitle}>Tóm Tắt Đơn Hàng</h2>
 
-              <div className={styles.items}>
-                {cartItems.map((item) => (
-                  <div key={item.id} className={styles.summaryItem}>
-                    <div className={styles.itemDetail}>
-                      <p className={styles.itemName}>{item.name}</p>
-                      <p className={styles.itemQty}>SL: {item.quantity}</p>
-                    </div>
-                    <p className={styles.itemPrice}>{(item.price * item.quantity).toLocaleString("vi-VN")}₫</p>
+              {cartItems.length === 0 ? (
+                <p className={styles.emptyCart}>Giỏ hàng trống</p>
+              ) : (
+                <>
+                  <div className={styles.items}>
+                    {cartItems.map((item) => (
+                      <div key={item.id} className={styles.summaryItem}>
+                        <div className={styles.itemDetail}>
+                          <p className={styles.itemName}>{item.name}</p>
+                          <p className={styles.itemQty}>SL: {item.quantity}</p>
+                        </div>
+                        <p className={styles.itemPrice}>
+                          {(item.price * item.quantity).toLocaleString("vi-VN")}
+                          ₫
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
 
-              <div className={styles.divider}></div>
+                  <div className={styles.divider}></div>
 
-              <div className={styles.summaryRow}>
-                <span>Tạm tính:</span>
-                <span>{subtotal.toLocaleString("vi-VN")}₫</span>
-              </div>
+                  <div className={styles.summaryRow}>
+                    <span>Tạm tính:</span>
+                    <span>{subtotal.toLocaleString("vi-VN")}₫</span>
+                  </div>
 
-              <div className={styles.summaryRow}>
-                <span>Vận chuyển:</span>
-                <span className={shipping === 0 ? styles.free : ""}>
-                  {shipping === 0 ? "Miễn phí" : `${shipping.toLocaleString("vi-VN")}₫`}
-                </span>
-              </div>
+                  <div className={styles.summaryRow}>
+                    <span>Vận chuyển:</span>
+                    <span className={shipping === 0 ? styles.free : ""}>
+                      {shipping === 0
+                        ? "Miễn phí"
+                        : `${shipping.toLocaleString("vi-VN")}₫`}
+                    </span>
+                  </div>
 
-              <div className={styles.summaryRow}>
-                <span>Thuế (10%):</span>
-                <span>{tax.toLocaleString("vi-VN")}₫</span>
-              </div>
+                  <div className={styles.summaryRow}>
+                    <span>Thuế (10%):</span>
+                    <span>{tax.toLocaleString("vi-VN")}₫</span>
+                  </div>
 
-              <div className={styles.divider}></div>
+                  <div className={styles.divider}></div>
 
-              <div className={styles.totalRow}>
-                <span>Tổng cộng:</span>
-                <span className={styles.totalAmount}>{total.toLocaleString("vi-VN")}₫</span>
-              </div>
+                  <div className={styles.totalRow}>
+                    <span>Tổng cộng:</span>
+                    <span className={styles.totalAmount}>
+                      {total.toLocaleString("vi-VN")}₫
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
       </main>
       <Footer />
     </>
-  )
+  );
 }

@@ -1,43 +1,47 @@
-"use client"
+"use client";
 
-import { Heart, ShoppingCart } from "lucide-react"
-import { useState } from "react"
-import Link from "next/link"
-import { useCart } from "@/app/contexts/CartContext"
-import styles from "./product-card.module.css"
+import { Heart, ShoppingCart } from "lucide-react";
+import { useState } from "react";
+import Link from "next/link";
+import { useCart } from "@/app/contexts/CartContext";
+import styles from "./product-card.module.css";
 
-import { Product } from "@/app/lib/api/products"
+import { Product } from "@/app/lib/api/products";
 
 interface ProductCardProps {
-  product: Product
+  product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const [isFavorite, setIsFavorite] = useState(false)
-  const { addToCart } = useCart()
+  const [isFavorite, setIsFavorite] = useState(false);
+  const { addToCart } = useCart();
 
   const formattedPrice = (value: number) =>
     new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
       maximumFractionDigits: 0,
-    }).format(value)
+    }).format(value);
 
   // Safe MoTa parsing helper
   const parseMoTa = (moTa: string | undefined): Record<string, any> => {
-    if (!moTa) return {}
+    if (!moTa) return {};
     if (typeof moTa === "string") {
       try {
-        return JSON.parse(moTa)
+        return JSON.parse(moTa);
       } catch {
-        return {}
+        return {};
       }
     }
-    return typeof moTa === "object" ? moTa : {}
-  }
+    return typeof moTa === "object" ? moTa : {};
+  };
 
-  // Parse attributes from MoTa if it's JSON
-  const attributes = parseMoTa(product.MoTa)
+  // Parse attributes from MoTa if it's JSON (fallback for old data)
+  const attributes = parseMoTa(product.MoTa);
+
+  // Ưu tiên dùng HinhAnh, nếu không có thì fallback về attributes.image
+  const productImage =
+    product.HinhAnh || attributes.image || "/placeholder.svg";
 
   return (
     <Link href={`/product/${product.MaSP}`} className={styles.link}>
@@ -45,7 +49,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Image Container */}
         <div className={styles.imageContainer}>
           <img
-            src={attributes.image || "/placeholder.svg"}
+            src={productImage}
             alt={product.TenSP}
             className={styles.image}
           />
@@ -81,7 +85,9 @@ export default function ProductCard({ product }: ProductCardProps) {
           <h3 className={styles.name}>{product.TenSP}</h3>
 
           <div className={styles.priceSection}>
-            <span className={styles.price}>{formattedPrice(product.GiaSP || 0)}</span>
+            <span className={styles.price}>
+              {formattedPrice(product.GiaSP || 0)}
+            </span>
             {/* {product.SoLuongTonKho !== undefined && (
               <span className={styles.stock}>
                 Còn {product.SoLuongTonKho} sản phẩm
@@ -93,18 +99,18 @@ export default function ProductCard({ product }: ProductCardProps) {
           <button
             type="button"
             onClick={async (e) => {
-              e.preventDefault()
-              e.stopPropagation()
+              e.preventDefault();
+              e.stopPropagation();
               try {
                 await addToCart({
                   id: product.MaSP,
                   name: product.TenSP,
                   price: product.GiaSP || 0,
                   image: attributes.image || "/placeholder.svg",
-                })
+                });
               } catch (error) {
                 // Error is already handled in CartContext
-                console.error("Failed to add to cart:", error)
+                console.error("Failed to add to cart:", error);
               }
             }}
             className={styles.addToCartButton}
@@ -116,5 +122,5 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
       </div>
     </Link>
-  )
+  );
 }
