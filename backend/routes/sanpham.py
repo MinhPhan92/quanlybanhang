@@ -55,6 +55,7 @@ def format_product_response(sp: SanPham, include_attributes: bool = True) -> dic
         "GiaSP": float(sp.GiaSP) if sp.GiaSP else 0.0,
         "SoLuongTonKho": sp.SoLuongTonKho,
         "MoTa": sp.MoTa,
+        "HinhAnh": sp.HinhAnh,  # Thêm trường HinhAnh
         "MaDanhMuc": sp.MaDanhMuc,
         "IsDelete": sp.IsDelete
     }
@@ -106,6 +107,7 @@ def create_sanpham(
             GiaSP=product_data.GiaSP,
             SoLuongTonKho=product_data.SoLuongTonKho,
             MoTa=mota_json,  # Store JSON-encoded attributes
+            HinhAnh=product_data.HinhAnh,  # Lưu đường dẫn ảnh
             MaDanhMuc=product_data.MaDanhMuc,
             IsDelete=False
         )
@@ -247,6 +249,62 @@ def get_sanpham(
             detail=f"Lỗi lấy thông tin sản phẩm: {str(e)}"
         )
 
+# Check availability (for cart validation)
+@router.get("/{masp}/check-availability", summary="Kiểm tra tồn kho và giá sản phẩm")
+def check_product_availability(
+    masp: int,
+    quantity: int = 1,
+    db: Session = Depends(get_db),
+    current_user: Optional[dict] = Depends(get_current_user_optional)
+):
+    """
+    Kiểm tra sản phẩm có sẵn không, giá hiện tại, và tồn kho.
+    Dùng để validate giỏ hàng.
+    """
+    try:
+        sp = db.query(SanPham).filter(SanPham.MaSP == masp).first()
+        
+        if not sp:
+            return {
+                "available": False,
+                "reason": "Sản phẩm không tồn tại",
+                "MaSP": masp
+            }
+        
+        if sp.IsDelete:
+            return {
+                "available": False,
+                "reason": "Sản phẩm đã ngừng kinh doanh",
+                "MaSP": masp,
+                "TenSP": sp.TenSP
+            }
+        
+        if sp.SoLuongTonKho < quantity:
+            return {
+                "available": False,
+                "reason": f"Không đủ hàng. Chỉ còn {sp.SoLuongTonKho} sản phẩm",
+                "MaSP": masp,
+                "TenSP": sp.TenSP,
+                "GiaSP": float(sp.GiaSP) if sp.GiaSP else 0.0,
+                "SoLuongTonKho": sp.SoLuongTonKho,
+                "HinhAnh": sp.HinhAnh
+            }
+        
+        return {
+            "available": True,
+            "MaSP": sp.MaSP,
+            "TenSP": sp.TenSP,
+            "GiaSP": float(sp.GiaSP) if sp.GiaSP else 0.0,
+            "SoLuongTonKho": sp.SoLuongTonKho,
+            "HinhAnh": sp.HinhAnh
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi kiểm tra sản phẩm: {str(e)}"
+        )
+
 # Update
 
 
@@ -290,6 +348,8 @@ def update_sanpham(
             sp.SoLuongTonKho = product_data.SoLuongTonKho
         if product_data.MaDanhMuc is not None:
             sp.MaDanhMuc = product_data.MaDanhMuc
+        if product_data.HinhAnh is not None:
+            sp.HinhAnh = product_data.HinhAnh
         
         # Handle attributes update
         if product_data.attributes is not None:

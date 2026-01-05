@@ -5,6 +5,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import ToastWrapper from "./components/shared/toast/ToastWrapper";
+import { ChatProvider } from "./contexts/ChatContext";
+import ChatWidget from "./components/shared/chatbot/ChatWidget";
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -29,8 +31,11 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             <ToastProvider>
-              {children}
-              <ToastWrapper />
+              <ChatProvider>
+                {children}
+                <ToastWrapper />
+                <ChatWidget />
+              </ChatProvider>
             </ToastProvider>
           </CartProvider>
         </AuthProvider>

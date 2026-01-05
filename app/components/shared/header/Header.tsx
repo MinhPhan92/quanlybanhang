@@ -1,44 +1,55 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { ShoppingCart, Search, Menu, Shield, LogIn, LogOut, User } from "lucide-react"
-import { useState } from "react"
-import { useAuth } from "@/app/contexts/AuthContext"
-import { useCart } from "@/app/contexts/CartContext"
-import { useRouter } from "next/navigation"
-import styles from "./Header.module.css"
+import Link from "next/link";
+import {
+  ShoppingCart,
+  Search,
+  Menu,
+  Shield,
+  LogIn,
+  LogOut,
+  User,
+  ChevronDown,
+  Package,
+} from "lucide-react";
+import { useState } from "react";
+import { useAuth } from "@/app/contexts/AuthContext";
+import { useCart } from "@/app/contexts/CartContext";
+import { useRouter } from "next/navigation";
+import styles from "./Header.module.css";
 
 export default function Header() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [showSearch, setShowSearch] = useState(false)
-  const { user, isAuthenticated, logout } = useAuth()
-  const { getTotalItems } = useCart()
-  const router = useRouter()
-  const isAdmin = user?.role === "Admin" || user?.role === "Manager"
-  const cartItemCount = getTotalItems()
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const { getTotalItems } = useCart();
+  const router = useRouter();
+  const isAdmin = user?.role === "Admin" || user?.role === "Manager";
+  const cartItemCount = getTotalItems();
 
   const handleLogout = () => {
-    logout()
-    router.push("/")
-  }
+    logout();
+    router.push("/");
+  };
 
   const handleSearchClick = () => {
-    setShowSearch(!showSearch)
-  }
+    setShowSearch(!showSearch);
+  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`)
-      setShowSearch(false)
-      setSearchQuery("")
+      router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+      setShowSearch(false);
+      setSearchQuery("");
     }
-  }
+  };
 
   const handleCartClick = () => {
-    router.push("/cart")
-  }
+    router.push("/cart");
+  };
 
   return (
     <header className={styles.header}>
@@ -71,7 +82,10 @@ export default function Header() {
             </Link>
             {isAdmin && (
               <Link href="/admin" className={styles.navLink}>
-                <Shield size={16} style={{ marginRight: "4px", verticalAlign: "middle" }} />
+                <Shield
+                  size={16}
+                  style={{ marginRight: "4px", verticalAlign: "middle" }}
+                />
                 Admin
               </Link>
             )}
@@ -95,8 +109,8 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={() => {
-                    setShowSearch(false)
-                    setSearchQuery("")
+                    setShowSearch(false);
+                    setSearchQuery("");
                   }}
                   className={styles.searchCloseButton}
                 >
@@ -125,19 +139,34 @@ export default function Header() {
               )}
             </button>
             {isAuthenticated ? (
-              <div className={styles.userMenu}>
-                <Link href="/profile/orders" className={styles.userName} title="Đơn hàng của tôi">
-                  <User size={18} style={{ marginRight: "4px" }} />
-                  {user?.username}
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className={styles.logoutButton}
-                  title="Đăng xuất"
-                >
-                  <LogOut size={20} />
+              <div
+                className={styles.userMenu}
+                onMouseEnter={() => setShowUserMenu(true)}
+                onMouseLeave={() => setShowUserMenu(false)}
+              >
+                <button className={styles.userMenuButton}>
+                  <User size={18} />
+                  <span className={styles.userName}>{user?.username}</span>
+                  <ChevronDown size={16} className={styles.chevronIcon} />
                 </button>
+                {showUserMenu && (
+                  <div className={styles.userDropdown}>
+                    <div className={styles.dropdownContent}>
+                      <Link href="/profile/orders" className={styles.dropdownItem}>
+                        <Package size={16} />
+                        <span>Lịch sử đơn hàng</span>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className={styles.dropdownItem}
+                      >
+                        <LogOut size={16} />
+                        <span>Đăng xuất</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <Link href="/login" className={styles.loginButton}>
@@ -158,24 +187,47 @@ export default function Header() {
         {/* Mobile Menu */}
         {isOpen && (
           <nav className={styles.mobileNav}>
-            <Link href="/" className={styles.mobileNavLink} onClick={() => setIsOpen(false)}>
+            <Link
+              href="/"
+              className={styles.mobileNavLink}
+              onClick={() => setIsOpen(false)}
+            >
               Trang chủ
             </Link>
-            <Link href="/shop" className={styles.mobileNavLink} onClick={() => setIsOpen(false)}>
+            <Link
+              href="/shop"
+              className={styles.mobileNavLink}
+              onClick={() => setIsOpen(false)}
+            >
               Sản phẩm
             </Link>
-            <Link href="/about" className={styles.mobileNavLink} onClick={() => setIsOpen(false)}>
+            <Link
+              href="/about"
+              className={styles.mobileNavLink}
+              onClick={() => setIsOpen(false)}
+            >
               Giới thiệu
             </Link>
-            <Link href="/contact" className={styles.mobileNavLink} onClick={() => setIsOpen(false)}>
+            <Link
+              href="/contact"
+              className={styles.mobileNavLink}
+              onClick={() => setIsOpen(false)}
+            >
               Liên hệ
             </Link>
-            <Link href="/policies" className={styles.mobileNavLink} onClick={() => setIsOpen(false)}>
+            <Link
+              href="/policies"
+              className={styles.mobileNavLink}
+              onClick={() => setIsOpen(false)}
+            >
               Chính sách
             </Link>
             {isAdmin && (
               <Link href="/admin" className={styles.mobileNavLink}>
-                <Shield size={16} style={{ marginRight: "4px", verticalAlign: "middle" }} />
+                <Shield
+                  size={16}
+                  style={{ marginRight: "4px", verticalAlign: "middle" }}
+                />
                 Admin
               </Link>
             )}
@@ -185,12 +237,18 @@ export default function Header() {
                 onClick={handleLogout}
                 className={styles.mobileNavLink}
               >
-                <LogOut size={16} style={{ marginRight: "4px", verticalAlign: "middle" }} />
+                <LogOut
+                  size={16}
+                  style={{ marginRight: "4px", verticalAlign: "middle" }}
+                />
                 Đăng xuất
               </button>
             ) : (
               <Link href="/login" className={styles.mobileNavLink}>
-                <LogIn size={16} style={{ marginRight: "4px", verticalAlign: "middle" }} />
+                <LogIn
+                  size={16}
+                  style={{ marginRight: "4px", verticalAlign: "middle" }}
+                />
                 Đăng nhập
               </Link>
             )}
@@ -198,5 +256,5 @@ export default function Header() {
         )}
       </div>
     </header>
-  )
+  );
 }

@@ -1,45 +1,67 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { X, Plus, Minus, ShoppingCart } from "lucide-react"
-import Header from "../components/shared/header/Header"
-import Footer from "../components/shared/footer/Footer"
-import { useCart } from "../contexts/CartContext"
-import { useAuth } from "../contexts/AuthContext"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
-import styles from "./cart.module.css"
+import { useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { X, Plus, Minus, ShoppingCart } from "lucide-react";
+import Header from "../components/shared/header/Header";
+import Footer from "../components/shared/footer/Footer";
+import { useCart } from "../contexts/CartContext";
+import { useAuth } from "../contexts/AuthContext";
+import styles from "./cart.module.css";
 
 export default function CartPage() {
-  const { cartItems, updateQuantity, removeFromCart } = useCart()
-  const { isAuthenticated } = useAuth()
-  const router = useRouter()
+  const router = useRouter();
+  const { cartItems, updateQuantity, removeFromCart, validateCart, isLoading } =
+    useCart();
+  const { isAuthenticated } = useAuth();
+
+  // Validate cart khi load trang
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      validateCart();
+    }
+  }, []); // Chỉ chạy 1 lần khi mount
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push("/login")
+      router.push("/login");
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, router]);
 
   const formattedPrice = (value: number) =>
     new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
       maximumFractionDigits: 0,
-    }).format(value)
+    }).format(value);
 
   const removeItem = (id: number) => {
-    removeFromCart(id)
-  }
+    removeFromCart(id);
+  };
 
   if (!isAuthenticated) {
-    return null
+    return null;
   }
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const shipping = subtotal > 0 ? (subtotal >= 10000000 ? 0 : 100000) : 0
-  const tax = Math.round(subtotal * 0.1)
-  const total = subtotal + shipping + tax
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const shipping = subtotal > 0 ? (subtotal >= 10000000 ? 0 : 100000) : 0;
+  const tax = Math.round(subtotal * 0.1);
+  const total = subtotal + shipping + tax;
+
+  // Handle checkout button click
+  const handleCheckout = () => {
+    if (!isAuthenticated) {
+      // Redirect to login with return URL
+      router.push("/login?redirect=/checkout");
+    } else {
+      // Go directly to checkout
+      router.push("/checkout");
+    }
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -50,7 +72,9 @@ export default function CartPage() {
             <div className={styles.emptyCart}>
               <ShoppingCart size={48} color="#ff8c42" />
               <h2 className={styles.emptyTitle}>Giỏ hàng của bạn trống</h2>
-              <p className={styles.emptyText}>Hãy thêm một số sản phẩm để bắt đầu mua sắm</p>
+              <p className={styles.emptyText}>
+                Hãy thêm một số sản phẩm để bắt đầu mua sắm
+              </p>
               <Link href="/shop" className={styles.continueShoppingBtn}>
                 Tiếp tục mua sắm
               </Link>
@@ -59,7 +83,7 @@ export default function CartPage() {
         </main>
         <Footer />
       </>
-    )
+    );
   }
 
   return (
@@ -72,38 +96,71 @@ export default function CartPage() {
           <div className={styles.content}>
             {/* Cart Items */}
             <div className={styles.cartItems}>
-              {cartItems.map((item) => (
-                <div key={item.id} className={styles.cartItem}>
-                  <img src={item.image || "/placeholder.svg"} alt={item.name} className={styles.itemImage} />
+              {cartItems.map((item) => {
+                const isMaxStock =
+                  item.maxStock && item.quantity >= item.maxStock;
 
-                  <div className={styles.itemInfo}>
-                    <h3 className={styles.itemName}>{item.name}</h3>
-                    <p className={styles.itemPrice}>{formattedPrice(item.price)}</p>
-                  </div>
+                return (
+                  <div key={item.id} className={styles.cartItem}>
+                    <img
+                      src={item.image || "/placeholder.svg"}
+                      alt={item.name}
+                      className={styles.itemImage}
+                    />
 
-                  <div className={styles.quantityControl}>
+                    <div className={styles.itemInfo}>
+                      <h3 className={styles.itemName}>{item.name}</h3>
+                      <p className={styles.itemPrice}>
+                        {formattedPrice(item.price)}
+                        {item.priceChanged && (
+                          <span className={styles.priceChanged}>
+                            {" "}
+                            (Giá đã thay đổi)
+                          </span>
+                        )}
+                      </p>
+                      {item.maxStock && item.maxStock < 10 && (
+                        <p className={styles.stockWarning}>
+                          Chỉ còn {item.maxStock} sản phẩm
+                        </p>
+                      )}
+                    </div>
+
+                    <div className={styles.quantityControl}>
+                      <button
+                        className={styles.quantityBtn}
+                        onClick={() =>
+                          updateQuantity(item.id, item.quantity - 1)
+                        }
+                        disabled={isLoading}
+                      >
+                        <Minus size={16} />
+                      </button>
+                      <span className={styles.quantity}>{item.quantity}</span>
+                      <button
+                        className={styles.quantityBtn}
+                        onClick={() =>
+                          updateQuantity(item.id, item.quantity + 1)
+                        }
+                        disabled={isLoading || isMaxStock}
+                        title={
+                          isMaxStock ? `Tối đa ${item.maxStock} sản phẩm` : ""
+                        }
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+
                     <button
-                      type="button"
-                      className={styles.quantityBtn}
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      className={styles.removeBtn}
+                      onClick={() => removeItem(item.id)}
+                      disabled={isLoading}
                     >
-                      <Minus size={16} />
-                    </button>
-                    <span className={styles.quantity}>{item.quantity}</span>
-                    <button
-                      type="button"
-                      className={styles.quantityBtn}
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    >
-                      <Plus size={16} />
+                      <X size={18} />
                     </button>
                   </div>
-                  {/* <div className={styles.itemTotal}>{formattedPrice(item.price * item.quantity)}</div> */}
-                  <button className={styles.removeBtn} onClick={() => removeItem(item.id)}>
-                    <X size={18} />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Order Summary */}
@@ -135,12 +192,14 @@ export default function CartPage() {
 
               <div className={styles.totalRow}>
                 <span>Tổng cộng:</span>
-                <span className={styles.totalAmount}>{formattedPrice(total)}</span>
+                <span className={styles.totalAmount}>
+                  {formattedPrice(total)}
+                </span>
               </div>
 
-              <Link href="/checkout" className={styles.checkoutBtn}>
+              <button className={styles.checkoutBtn} onClick={handleCheckout}>
                 Thanh toán
-              </Link>
+              </button>
 
               <Link href="/shop" className={styles.continueShoppingLink}>
                 Tiếp tục mua sắm
@@ -151,5 +210,5 @@ export default function CartPage() {
       </main>
       <Footer />
     </>
-  )
+  );
 }

@@ -51,26 +51,20 @@ class DeliveryUpdateResponse(BaseModel):
 
 @router.post("/", response_model=dict)
 def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    # Role check: Admin, Manager, Employee, and Customers can create orders
-    from backend.routes.deps import has_role
-    if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien", "Customer", "KhachHang"]):
+    # Role check: Admin, Manager, Employee can create any orders
+    # KhachHang can only create orders for themselves
+    user_role = current_user.get("role")
+    
+    if user_role not in ["Admin", "Manager", "Employee", "KhachHang"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     
-    # For customers, ensure MaKH matches their own ID
-    # Token uses "user_id" for customer ID, role can be "Customer" or "KhachHang"
-    user_role = current_user.get("role")
-    if user_role in ["KhachHang", "Customer"]:
-        customer_id = current_user.get("user_id") or current_user.get("MaKH")
-        if customer_id:
-            # Auto-set MaKH from token for security
-            donhang["MaKH"] = customer_id
-        elif not donhang.get("MaKH"):
-            # If no MaKH provided and can't get from token, raise error
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Không tìm thấy thông tin khách hàng"
-            )
+    # If customer is creating order, ensure MaKH matches their account
+    if user_role == "KhachHang":
+        # Get customer ID from token (stored as user_id for customers)
+        customer_id_from_token = current_user.get("user_id")
+        # Override MaKH to prevent customers from creating orders for others
+        donhang["MaKH"] = customer_id_from_token
     
     # Extract voucher code from payload
     voucher_code = donhang.get("voucher_code")
@@ -142,7 +136,7 @@ def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: d
     db.commit()
     db.refresh(new_dh)
 
-    # Add order items if provided
+    # Save order items with price snapshot (DonGia)
     items = donhang.get("items", [])
     if items:
         from backend.models import DonHang_SanPham
@@ -159,7 +153,7 @@ def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: d
                 MaDonHang=new_dh.MaDonHang,
                 MaSP=ma_sp,
                 SoLuong=item.get("SoLuong", 1),
-                DonGia=item.get("DonGia", 0),
+                DonGia=item.get("DonGia", 0),  # Price snapshot at order time
                 GiamGia=item.get("GiamGia", 0)
             )
             db.add(order_item)
@@ -260,6 +254,55 @@ def get_all_donhang(db: Session = Depends(get_db), current_user: dict = Depends(
             detail=f"Lỗi lấy danh sách đơn hàng: {str(e)}"
         )
 
+# Get customer's own orders
+@router.get("/my-orders", response_model=list)
+def get_my_orders(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    """
+    Lấy danh sách đơn hàng của khách hàng hiện tại.
+    """
+    try:
+        # Get customer ID from current user
+        user_role = current_user.get("role")
+        if user_role != "KhachHang":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, 
+                detail="Endpoint này chỉ dành cho khách hàng"
+            )
+        
+        customer_id = current_user.get("user_id")
+        if not customer_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không tìm thấy thông tin khách hàng"
+            )
+        
+        # Get orders for this customer
+        dhs = db.query(DonHang).filter(DonHang.MaKH == customer_id).order_by(DonHang.NgayDat.desc()).all()
+        
+        # Serialize to dictionaries
+        result = []
+        for dh in dhs:
+            order_dict = {
+                "MaDonHang": dh.MaDonHang,
+                "NgayDat": dh.NgayDat.isoformat() if dh.NgayDat else None,
+                "TongTien": float(dh.TongTien) if dh.TongTien else 0.0,
+                "TrangThai": dh.TrangThai,
+                "MaKH": dh.MaKH,
+                "MaNV": dh.MaNV,
+                "KhuyenMai": dh.KhuyenMai,
+                "PhiShip": float(dh.PhiShip) if dh.PhiShip else None,
+                "MaShipper": dh.MaShipper,
+            }
+            result.append(order_dict)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi lấy lịch sử đơn hàng: {str(e)}"
+        )
+
 # Read one
 
 
@@ -299,9 +342,9 @@ def get_donhang(madonhang: int, db: Session = Depends(get_db), current_user: dic
                 "MaSP": order_item.MaSP,
                 "TenSP": product.TenSP if product else f"Sản phẩm #{order_item.MaSP}",
                 "SoLuong": order_item.SoLuong,
-                "DonGia": float(order_item.DonGia) if order_item.DonGia else 0.0,
+                "DonGia": float(order_item.DonGia) if order_item.DonGia else 0.0,  # Price at order time (snapshot)
                 "GiamGia": float(order_item.GiamGia) if order_item.GiamGia else 0.0,
-                "image": None  # Can be extended to include product image if available
+                "image": product.HinhAnh if product else None
             })
         
         # Properly serialize SQLAlchemy object to dictionary
@@ -315,7 +358,7 @@ def get_donhang(madonhang: int, db: Session = Depends(get_db), current_user: dic
             "KhuyenMai": dh.KhuyenMai,
             "PhiShip": float(dh.PhiShip) if dh.PhiShip else None,
             "MaShipper": dh.MaShipper,
-            "items": items,  # Include order items
+            "items": items  # Include order items
         }
     except HTTPException:
         raise

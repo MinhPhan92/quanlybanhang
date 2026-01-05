@@ -1,4 +1,5 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export const API_ENDPOINTS = {
   AUTH: {
@@ -63,6 +64,11 @@ export const API_ENDPOINTS = {
   },
   PAYMENTS: {
     HISTORY: (orderId: number) => `/thanhtoan/history/${orderId}`,
+    CREATE_TRANSACTION: "/payment/create-transaction",
+    GET_TRANSACTION: (transactionId: string) =>
+      `/payment/transaction/${transactionId}`,
+    CALLBACK: "/payment/callback",
+    ORDER_TRANSACTIONS: (orderId: number) =>
+      `/payment/order/${orderId}/transactions`,
   },
 };
-

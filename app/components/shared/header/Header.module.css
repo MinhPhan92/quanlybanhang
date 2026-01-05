@@ -211,9 +211,37 @@
 }
 
 .userMenu {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+}
+
+.userMenuButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.userMenuButton:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.chevronIcon {
+  transition: transform 0.2s;
+}
+
+.userMenu:hover .chevronIcon {
+  transform: rotate(180deg);
 }
 
 .userName {
@@ -229,21 +257,65 @@
   }
 }
 
-.logoutButton {
-  padding: 0.5rem;
+.userDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  padding-top: 0.5rem;
   background: transparent;
-  border: none;
-  cursor: pointer;
-  color: #1f2937;
-  border-radius: 0.5rem;
-  transition: background-color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-width: 200px;
+  z-index: 100;
 }
 
-.logoutButton:hover {
-  background-color: #fee;
+.userDropdown::before {
+  content: "";
+  display: block;
+  height: 0.5rem;
+}
+
+.dropdownContent {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 0.25rem;
+  overflow: hidden;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  width: 100%;
+  text-align: left;
+  color: #1f2937;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-sizing: border-box;
+}
+
+.dropdownItem:hover {
+  background-color: #f3f4f6;
+}
+
+.dropdownItem:hover:not(:last-child) {
+  color: #1f2937;
+}
+
+.dropdownItem:last-child {
+  color: #dc2626;
+}
+
+.dropdownItem:last-child:hover {
+  background-color: #fee2e2;
   color: #dc2626;
 }
 

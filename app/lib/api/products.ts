@@ -7,6 +7,7 @@ export interface Product {
   GiaSP: number;
   SoLuongTonKho: number;
   MoTa?: string;
+  HinhAnh?: string; // URL hoặc đường dẫn ảnh sản phẩm
   MaDanhMuc?: number;
   IsDelete: boolean;
   attributes?: Record<string, any>;
@@ -30,6 +31,7 @@ export interface ProductCreateRequest {
   GiaSP: number;
   SoLuongTonKho: number;
   MoTa?: string;
+  HinhAnh?: string; // URL hoặc đường dẫn ảnh sản phẩm
   MaDanhMuc?: number;
   attributes?: Record<string, any>;
 }
@@ -39,6 +41,7 @@ export interface ProductUpdateRequest {
   GiaSP?: number;
   SoLuongTonKho?: number;
   MoTa?: string;
+  HinhAnh?: string; // URL hoặc đường dẫn ảnh sản phẩm
   MaDanhMuc?: number;
   attributes?: Record<string, any>;
 }
@@ -78,7 +81,10 @@ export const productsApi = {
 
     // apiClient base already includes /api, so use route path without duplicating /api
     // Backend route is @router.get("/") which requires trailing slash when redirect_slashes=False
-    return apiClient(`/sanpham/?${params.toString()}`, { auth: false, debug: true });
+    return apiClient(`/sanpham/?${params.toString()}`, {
+      auth: false,
+      debug: true,
+    });
   },
 
   getOne: async (id: number): Promise<Product> => {
@@ -102,6 +108,25 @@ export const productsApi = {
   delete: async (id: number): Promise<{ message: string }> => {
     return apiClient(`/sanpham/${id}`, {
       method: "DELETE",
+    });
+  },
+
+  // Check product availability for cart validation
+  checkAvailability: async (
+    id: number,
+    quantity: number = 1
+  ): Promise<{
+    available: boolean;
+    reason?: string;
+    MaSP: number;
+    TenSP?: string;
+    GiaSP?: number;
+    SoLuongTonKho?: number;
+    HinhAnh?: string;
+  }> => {
+    return apiClient(`/sanpham/${id}/check-availability?quantity=${quantity}`, {
+      method: "GET",
+      auth: false,
     });
   },
 };
@@ -133,4 +158,3 @@ export const categoriesApi = {
     });
   },
 };
-

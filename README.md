@@ -1,140 +1,183 @@
-# Quản Lý Bán Hàng - E-commerce Platform
+# Quan Ly Ban Hang - E-commerce Platform
 
-Hệ thống quản lý bán hàng đồ gia dụng được xây dựng với Next.js và FastAPI.
+He thong quan ly ban hang do gia dung duoc xay dung voi Next.js va FastAPI.
 
-## 🚀 Tính năng
+## Yeu cau
 
-### Frontend (Next.js)
-- **Trang chủ**: Hiển thị sản phẩm nổi bật
-- **Cửa hàng**: Duyệt và tìm kiếm sản phẩm
-- **Chi tiết sản phẩm**: Xem thông tin chi tiết, đánh giá
-- **Giỏ hàng**: Quản lý sản phẩm trong giỏ hàng
-- **Thanh toán**: Quy trình checkout hoàn chỉnh
-- **Đơn hàng**: 
-  - Lịch sử đơn hàng
-  - Chi tiết đơn hàng
-  - Theo dõi đơn hàng
-  - Hóa đơn/Receipt
-- **Tài khoản**:
-  - Đăng nhập/Đăng ký
-  - Quên mật khẩu/Đặt lại mật khẩu
-  - Quản lý địa chỉ
-  - Hồ sơ người dùng
-- **Admin Dashboard**: Quản lý sản phẩm, đơn hàng, khách hàng, nhân viên
-
-### Backend (FastAPI)
-- RESTful API với JWT authentication
-- Quản lý sản phẩm, danh mục
-- Quản lý đơn hàng và thanh toán
-- Quản lý giỏ hàng
-- Quản lý khách hàng và nhân viên
-- Hệ thống khuyến mãi/voucher
-- Activity logging
-- Inventory management
-
-## 📋 Yêu cầu
-
-- Node.js 18+ 
+- Node.js 18+
 - Python 3.8+
 - MySQL/MariaDB
 
-## 🛠️ Cài đặt
+## Cai dat
 
-### Backend
+### 1. Clone du an
 
 ```bash
-cd backend
+git clone <repository-url>
+cd quanlybanhang
+```
+
+### 2. Cai dat Backend
+
+```bash
+# Tao virtual environment (khuyen nghi)
+python -m venv .venv
+
+# Kich hoat virtual environment
+# Windows:
+.\.venv\Scripts\activate
+# Linux/Mac:
+source .venv/bin/activate
+
+# Cai dat cac thu vien
 pip install -r requirements.txt
 ```
 
-Tạo file `.env` trong thư mục `backend`:
+Tao file `.env` trong thu muc goc (tuy chon):
+
 ```
-DATABASE_URL=mysql+pymysql://user:password@localhost:3306/db_name
+DB_USER=root
+DB_PASSWORD=1234
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=QuanLyBanHang
 SECRET_KEY=your-secret-key
 ```
 
-- Chạy file `db/db-ban-do-gia-dung.sql` trên MySQL để tạo database và các bảng.
-- Nếu DB hiện tại đang bị giới hạn mô tả sản phẩm (cột `SanPham.MoTa`), hãy chạy migration:
-  - `db/migrations/2025-12-17_alter_sanpham_mota_text.sql`
+Neu khong tao file `.env`, he thong se dung gia tri mac dinh trong `backend/database.py`.
 
-Chạy backend:
+### 3. Cai dat Database
+
+**Buoc 1**: Chay file chinh de tao database va cac bang:
+
 ```bash
+mysql -u root -p < db/db-ban-do-gia-dung.sql
+```
+
+**Buoc 2**: Chay cac file migration (BAT BUOC neu database moi):
+
+```bash
+# Mo rong cot MoTa tu VARCHAR(255) sang TEXT
+mysql -u root -p QuanLyBanHang < db/migrations/2025-12-17_alter_sanpham_mota_text.sql
+
+# Them cot HinhAnh vao bang SanPham (luu anh san pham)
+mysql -u root -p QuanLyBanHang < db/migrations/2026-01-04_add_hinhanh_to_sanpham.sql
+
+# Tao bang PaymentTransaction (thanh toan QR)
+mysql -u root -p QuanLyBanHang < db/migrations/2026-01-04_create_payment_transaction.sql
+```
+
+**Luu y**: Neu da co database cu, chi can chay cac migration chua co. Kiem tra bang cau lenh:
+
+```bash
+mysql -u root -p QuanLyBanHang -e "DESCRIBE SanPham;"
+mysql -u root -p QuanLyBanHang -e "SHOW TABLES LIKE 'PaymentTransaction';"
+```
+
+**Buoc 3** (tuy chon): Them du lieu mau:
+
+```bash
+mysql -u root -p QuanLyBanHang < db/insert-sample-data.sql
+```
+
+### 4. Chay Backend
+
+```bash
+cd backend
 uvicorn main:app --reload
 ```
 
-Backend sẽ chạy tại `http://localhost:8000`
+Backend se chay tai `http://localhost:8000`
 
-### Frontend
+### 5. Cai dat Frontend
 
 ```bash
 npm install
 ```
 
-Tạo file `.env.local`:
+Tao file `.env.local` (tuy chon):
+
 ```
 NEXT_PUBLIC_API_URL=http://localhost:8000/api
 ```
 
-Chạy frontend:
+### 6. Chay Frontend
+
 ```bash
 npm run dev
 ```
 
-Frontend sẽ chạy tại `http://localhost:3000`
+Frontend se chay tai `http://localhost:3000`
 
-## 📁 Cấu trúc dự án
+### 7. Chay nhanh (Windows)
+
+Su dung file batch de khoi dong ca backend va frontend:
+
+```bash
+.\start-all.bat
+```
+
+Dung tat ca:
+
+```bash
+.\stop-all.bat
+```
+
+## Cau truc thu muc
 
 ```
 quanlybanhang/
 ├── app/                    # Next.js app directory
 │   ├── admin/             # Admin dashboard pages
-│   ├── components/         # React components
-│   ├── contexts/           # React contexts (Auth, Cart)
+│   ├── components/        # React components
+│   ├── contexts/          # React contexts (Auth, Cart)
 │   ├── lib/               # Utilities and API clients
 │   └── [pages]/           # Public pages
-├── backend/                # FastAPI backend
+├── backend/               # FastAPI backend
 │   ├── routes/            # API routes
 │   ├── models.py          # Database models
 │   ├── database.py        # Database connection
 │   └── main.py            # FastAPI app
-├── public/                 # Static assets
-└── db/                     # Database scripts
+├── public/                # Static assets
+│   └── productimg/        # Thu muc luu anh san pham upload
+└── db/                    # Database scripts
+    └── migrations/        # Cac file migration
 ```
 
-## 🔐 Authentication
+## API Documentation
 
-Hệ thống sử dụng JWT tokens cho authentication. Token được lưu trong `localStorage` sau khi đăng nhập.
+API documentation co san tai:
 
-## 📝 API Documentation
-
-API documentation có sẵn tại:
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
 
-## 🧪 Testing
+## Dang ky tai khoan Admin
 
-Chạy linter:
 ```bash
-npm run lint
+curl -X POST "http://localhost:8000/api/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "SdtNV": "0999888777",
+    "password": "admin123",
+    "TenNV": "Admin System",
+    "ChucVu": "Admin"
+  }'
 ```
 
-## 📄 License
+Sau do dang nhap tai `http://localhost:3000/login` va truy cap admin tai `http://localhost:3000/admin`.
 
-Private project
+## Export DB (.sql) de gui team
 
-- Đảm bảo backend và MySQL đều đang chạy.
+### Cach nhanh (MySQL Workbench)
 
-## Export DB (.sql) để gửi team
+- Server -> Data Export -> chon schema `QuanLyBanHang` -> Export to Self-Contained File (`.sql`).
 
-### Cách nhanh (MySQL Workbench)
-- Server → Data Export → chọn schema `QuanLyBanHang` → Export to Self-Contained File (`.sql`).
-
-### Cách CLI (mysqldump)
+### Cach CLI (mysqldump)
 
 ```bash
 mysqldump -u root -p QuanLyBanHang > QuanLyBanHang_export.sql
 ```
 
-## Tác giả
+## Tac gia
 
 MinhPhan92

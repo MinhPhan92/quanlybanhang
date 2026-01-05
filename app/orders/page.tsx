@@ -1,50 +1,58 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import Header from "@/app/components/shared/header/Header"
-import Footer from "@/app/components/shared/footer/Footer"
-import { useAuth } from "@/app/contexts/AuthContext"
-import { ordersApi, Order } from "@/app/lib/api/orders"
-import { Package, Search, Filter } from "lucide-react"
-import styles from "./orders.module.css"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Header from "@/app/components/shared/header/Header";
+import Footer from "@/app/components/shared/footer/Footer";
+import { useAuth } from "@/app/contexts/AuthContext";
+import { ordersApi, Order } from "@/app/lib/api/orders";
+import { Package, Search, Filter } from "lucide-react";
+import styles from "./orders.module.css";
 
 export default function OrdersPage() {
-  const router = useRouter()
-  const { isAuthenticated, isLoading } = useAuth()
-  const [orders, setOrders] = useState<Order[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [filterStatus, setFilterStatus] = useState<string>("all")
-  const [searchTerm, setSearchTerm] = useState("")
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push("/login")
-      return
+      router.push("/login");
+      return;
     }
     if (isAuthenticated) {
-      loadOrders()
+      loadOrders();
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [isAuthenticated, isLoading, router]);
 
   const loadOrders = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      const data = await ordersApi.getAll()
-      setOrders(data || [])
+      setLoading(true);
+      setError(null);
+      const data = await ordersApi.getMyOrders();
+      setOrders(data || []);
     } catch (err: any) {
-      setError(err.message || "Không thể tải danh sách đơn hàng")
-      console.error("Error loading orders:", err)
+      setError(err.message || "Không thể tải danh sách đơn hàng");
+      console.error("Error loading orders:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getStatusColor = (status: string) => {
     const statusMap: Record<string, string> = {
+      "Chờ thanh toán": "#f59e0b",
+      "Chờ xử lý": "#3b82f6",
+      "Đang xử lý": "#8b5cf6",
+      "Đang giao hàng": "#06b6d4",
+      "Đã giao hàng": "#10b981",
+      "Đã hủy": "#ef4444",
+      "Đã hoàn trả": "#6b7280",
+      // English fallbacks
       Pending: "#f59e0b",
       Confirmed: "#3b82f6",
       Processing: "#8b5cf6",
@@ -52,31 +60,24 @@ export default function OrdersPage() {
       Delivered: "#10b981",
       Cancelled: "#ef4444",
       Returned: "#6b7280",
-    }
-    return statusMap[status] || "#6b7280"
-  }
+    };
+    return statusMap[status] || "#6b7280";
+  };
 
   const getStatusLabel = (status: string) => {
-    const labelMap: Record<string, string> = {
-      Pending: "Chờ xử lý",
-      Confirmed: "Đã xác nhận",
-      Processing: "Đang xử lý",
-      Shipped: "Đang giao hàng",
-      Delivered: "Đã giao hàng",
-      Cancelled: "Đã hủy",
-      Returned: "Đã trả hàng",
-    }
-    return labelMap[status] || status
-  }
+    // Backend already returns Vietnamese status
+    return status;
+  };
 
   const filteredOrders = orders.filter((order) => {
-    const matchesStatus = filterStatus === "all" || order.TrangThai === filterStatus
+    const matchesStatus =
+      filterStatus === "all" || order.TrangThai === filterStatus;
     const matchesSearch =
       searchTerm === "" ||
       order.MaDonHang.toString().includes(searchTerm) ||
-      order.TongTien.toString().includes(searchTerm)
-    return matchesStatus && matchesSearch
-  })
+      order.TongTien.toString().includes(searchTerm);
+    return matchesStatus && matchesSearch;
+  });
 
   if (isLoading || loading) {
     return (
@@ -89,7 +90,7 @@ export default function OrdersPage() {
         </main>
         <Footer />
       </>
-    )
+    );
   }
 
   return (
@@ -119,12 +120,12 @@ export default function OrdersPage() {
                 className={styles.filterSelect}
               >
                 <option value="all">Tất cả trạng thái</option>
-                <option value="Pending">Chờ xử lý</option>
-                <option value="Confirmed">Đã xác nhận</option>
-                <option value="Processing">Đang xử lý</option>
-                <option value="Shipped">Đang giao hàng</option>
-                <option value="Delivered">Đã giao hàng</option>
-                <option value="Cancelled">Đã hủy</option>
+                <option value="Chờ thanh toán">Chờ thanh toán</option>
+                <option value="Chờ xử lý">Chờ xử lý</option>
+                <option value="Đang xử lý">Đang xử lý</option>
+                <option value="Đang giao hàng">Đang giao hàng</option>
+                <option value="Đã giao hàng">Đã giao hàng</option>
+                <option value="Đã hủy">Đã hủy</option>
               </select>
             </div>
           </div>
@@ -149,7 +150,9 @@ export default function OrdersPage() {
                     <div className={styles.orderInfo}>
                       <Package size={24} />
                       <div>
-                        <h3 className={styles.orderNumber}>Đơn hàng #{order.MaDonHang}</h3>
+                        <h3 className={styles.orderNumber}>
+                          Đơn hàng #{order.MaDonHang}
+                        </h3>
                         <p className={styles.orderDate}>
                           {new Date(order.NgayDat).toLocaleDateString("vi-VN", {
                             year: "numeric",
@@ -161,7 +164,10 @@ export default function OrdersPage() {
                     </div>
                     <div
                       className={styles.statusBadge}
-                      style={{ backgroundColor: `${getStatusColor(order.TrangThai)}20`, color: getStatusColor(order.TrangThai) }}
+                      style={{
+                        backgroundColor: `${getStatusColor(order.TrangThai)}20`,
+                        color: getStatusColor(order.TrangThai),
+                      }}
                     >
                       {getStatusLabel(order.TrangThai)}
                     </div>
@@ -225,7 +231,9 @@ export default function OrdersPage() {
             <div className={styles.emptyContainer}>
               <Package size={48} color="#9ca3af" />
               <h2 className={styles.emptyTitle}>Chưa có đơn hàng nào</h2>
-              <p className={styles.emptyText}>Bạn chưa có đơn hàng nào. Hãy bắt đầu mua sắm!</p>
+              <p className={styles.emptyText}>
+                Bạn chưa có đơn hàng nào. Hãy bắt đầu mua sắm!
+              </p>
               <Link href="/shop" className={styles.shopButton}>
                 Mua sắm ngay
               </Link>
@@ -235,6 +243,5 @@ export default function OrdersPage() {
       </main>
       <Footer />
     </>
-  )
+  );
 }
-
