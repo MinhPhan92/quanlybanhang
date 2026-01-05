@@ -1,0 +1,16 @@
+[33mfc5187b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mbao[m[33m, [m[1;31morigin/bao[m[33m)[m them phan quyen
+[33m57d7f12[m sua login
+[33mac31cab[m[33m ([m[1;32mmain[m[33m)[m resolve merge conflicts, keep local changes
+[33m5b3fb3e[m them register API va auth
+[33mf62f67a[m feat: Complete admin dashboard integration with real API data
+[33mf14799f[m completed most function
+[33m57bd561[m Add logging, alerts, config management, shipper support, and delivery tracking
+[33m502d7bb[m Merge branch 'main' of https://github.com/MinhPhan92/quanlybanhang
+[33mf605ef5[m feat: Completed F18 (Inventory/Order Status), F16 (Feedback), and F25 (Product Attributes)
+[33m6af4596[m Update README.md
+[33mb00abbf[m Merge branch 'main' of https://github.com/MinhPhan92/quanlybanhang
+[33m61413e3[m Initial commit
+[33m5a926dc[m Create .gitkeep
+[33m6111694[m Create .gitkeep
+[33m4cc57f3[m Upload full project code
+[33m9f72901[m Initial commit
