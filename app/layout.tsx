@@ -3,6 +3,8 @@ import { Quicksand } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
+import { ChatProvider } from "./contexts/ChatContext";
+import ChatWidget from "./components/shared/chatbot/ChatWidget";
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -26,7 +28,10 @@ export default function RootLayout({
       <body className={`${quicksand.variable} antialiased`}>
         <AuthProvider>
           <CartProvider>
-            {children}
+            <ChatProvider>
+              {children}
+              <ChatWidget />
+            </ChatProvider>
           </CartProvider>
         </AuthProvider>
       </body>

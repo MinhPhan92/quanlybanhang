@@ -21,7 +21,7 @@ from backend.routes.chatbot_prompts import TEXT2SQL_PROMPT
 
 def add_product_url(row: Dict[str, Any]) -> Dict[str, Any]:
     if "MaSP" in row:
-        row["url"] = f"/products/{row['MaSP']}"
+        row["url"] = f"/product/{row['MaSP']}"
     return row
 
 def add_product_urls(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -105,19 +105,16 @@ def intent_top_selling_products(db: Session, limit: int = 5):
         .limit(limit)
         .all()
     )
-    items = [{
-        "id": r.MaSP,
-        "name": r.TenSP,
-        "price": r.GiaSP,
-        "sold": r.TongSoLuongBan,
-        "url": f"/products/{r.MaSP}",
-    } for r in rows]
     return {
         "mode": "template",
         "intent": "top_selling_products",
         "message": "Một số sản phẩm bán chạy hiện nay:",
-        "items": items,
-        "total": len(items),
+        "rows": add_product_urls([{
+            "MaSP": r.MaSP,
+            "TenSP": r.TenSP,
+            "GiaSP": r.GiaSP,
+            "DaBan": int(r.TongSoLuongBan),
+        } for r in rows]),
     }
 
 def intent_products_by_keyword_and_price(db: Session, keyword: str, min_price: Optional[int] = None, max_price: Optional[int] = None, limit: int = 5):
@@ -208,9 +205,46 @@ def is_internal_data_question(question: str) -> bool:
     return any(k in q for k in keywords)
 
 def is_policy_question(question: str) -> bool:
+    """
+    Phát hiện câu hỏi VỀ CHÍNH SÁCH (TIER 2)
+    
+    PHẢI THỎA:
+    - Có keyword policy (chính sách, quy định, điều kiện)
+    - HOẶC: Có policy-related keyword + Không có query verb
+    
+    TRÁNH FALSE POSITIVE:
+    - "tìm sản phẩm có bảo hành tốt" → FALSE (đây là data query)
+    - "sản phẩm nào có thời gian bảo hành lâu?" → FALSE (đây là data query)
+    - "chính sách bảo hành?" → TRUE ✅
+    - "đổi trả như thế nào?" → TRUE ✅
+    """
     q = question.lower()
-    keywords = ["bảo hành", "hỏng", "lỗi", "sửa", "đổi", "trả", "hoàn", "ship", "giao", "vận chuyển", "thanh toán", "cod", "chính sách"]
-    return any(k in q for k in keywords)
+    
+    # === BLACKLIST: Data query indicators ===
+    # Nếu có động từ truy vấn mạnh → Không phải policy question
+    data_query_verbs = ["tìm", "xem", "show", "hiển thị", "liệt kê", "có những", "có gì", "gợi ý", "cho tôi", "nào"]
+    if any(verb in q for verb in data_query_verbs):
+        return False
+    
+    # === WHITELIST: Policy indicators ===
+    # 1. Explicit policy keywords
+    explicit_policy = ["chính sách", "quy định", "điều kiện", "thủ tục"]
+    if any(kw in q for kw in explicit_policy):
+        return True
+    
+    # 2. Policy-related keywords WITHOUT data query context
+    # Ví dụ: "bảo hành như thế nào?" ✅ vs "tìm sp có bảo hành" ❌
+    policy_keywords = ["bảo hành", "hỏng", "lỗi", "sửa", "đổi", "trả", "hoàn", "ship", "giao", "vận chuyển", "thanh toán", "cod"]
+    question_indicators = ["như thế nào", "thế nào", "ra sao", "?", "được không", "có không", "bao lâu", "mất bao lâu"]
+    
+    has_policy_keyword = any(kw in q for kw in policy_keywords)
+    has_question_indicator = any(qi in q for qi in question_indicators)
+    
+    # Cả 2 điều kiện phải thỏa
+    if has_policy_keyword and has_question_indicator:
+        return True
+    
+    return False
 
 # ==========================
 # SQL & LLM Processing
@@ -241,6 +275,10 @@ def generate_sql_with_llm(question: str) -> str:
             if not re.search(r'\blimit\b', sql.lower()):
                 sql = sql.strip() + " LIMIT 5"
             return sql
+    except httpx.ConnectError as e:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Không thể kết nối đến SQL LLM server tại {SQL_LLM_URL}. Vui lòng kiểm tra server Ollama.")
+    except httpx.TimeoutException as e:
+        raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=f"SQL LLM server không phản hồi (timeout). Truy vấn SQL có thể quá phức tạp.")
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Lỗi gọi SQL LLM (Ollama): {e}")
 
@@ -293,14 +331,44 @@ def extract_lmstudio_text(message: dict) -> str:
 def generate_chat_with_llm(messages: list) -> str:
     if not CHAT_LLM_URL or not CHAT_LLM_MODEL:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Chưa cấu hình CHAT_LLM_URL hoặc CHAT_LLM_MODEL.")
-    messages = normalize_lmstudio_messages(messages)
-    payload = {"model": CHAT_LLM_MODEL, "messages": messages, "temperature": 0.7, "max_tokens": 512}
+    
+    # Build prompt from messages for Ollama
+    prompt_parts = []
+    for msg in messages:
+        role = msg.get("role", "")
+        content = msg.get("content", "")
+        if role == "system":
+            prompt_parts.append(f"System: {content}")
+        elif role == "user":
+            prompt_parts.append(f"User: {content}")
+        elif role == "assistant":
+            prompt_parts.append(f"Assistant: {content}")
+    
+    prompt_parts.append("Assistant:")
+    full_prompt = "\n\n".join(prompt_parts)
+    
+    # Ollama API format
+    payload = {
+        "model": CHAT_LLM_MODEL,
+        "prompt": full_prompt,
+        "stream": False,
+        "options": {
+            "temperature": 0.5,
+            "num_predict": 200
+        }
+    }
+    
     try:
         timeout = httpx.Timeout(connect=10.0, read=60.0, write=20.0, pool=10.0)
         with httpx.Client(timeout=timeout) as client:
-            resp = client.post(CHAT_LLM_URL, json=payload)
+            resp = client.post(f"{CHAT_LLM_URL}/api/generate", json=payload)
             resp.raise_for_status()
             data = resp.json()
-            return extract_lmstudio_text(data["choices"][0]["message"])
+            response_text = data.get("response", "").strip()
+            return response_text
+    except httpx.ConnectError as e:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Không thể kết nối đến Chat LLM server tại {CHAT_LLM_URL}. Vui lòng kiểm tra server Ollama.")
+    except httpx.TimeoutException as e:
+        raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=f"Chat LLM server không phản hồi (timeout). Server có thể đang quá tải.")
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Lỗi gọi Chat LLM: {e}")
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Lỗi gọi Chat LLM (Ollama): {e}")

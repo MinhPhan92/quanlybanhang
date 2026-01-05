@@ -99,20 +99,38 @@
 .sectionTitle {
   font-size: 36px;
   font-weight: 700;
-  color: #222;
-  margin-bottom: 40px;
+  color: #1a1a1a;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.policyIcon {
+  font-size: 40px;
 }
 
 .policyContent {
   line-height: 1.8;
+  color: #333;
+  background: #f8f9fa;
+  padding: 30px;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
 }
 
-.policyContent h3 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #ff8c42;
-  margin-top: 30px;
-  margin-bottom: 15px;
+.paragraph {
+  margin-bottom: 20px;
+  white-space: pre-line;
+}
+
+.paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.line {
+  margin-bottom: 8px;
+  font-size: 15px;
 }
 
 .policyContent p {

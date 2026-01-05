@@ -5,7 +5,7 @@ import os
 """
 {
     "username": "0912345678",
-    "password": "customer123"
+    "password": "   "
 }
 """
 # ==========================
@@ -40,41 +40,114 @@ PRODUCT_KEYWORDS = {
 
 POLICY_TEMPLATES = {
     "bao_hanh": (
-        "Tất cả sản phẩm được bảo hành 12 tháng kể từ ngày mua.\n"
-        "Bảo hành áp dụng cho các lỗi kỹ thuật do nhà sản xuất trong quá trình sử dụng bình thường.\n"
-        "Không áp dụng bảo hành trong các trường hợp sau:\n"
-        "    - Sản phẩm bị rơi vỡ hoặc va đập mạnh.\n"
-        "    - Sản phẩm bị vào nước.\n"
-        "    - Sử dụng sản phẩm sai hướng dẫn hoặc sai mục đích.\n"
-        "Nếu sản phẩm gặp lỗi kỹ thuật, khách hàng có thể liên hệ cửa hàng để được hướng dẫn bảo hành."
+        "CHÍNH SÁCH BẢO HÀNH\n\n"
+        "Tất cả sản phẩm được bảo hành 12 tháng kể từ ngày mua.\n\n"
+        "Bảo hành áp dụng:\n"
+        "   - Lỗi kỹ thuật do nhà sản xuất\n"
+        "   - Sử dụng bình thường theo hướng dẫn\n\n"
+        "Không áp dụng bảo hành:\n"
+        "   - Sản phẩm bị rơi vỡ, va đập mạnh\n"
+        "   - Sản phẩm bị vào nước\n"
+        "   - Sử dụng sai hướng dẫn hoặc mục đích\n\n"
+        "Liên hệ: Khi sản phẩm gặp lỗi kỹ thuật, vui lòng liên hệ cửa hàng để được hướng dẫn bảo hành."
     ),
     "doi_tra": (
-        "Khách hàng có thể đổi hoặc trả sản phẩm trong vòng 7 ngày kể từ ngày nhận hàng.\n"
-        "Điều kiện áp dụng đổi trả:\n"
-        "    - Sản phẩm còn nguyên tem và hộp.\n"
-        "    - Sản phẩm chưa qua sử dụng.\n"
-        "    - Không áp dụng đổi trả đối với các sản phẩm thuộc chương trình khuyến mãi hoặc giảm giá.\n"
-        "Khi có nhu cầu đổi trả, khách hàng vui lòng liên hệ cửa hàng sớm để được hỗ trợ."
+        "CHÍNH SÁCH ĐỔI TRẢ\n\n"
+        "Thời hạn: 30 ngày kể từ ngày mua hàng\n\n"
+        "Điều kiện áp dụng:\n"
+        "   - Sản phẩm còn nguyên tem, hộp và phụ kiện\n"
+        "   - Sản phẩm chưa qua sử dụng\n"
+        "   - Có kèm hóa đơn mua hàng\n\n"
+        "Không áp dụng:\n"
+        "   - Sản phẩm khuyến mãi, giảm giá đặc biệt\n"
+        "   - Sản phẩm điện tử đã sử dụng\n"
+        "   - Sản phẩm bị hư hỏng do lỗi khách hàng\n\n"
+        "Quy trình:\n"
+        "   1. Liên hệ bộ phận CSKH\n"
+        "   2. Cung cấp thông tin đơn hàng và lý do\n"
+        "   3. Nhận nhãn vận chuyển\n"
+        "   4. Hoàn tiền trong 7-10 ngày làm việc"
     ),
     "thanh_toan": (
-        "Cửa hàng hiện hỗ trợ các hình thức thanh toán sau:\n"
-        "    - Thanh toán khi nhận hàng (COD).\n"
-        "    - Chuyển khoản ngân hàng.\n"
-        "    - Thanh toán qua ví điện tử.\n"
-        "Hình thức thanh toán cụ thể sẽ được xác nhận trong quá trình đặt hàng."
+        "CHÍNH SÁCH THANH TOÁN\n\n"
+        "Cửa hàng hỗ trợ các hình thức thanh toán:\n\n"
+        "Thanh toán khi nhận hàng (COD)\n"
+        "   - An toàn, tiện lợi\n"
+        "   - Kiểm tra hàng trước khi thanh toán\n\n"
+        "Chuyển khoản ngân hàng\n"
+        "   - Thông tin tài khoản sẽ được gửi khi đặt hàng\n"
+        "   - Đơn hàng được xử lý sau khi nhận thanh toán\n\n"
+        "Ví điện tử\n"
+        "   - Hỗ trợ: Momo, ZaloPay, VNPay\n"
+        "   - Thanh toán nhanh chóng, bảo mật\n\n"
+        "Liên hệ: Hình thức thanh toán cụ thể sẽ được xác nhận khi đặt hàng."
     ),
     "van_chuyen": (
-        "Thời gian giao hàng dự kiến từ 2 đến 5 ngày làm việc, tùy thuộc vào khu vực giao hàng.\n"
-        "Phí vận chuyển sẽ được thông báo cụ thể khi khách hàng tiến hành đặt hàng.\n"
-        "Cửa hàng sẽ cố gắng giao hàng sớm nhất có thể để đảm bảo trải nghiệm mua sắm tốt cho khách hàng."
+        "CHÍNH SÁCH VẬN CHUYỂN\n\n"
+        "Thời gian giao hàng:\n"
+        "   - Tiêu chuẩn: 5-7 ngày\n"
+        "   - Nhanh: 2-3 ngày\n"
+        "   - Siêu tốc: 1 ngày\n\n"
+        "Phí vận chuyển:\n"
+        "   - Tính theo địa chỉ và phương thức giao hàng\n"
+        "   - MIỄN PHÍ cho đơn hàng từ 10 triệu đồng\n\n"
+        "Xử lý đơn hàng:\n"
+        "   - Đơn hàng được xử lý trong 24 giờ\n"
+        "   - Gửi mã theo dõi qua email/SMS\n\n"
+        "Đơn hàng bị mất/hư hỏng:\n"
+        "   - Liên hệ trong vòng 48 giờ kể từ khi nhận\n"
+        "   - Cửa hàng sẽ xử lý và đổi hàng mới"
     )
 }
 
 POLICY_SYNONYMS = {
-    "bao_hanh": ["bảo hành", "hỏng", "lỗi", "không chạy", "sửa", "bảo trì"],
-    "doi_tra": ["đổi", "trả", "không ưng", "hoàn tiền", "trả hàng"],
-    "van_chuyen": ["ship", "vận chuyển", "giao hàng", "khi nào tới", "bao lâu nhận được"],
-    "thanh_toan": ["thanh toán", "cod", "chuyển khoản", "ví điện tử", "trả tiền"]
+    "bao_hanh": [
+        "bảo hành", "warranty", "bảo trì", "maintain",
+        "hỏng", "lỗi", "hư", "broken", "error", "fail",
+        "không chạy", "không hoạt động", "không dùng được", "chết máy",
+        "sửa", "sửa chữa", "repair", "fix",
+        "thời gian bảo hành", "thời hạn bảo hành", "bảo hành bao lâu",
+        "có được bảo hành không", "bảo hành như thế nào",
+        "điều kiện bảo hành", "quy định bảo hành",
+        "mất bảo hành", "hết bảo hành", "expire warranty"
+    ],
+    "doi_tra": [
+        "đổi", "trả", "đổi trả", "return", "refund", "exchange",
+        "hoàn tiền", "hoàn lại tiền", "trả tiền lại", "refund",
+        "trả hàng", "trả lại hàng", "gửi lại",
+        "không ưng", "không vừa ý", "không hài lòng", "không đúng",
+        "đổi size", "đổi màu", "đổi mẫu", "đổi sản phẩm khác",
+        "hoàn trả", "chính sách đổi trả", "quy định đổi trả",
+        "thời hạn đổi trả", "bao lâu được đổi", "đổi trong bao nhiêu ngày",
+        "điều kiện đổi trả", "làm sao để đổi", "cách đổi hàng",
+        "không muốn nữa", "mua nhầm", "không phù hợp"
+    ],
+    "van_chuyen": [
+        "ship", "shipping", "vận chuyển", "giao hàng", "delivery",
+        "khi nào tới", "khi nào đến", "bao giờ nhận được", "bao lâu nhận được",
+        "thời gian giao", "giao bao lâu", "mất bao lâu", "how long",
+        "phí ship", "phí vận chuyển", "phí giao hàng", "ship phí", "shipping fee",
+        "ship cod", "giao cod", "ship hàng",
+        "miễn phí ship", "free ship", "freeship", "miễn ship",
+        "tracking", "theo dõi đơn", "kiểm tra đơn hàng", "tra cứu",
+        "giao nhanh", "giao hỏa tốc", "giao siêu tốc", "express",
+        "shipper", "người giao", "tài xế", "bưu tá",
+        "chưa nhận được hàng", "hàng chưa tới", "sao chưa tới",
+        "hàng bị mất", "không nhận được", "thất lạc"
+    ],
+    "thanh_toan": [
+        "thanh toán", "payment", "pay", "trả tiền", "đóng tiền",
+        "cod", "tiền mặt", "ship cod", "nhận hàng trả tiền",
+        "chuyển khoản", "ck", "transfer", "banking",
+        "ví điện tử", "e-wallet", "ví momo", "ví zalopay",
+        "momo", "zalopay", "vnpay", "shopeepay", "viettelpay",
+        "thẻ", "thẻ tín dụng", "thẻ atm", "credit card", "debit",
+        "hình thức thanh toán", "phương thức thanh toán", "cách thanh toán",
+        "trả trước", "trả sau", "thanh toán trước", "thanh toán sau",
+        "có được", "được không", "hỗ trợ không",
+        "an toàn không", "bảo mật không", "secure",
+        "hóa đơn", "invoice", "bill", "receipt"
+    ]
 }
 
 # ==========================
