@@ -24,8 +24,9 @@ export default function ResetPasswordPage() {
     const tokenParam = searchParams.get("token")
     if (tokenParam) {
       setToken(tokenParam)
+      setError(null)
     } else {
-      setError("Token không hợp lệ hoặc đã hết hạn")
+      setError("Link đặt lại mật khẩu không hợp lệ. Vui lòng kiểm tra lại email hoặc yêu cầu link mới.")
     }
   }, [searchParams])
 
@@ -56,8 +57,9 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     setError(null)
 
-    if (password !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp")
+    // Validation
+    if (!password.trim()) {
+      setError("Vui lòng nhập mật khẩu mới")
       return
     }
 
@@ -66,22 +68,41 @@ export default function ResetPasswordPage() {
       return
     }
 
+    if (passwordStrength <= 2) {
+      setError("Mật khẩu quá yếu. Vui lòng sử dụng mật khẩu mạnh hơn")
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp")
+      return
+    }
+
     if (!token) {
-      setError("Token không hợp lệ")
+      setError("Token không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu link mới.")
       return
     }
 
     setLoading(true)
 
     try {
-      await authApi.resetPassword(token!, password)
+      await authApi.resetPassword(token, password)
       
       setSuccess(true)
       setTimeout(() => {
         router.push("/login")
       }, 3000)
     } catch (err: any) {
-      setError(err.message || "Có lỗi xảy ra. Vui lòng thử lại.")
+      const errorMessage = err.message || "Có lỗi xảy ra. Vui lòng thử lại."
+      
+      // Handle specific error cases
+      if (errorMessage.includes("hết hạn") || errorMessage.includes("expired")) {
+        setError("Link đặt lại mật khẩu đã hết hạn. Vui lòng yêu cầu link mới từ trang quên mật khẩu.")
+      } else if (errorMessage.includes("không hợp lệ") || errorMessage.includes("invalid")) {
+        setError("Link đặt lại mật khẩu không hợp lệ. Vui lòng yêu cầu link mới.")
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setLoading(false)
     }
@@ -194,13 +215,17 @@ export default function ResetPasswordPage() {
               <button
                 type="submit"
                 className={styles.submitButton}
-                disabled={loading || !token || password !== confirmPassword || password.length < 8}
+                disabled={loading || !token || password !== confirmPassword || password.length < 8 || passwordStrength <= 2}
               >
                 {loading ? "Đang xử lý..." : "Đặt Lại Mật Khẩu"}
               </button>
             </form>
 
             <div className={styles.footer}>
+              <Link href="/forgot-password" className={styles.backLink}>
+                Yêu cầu link mới
+              </Link>
+              <span className={styles.separator}>|</span>
               <Link href="/login" className={styles.backLink}>
                 Quay lại đăng nhập
               </Link>

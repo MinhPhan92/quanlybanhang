@@ -41,6 +41,11 @@ class ResetPasswordRequest(BaseModel):
     new_password: str
 
 
+class ChangePasswordRequest(BaseModel):
+    currentPassword: str
+    newPassword: str
+
+
 class UserResponse(BaseModel):
     MaTK: int
     username: str

@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from backend.database import get_db
 from backend.models import NhanVien, TaiKhoan, KhachHang
 from backend.routes.deps import get_current_user
-from backend.schemas import RegisterRequest, RegisterCustomerRequest, CustomerRegisterRequest, LoginRequest, TokenResponse, UserResponse, ForgotPasswordRequest, ResetPasswordRequest
+from backend.schemas import RegisterRequest, RegisterCustomerRequest, CustomerRegisterRequest, LoginRequest, TokenResponse, UserResponse, ForgotPasswordRequest, ResetPasswordRequest, ChangePasswordRequest
 
 # =====================================================
 # 🔐 Auth Router
@@ -31,17 +31,21 @@ pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 # =====================================================
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Kiểm tra mật khẩu có khớp với hash không"""
-    if not hashed_password:
+    if not hashed_password or not plain_password:
         return False
+    
+    # Trim whitespace từ cả hai để so sánh chính xác
+    plain_password_clean = plain_password.strip()
+    hashed_password_clean = str(hashed_password).strip()
     
     # Kiểm tra nếu password trong DB là plain text (chưa được hash)
     # Đây là trường hợp legacy - nên hash lại sau khi verify thành công
-    if plain_password == hashed_password:
+    if plain_password_clean == hashed_password_clean:
         return True
     
     # Kiểm tra nếu đã được hash
     try:
-        return pwd_context.verify(plain_password, hashed_password)
+        return pwd_context.verify(plain_password_clean, hashed_password_clean)
     except Exception:
         # Hash không hợp lệ hoặc không thể verify
         return False
@@ -419,4 +423,99 @@ def reset_password(request_data: ResetPasswordRequest, db: Session = Depends(get
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Lỗi đặt lại mật khẩu: {str(e)}"
+        )
+
+
+@router.post("/change-password", summary="Đổi mật khẩu (yêu cầu đăng nhập)")
+def change_password(
+    request_data: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Đổi mật khẩu cho tài khoản đã đăng nhập.
+    Yêu cầu nhập mật khẩu hiện tại và mật khẩu mới.
+    """
+    try:
+        # Lấy account_id từ current_user (có thể là MaTK hoặc account_id hoặc user_id)
+        account_id = (
+            current_user.get("account_id") or 
+            current_user.get("MaTK") or 
+            current_user.get("user_id")
+        )
+        
+        if not account_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không thể xác định tài khoản"
+            )
+        
+        # Tìm tài khoản
+        account = db.query(TaiKhoan).filter(
+            TaiKhoan.MaTK == account_id,
+            TaiKhoan.IsDelete == False
+        ).first()
+        
+        if not account:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tài khoản không tồn tại"
+            )
+        
+        # Kiểm tra mật khẩu hiện tại
+        # Trim whitespace từ password nhập vào (cả đầu và cuối)
+        current_password_trimmed = request_data.currentPassword.strip()
+        
+        if not current_password_trimmed:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Vui lòng nhập mật khẩu hiện tại"
+            )
+        
+        if not account.Pass:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Tài khoản chưa có mật khẩu. Vui lòng sử dụng chức năng đặt lại mật khẩu."
+            )
+        
+        # Verify password (hàm này đã xử lý cả plain text và hashed password)
+        password_verified = verify_password(current_password_trimmed, account.Pass)
+        
+        if not password_verified:
+            # Thử thêm một lần nữa với password không trim (để tương thích)
+            # Nhưng thường thì nên trim để tránh lỗi do user nhập thừa space
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Mật khẩu hiện tại không đúng. Vui lòng kiểm tra lại mật khẩu bạn đã nhập."
+            )
+        
+        # Kiểm tra mật khẩu mới
+        if len(request_data.newPassword) < 6:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Mật khẩu mới phải có ít nhất 6 ký tự"
+            )
+        
+        # Kiểm tra mật khẩu mới không giống mật khẩu cũ
+        if verify_password(request_data.newPassword, account.Pass):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Mật khẩu mới phải khác mật khẩu hiện tại"
+            )
+        
+        # Cập nhật mật khẩu
+        account.Pass = get_password_hash(request_data.newPassword)
+        db.commit()
+        
+        return {
+            "status": "success",
+            "message": "Mật khẩu đã được đổi thành công"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi đổi mật khẩu: {str(e)}"
         )

@@ -39,12 +39,21 @@ export default function ForgotPasswordPage() {
       // In development, if token is returned, show it for testing
       if (response.token && process.env.NODE_ENV === "development") {
         console.log("Reset token (dev only):", response.token)
-        // Optionally show token in UI for testing
+        // Show token in alert for easy testing in development
+        alert(`Development Mode: Reset token = ${response.token}\n\nYou can use this URL:\n/reset-password?token=${response.token}`)
       }
       
       setSubmitted(true)
     } catch (err: any) {
-      setError(err.message || "Có lỗi xảy ra. Vui lòng thử lại.")
+      const errorMessage = err.message || "Có lỗi xảy ra. Vui lòng thử lại."
+      
+      // Handle specific error cases
+      if (errorMessage.includes("không tồn tại") || errorMessage.includes("not found")) {
+        // Don't reveal if email exists (security best practice)
+        setSubmitted(true) // Show success message anyway
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setLoading(false)
     }
@@ -79,7 +88,13 @@ export default function ForgotPasswordPage() {
                   <li>Kiểm tra thư mục spam/junk</li>
                   <li>Đảm bảo email bạn nhập là chính xác</li>
                   <li>Thử lại sau vài phút</li>
+                  <li>Nếu vẫn không nhận được, vui lòng liên hệ hỗ trợ</li>
                 </ul>
+                {process.env.NODE_ENV === "development" && (
+                  <div className={styles.devNote}>
+                    <p><strong>Development Mode:</strong> Check console for reset token</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

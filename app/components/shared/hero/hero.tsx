@@ -1,10 +1,14 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/app/contexts/AuthContext"
+import Link from "next/link"
+import { User, Lock } from "lucide-react"
 import styles from "./hero.module.css"
 
 export default function Hero() {
   const router = useRouter()
+  const { isAuthenticated } = useAuth()
 
   const handleShopNow = () => {
     router.push("/shop")
@@ -20,9 +24,23 @@ export default function Hero() {
               Khám phá bộ sưu tập đồ gia dụng tiên tiến giúp biến căn nhà của bạn thành một không gian hiện đại, tiện
               nghi và đầy phong cách.
             </p>
-            <button type="button" onClick={handleShopNow} className={styles.button}>
-              Mua sắm ngay
-            </button>
+            <div className={styles.buttonGroup}>
+              <button type="button" onClick={handleShopNow} className={styles.button}>
+                Mua sắm ngay
+              </button>
+              {isAuthenticated && (
+                <Link href="/profile" className={styles.profileLink}>
+                  <User size={18} />
+                  <span>Thông tin cá nhân</span>
+                </Link>
+              )}
+              {!isAuthenticated && (
+                <Link href="/forgot-password" className={styles.forgotPasswordLink}>
+                  <Lock size={18} />
+                  <span>Quên mật khẩu?</span>
+                </Link>
+              )}
+            </div>
           </div>
           <div className={styles.imageContainer}>
             <img src="/modern-kitchen-appliances.png" alt="Đồ gia dụng hiện đại" className={styles.image} />

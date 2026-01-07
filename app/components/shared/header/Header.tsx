@@ -149,6 +149,10 @@ export default function Header() {
                 {showUserMenu && (
                   <div className={styles.userDropdown}>
                     <div className={styles.dropdownContent}>
+                      <Link href="/profile" className={styles.dropdownItem}>
+                        <User size={16} />
+                        <span>Thông tin cá nhân</span>
+                      </Link>
                       <Link href="/profile/orders" className={styles.dropdownItem}>
                         <Package size={16} />
                         <span>Lịch sử đơn hàng</span>
