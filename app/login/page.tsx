@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { LogIn, Loader2, Eye, EyeOff } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { LogIn, Loader2, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { authApi, LoginRequest, UserInfo } from "@/app/lib/api/auth";
 import { useAuth } from "@/app/contexts/AuthContext";
 import styles from "./login.module.css";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, login, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState<LoginRequest>({
     username: "",
@@ -17,6 +18,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Check for registration success message
+  useEffect(() => {
+    if (searchParams.get("registered") === "true") {
+      setShowSuccess(true);
+      // Remove query param from URL
+      router.replace("/login", { scroll: false });
+      // Hide success message after 5 seconds
+      setTimeout(() => setShowSuccess(false), 5000);
+    }
+  }, [searchParams, router]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -26,16 +39,43 @@ export default function LoginPage() {
   }, [isAuthenticated, user]);
 
   const handleRedirect = (role: string) => {
+    // Handle both "NhanVien" and "Employee" role names
     if (role === "Admin" || role === "Manager") {
-      router.push("/admin"); // Redirect to admin page (project management)
+      router.push("/admin/dashboard"); // Redirect to admin dashboard for Admin and Manager
+    } else if (role === "NhanVien" || role === "Employee") {
+      router.push("/employee/dashboard"); // Redirect to employee dashboard for Employee
     } else {
-      router.push("/"); // Redirect to home for other roles
+      router.push("/"); // Redirect to home for customers
     }
+  };
+
+  const validateForm = (): boolean => {
+    if (!formData.username.trim()) {
+      setError("Vui lòng nhập tên đăng nhập");
+      return false;
+    }
+
+    if (!formData.password.trim()) {
+      setError("Vui lòng nhập mật khẩu");
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự");
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -66,7 +106,8 @@ export default function LoginPage() {
     } catch (err: any) {
       // If status check fails, clear token
       localStorage.removeItem("token");
-      setError(err.message || "Đăng nhập thất bại. Vui lòng thử lại.");
+      const errorMessage = err.message || "Đăng nhập thất bại. Vui lòng thử lại.";
+      setError(errorMessage);
       console.error("Login error:", err);
     } finally {
       setLoading(false);
@@ -91,6 +132,13 @@ export default function LoginPage() {
           <h1 className={styles.title}>Đăng nhập</h1>
           <p className={styles.subtitle}>Nhập thông tin để truy cập hệ thống</p>
         </div>
+
+        {showSuccess && (
+          <div className={styles.successMessage}>
+            <CheckCircle size={20} />
+            <p>Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.</p>
+          </div>
+        )}
 
         {error && (
           <div className={styles.errorMessage}>

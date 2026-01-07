@@ -11,6 +11,7 @@ export interface Order {
   KhuyenMai?: string;
   PhiShip?: number;
   MaShipper?: number;
+  items?: OrderItem[]; // Include items in order list
 }
 
 export interface StatusUpdateRequest {

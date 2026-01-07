@@ -47,6 +47,13 @@
   line-height: 1.5;
 }
 
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .button {
   background-color: #ff8c42;
   color: #ffffff;
@@ -55,12 +62,57 @@
   font-weight: 600;
   border: none;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s;
   width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .button:hover {
   background-color: #e67e2f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.4);
+}
+
+.profileLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.profileLink:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #6b3fa0 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.forgotPasswordLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.forgotPasswordLink:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
 }
 
 .imageContainer {

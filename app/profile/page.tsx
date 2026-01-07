@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { reviewsApi, Review } from "@/app/lib/api/reviews";
 import { complaintsApi, Complaint } from "@/app/lib/api/complaints";
-import { User, Mail, Phone, MapPin, Edit, Save, X, Star, MessageSquare, Trash2 } from "lucide-react";
+import { authApi } from "@/app/lib/api/auth";
+import { customerApi } from "@/app/lib/api/customer";
+import { useToast } from "@/app/contexts/ToastContext";
+import { User, Mail, Phone, MapPin, Edit, Save, X, Star, MessageSquare, Trash2, Lock, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import styles from "./profile.module.css";
 
@@ -25,6 +28,20 @@ export default function ProfilePage() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [complaintsLoading, setComplaintsLoading] = useState(false);
+  const { showToast } = useToast();
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -33,8 +50,10 @@ export default function ProfilePage() {
   }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
-    if (user) {
-      // TODO: Load user profile data from API
+    if (user && user.role === "KhachHang") {
+      loadProfile();
+    } else if (user) {
+      // For non-customer users, just set username
       setFormData({
         fullName: user.username || "",
         email: "",
@@ -43,6 +62,29 @@ export default function ProfilePage() {
       });
     }
   }, [user]);
+
+  const loadProfile = async () => {
+    try {
+      const customerInfo = await customerApi.getMyInfo();
+      setFormData({
+        fullName: customerInfo.TenKH || "",
+        email: customerInfo.EmailKH || "",
+        phone: customerInfo.SdtKH || "",
+        address: customerInfo.DiaChiKH || "",
+      });
+    } catch (err: any) {
+      console.error("Error loading profile:", err);
+      // Fallback to username if API fails
+      if (user) {
+        setFormData({
+          fullName: user.username || "",
+          email: "",
+          phone: "",
+          address: "",
+        });
+      }
+    }
+  };
 
   useEffect(() => {
     if (user && user.role === "KhachHang") {
@@ -90,13 +132,42 @@ export default function ProfilePage() {
   };
 
   const handleSave = async () => {
+    if (!user || user.role !== "KhachHang") {
+      showToast("Chỉ khách hàng mới có thể cập nhật thông tin", "error");
+      return;
+    }
+
+    // Validation
+    if (!formData.fullName.trim()) {
+      showToast("Vui lòng nhập họ và tên", "error");
+      return;
+    }
+    if (!formData.email.trim()) {
+      showToast("Vui lòng nhập email", "error");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      showToast("Email không hợp lệ", "error");
+      return;
+    }
+    if (!formData.phone.trim()) {
+      showToast("Vui lòng nhập số điện thoại", "error");
+      return;
+    }
+
     try {
       setLoading(true);
-      // TODO: Implement update profile API call
-      alert("Chức năng cập nhật thông tin sẽ được triển khai sau");
+      await customerApi.updateMyInfo({
+        TenKH: formData.fullName.trim(),
+        EmailKH: formData.email.trim(),
+        SdtKH: formData.phone.trim(),
+        DiaChiKH: formData.address.trim(),
+      });
+      showToast("Cập nhật thông tin thành công", "success");
       setEditing(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating profile:", error);
+      showToast(error.message || "Có lỗi xảy ra khi cập nhật thông tin", "error");
     } finally {
       setLoading(false);
     }
@@ -267,6 +338,201 @@ export default function ProfilePage() {
         </div>
       </div>
       )}
+
+      {/* Change Password Section */}
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <div className={styles.sectionHeader}>
+            <Lock size={20} />
+            <h2 className={styles.sectionTitle}>Đổi mật khẩu</h2>
+          </div>
+          <button
+            type="button"
+            className={styles.toggleButton}
+            onClick={() => {
+              setShowChangePassword(!showChangePassword);
+              if (showChangePassword) {
+                setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                setPasswordErrors({});
+              }
+            }}
+          >
+            {showChangePassword ? "Ẩn" : "Hiện"}
+          </button>
+        </div>
+
+        {showChangePassword && (
+          <div className={styles.cardBody}>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setPasswordErrors({});
+
+                // Validation
+                const errors: Record<string, string> = {};
+                if (!passwordData.currentPassword.trim()) {
+                  errors.currentPassword = "Vui lòng nhập mật khẩu hiện tại";
+                }
+                if (!passwordData.newPassword.trim()) {
+                  errors.newPassword = "Vui lòng nhập mật khẩu mới";
+                } else if (passwordData.newPassword.length < 6) {
+                  errors.newPassword = "Mật khẩu mới phải có ít nhất 6 ký tự";
+                }
+                if (!passwordData.confirmPassword.trim()) {
+                  errors.confirmPassword = "Vui lòng xác nhận mật khẩu mới";
+                } else if (passwordData.newPassword !== passwordData.confirmPassword) {
+                  errors.confirmPassword = "Mật khẩu xác nhận không khớp";
+                }
+
+                if (Object.keys(errors).length > 0) {
+                  setPasswordErrors(errors);
+                  return;
+                }
+
+                setChangingPassword(true);
+                try {
+                  await authApi.changePassword({
+                    currentPassword: passwordData.currentPassword,
+                    newPassword: passwordData.newPassword,
+                  });
+                  showToast("Đổi mật khẩu thành công", "success");
+                  setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                  setShowChangePassword(false);
+                } catch (err: any) {
+                  const errorMessage = err.message || "Không thể đổi mật khẩu. Vui lòng thử lại.";
+                  if (errorMessage.includes("old password") || errorMessage.includes("mật khẩu hiện tại")) {
+                    setPasswordErrors({ currentPassword: "Mật khẩu hiện tại không đúng" });
+                  } else if (errorMessage.includes("token") || errorMessage.includes("expired")) {
+                    showToast("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", "error");
+                    setTimeout(() => router.push("/login"), 2000);
+                  } else {
+                    showToast(errorMessage, "error");
+                  }
+                } finally {
+                  setChangingPassword(false);
+                }
+              }}
+            >
+              <div className={styles.formGroup}>
+                <label>
+                  <Lock size={16} />
+                  Mật khẩu hiện tại
+                </label>
+                <div className={styles.passwordInputWrapper}>
+                  <input
+                    type={showPasswords.current ? "text" : "password"}
+                    value={passwordData.currentPassword}
+                    onChange={(e) => {
+                      setPasswordData({ ...passwordData, currentPassword: e.target.value });
+                      if (passwordErrors.currentPassword) {
+                        setPasswordErrors({ ...passwordErrors, currentPassword: "" });
+                      }
+                    }}
+                    className={passwordErrors.currentPassword ? styles.inputError : ""}
+                    placeholder="Nhập mật khẩu hiện tại"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                    className={styles.passwordToggle}
+                  >
+                    {showPasswords.current ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {passwordErrors.currentPassword && (
+                  <span className={styles.errorText}>{passwordErrors.currentPassword}</span>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>
+                  <Lock size={16} />
+                  Mật khẩu mới
+                </label>
+                <div className={styles.passwordInputWrapper}>
+                  <input
+                    type={showPasswords.new ? "text" : "password"}
+                    value={passwordData.newPassword}
+                    onChange={(e) => {
+                      setPasswordData({ ...passwordData, newPassword: e.target.value });
+                      if (passwordErrors.newPassword) {
+                        setPasswordErrors({ ...passwordErrors, newPassword: "" });
+                      }
+                    }}
+                    className={passwordErrors.newPassword ? styles.inputError : ""}
+                    placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                    className={styles.passwordToggle}
+                  >
+                    {showPasswords.new ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {passwordErrors.newPassword && (
+                  <span className={styles.errorText}>{passwordErrors.newPassword}</span>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>
+                  <Lock size={16} />
+                  Xác nhận mật khẩu mới
+                </label>
+                <div className={styles.passwordInputWrapper}>
+                  <input
+                    type={showPasswords.confirm ? "text" : "password"}
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => {
+                      setPasswordData({ ...passwordData, confirmPassword: e.target.value });
+                      if (passwordErrors.confirmPassword) {
+                        setPasswordErrors({ ...passwordErrors, confirmPassword: "" });
+                      }
+                    }}
+                    className={passwordErrors.confirmPassword ? styles.inputError : ""}
+                    placeholder="Nhập lại mật khẩu mới"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                    className={styles.passwordToggle}
+                  >
+                    {showPasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {passwordErrors.confirmPassword && (
+                  <span className={styles.errorText}>{passwordErrors.confirmPassword}</span>
+                )}
+              </div>
+
+              <div className={styles.formActions}>
+                <button
+                  type="button"
+                  className={styles.cancelButton}
+                  onClick={() => {
+                    setShowChangePassword(false);
+                    setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                    setPasswordErrors({});
+                  }}
+                  disabled={changingPassword}
+                >
+                  <X size={16} />
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className={styles.saveButton}
+                  disabled={changingPassword}
+                >
+                  <Lock size={16} />
+                  {changingPassword ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+      </div>
 
       {activeTab === "reviews" && isCustomer && (
         <div className={styles.card}>

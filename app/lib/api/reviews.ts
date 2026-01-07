@@ -24,6 +24,13 @@ export interface ReviewCreateRequest {
 }
 
 export const reviewsApi = {
+  getAll: async (
+    page: number = 1,
+    limit: number = 50
+  ): Promise<ReviewListResponse> => {
+    return apiClient(`/reviews/?page=${page}&limit=${limit}`);
+  },
+
   getProductReviews: async (
     productId: number,
     page: number = 1,

@@ -102,10 +102,27 @@ export default function OrderDetailPage() {
     )
   }
 
-  const formattedTotal = new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(order.TongTien || 0)
+  // Calculate subtotal from items
+  const subtotal = order.items?.reduce((sum, item) => {
+    const itemTotal = (item.DonGia * item.SoLuong) - (item.GiamGia || 0)
+    return sum + itemTotal
+  }, 0) || 0
+
+  const shipping = order.PhiShip || 0
+  const tax = Math.round(subtotal * 0.1) // 10% tax
+  const calculatedTotal = subtotal + shipping + tax
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(amount)
+  }
+
+  const formattedSubtotal = formatCurrency(subtotal)
+  const formattedShipping = formatCurrency(shipping)
+  const formattedTax = formatCurrency(tax)
+  const formattedTotal = formatCurrency(order.TongTien || calculatedTotal)
 
   return (
     <>
@@ -143,33 +160,25 @@ export default function OrderDetailPage() {
               <div className={styles.itemsList}>
                 {order.items && order.items.length > 0 ? (
                   order.items.map((item, index) => {
-                    const itemTotal = (item.DonGia * item.SoLuong) - (item.GiamGia || 0)
+                    const itemSubtotal = item.DonGia * item.SoLuong
+                    const discount = item.GiamGia || 0
+                    const itemTotal = itemSubtotal - discount
                     return (
                       <div key={index} className={styles.itemCard}>
                         <div className={styles.itemInfo}>
                           <h3 className={styles.itemName}>{item.TenSP}</h3>
                           <p className={styles.itemDetails}>
                             Số lượng: {item.SoLuong} ×{" "}
-                            {new Intl.NumberFormat("vi-VN", {
-                              style: "currency",
-                              currency: "VND",
-                            }).format(item.DonGia)}
+                            {formatCurrency(item.DonGia)}
                           </p>
-                          {item.GiamGia && item.GiamGia > 0 && (
+                          {discount > 0 && (
                             <p className={styles.discount}>
-                              Giảm giá:{" "}
-                              {new Intl.NumberFormat("vi-VN", {
-                                style: "currency",
-                                currency: "VND",
-                              }).format(item.GiamGia)}
+                              Giảm giá: {formatCurrency(discount)}
                             </p>
                           )}
                         </div>
                         <div className={styles.itemTotal}>
-                          {new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(itemTotal)}
+                          {formatCurrency(itemTotal)}
                         </div>
                       </div>
                     )
@@ -186,19 +195,18 @@ export default function OrderDetailPage() {
               <div className={styles.summary}>
                 <div className={styles.summaryRow}>
                   <span>Tạm tính:</span>
-                  <span>{formattedTotal}</span>
+                  <span>{formattedSubtotal}</span>
                 </div>
-                {order.PhiShip && (
-                  <div className={styles.summaryRow}>
-                    <span>Phí vận chuyển:</span>
-                    <span>
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      }).format(order.PhiShip)}
-                    </span>
-                  </div>
-                )}
+                <div className={styles.summaryRow}>
+                  <span>Phí vận chuyển:</span>
+                  <span className={shipping === 0 ? styles.free : ""}>
+                    {shipping === 0 ? "Miễn phí" : formattedShipping}
+                  </span>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span>Thuế (10%):</span>
+                  <span>{formattedTax}</span>
+                </div>
                 {order.KhuyenMai && (
                   <div className={styles.summaryRow}>
                     <span>Mã giảm giá ({order.KhuyenMai}):</span>

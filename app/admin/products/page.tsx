@@ -11,6 +11,7 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  Star,
   Upload,
   Image as ImageIcon,
 } from "lucide-react";
@@ -393,6 +394,13 @@ export default function ProductsPage() {
                   <td>{product.TenDanhMuc || "—"}</td>
                   <td>
                     <div className={styles.actions}>
+                      <button
+                        onClick={() => router.push(`/product/${product.MaSP}`)}
+                        className={styles.viewButton}
+                        title="Xem chi tiết & đánh giá"
+                      >
+                        <Star size={16} />
+                      </button>
                       <button
                         onClick={() => handleOpenModal(product)}
                         className={styles.editButton}

@@ -23,6 +23,12 @@ export default function CartPage() {
     }
   }, []); // Chỉ chạy 1 lần khi mount
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, router]);
+
   const formattedPrice = (value: number) =>
     new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -33,6 +39,10 @@ export default function CartPage() {
   const removeItem = (id: number) => {
     removeFromCart(id);
   };
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -87,8 +97,9 @@ export default function CartPage() {
             {/* Cart Items */}
             <div className={styles.cartItems}>
               {cartItems.map((item) => {
-                const isMaxStock =
-                  item.maxStock && item.quantity >= item.maxStock;
+                const isMaxStock = Boolean(
+                  item.maxStock && item.quantity >= item.maxStock
+                );
 
                 return (
                   <div key={item.id} className={styles.cartItem}>

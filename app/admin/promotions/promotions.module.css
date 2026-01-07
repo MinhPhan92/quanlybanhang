@@ -40,16 +40,118 @@
   background: #2563eb;
 }
 
-.emptyState {
+.errorBanner {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 400px;
+  justify-content: space-between;
+  padding: 1rem;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  color: #991b1b;
+  margin-bottom: 1.5rem;
+}
+
+.errorBanner button {
+  padding: 0.5rem 1rem;
+  background: #991b1b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
   background: white;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.statCard svg {
+  color: #3b82f6;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 0.25rem 0;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.voucherCode {
+  color: #3b82f6;
+  font-family: monospace;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #e0e7ff;
+  color: #4338ca;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.dateRange {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.usageInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.statusActive {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.statusExpired {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.statusInactive {
+  background: #f3f4f6;
   color: #6b7280;
 }
 

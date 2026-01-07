@@ -137,4 +137,24 @@ export const categoriesApi = {
     // Backend route requires trailing slash when redirect_slashes=False
     return apiClient("/danhmuc/", { auth: false, debug: true });
   },
+
+  create: async (data: { TenDanhMuc: string }): Promise<{ MaDanhMuc: number }> => {
+    return apiClient("/danhmuc/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  update: async (id: number, data: { TenDanhMuc: string }): Promise<Category> => {
+    return apiClient(`/danhmuc/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete: async (id: number): Promise<{ message: string }> => {
+    return apiClient(`/danhmuc/${id}`, {
+      method: "DELETE",
+    });
+  },
 };

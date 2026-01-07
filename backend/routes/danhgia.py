@@ -26,7 +26,8 @@ def create_review(
     Chỉ khách hàng đã mua sản phẩm mới có thể đánh giá.
     """
     # Role check: Only customers can create reviews
-    if current_user.get("role") != "KhachHang":
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Customer", "KhachHang"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Chỉ khách hàng mới có thể tạo đánh giá"
@@ -199,6 +200,72 @@ def get_product_reviews(
             detail=f"Lỗi lấy đánh giá: {str(e)}"
         )
 
+@router.get("/", response_model=ReviewListResponse, summary="Xem tất cả đánh giá (Admin/Manager)")
+def get_all_reviews(
+    page: int = 1,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Lấy danh sách tất cả đánh giá.
+    Chỉ Admin và Manager mới có thể xem.
+    """
+    # Role check: Only Admin and Manager can view all reviews
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien"]):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chỉ Admin, Manager và Nhân viên mới có thể xem tất cả đánh giá"
+        )
+    
+    try:
+        # Build query
+        query = db.query(DanhGia).filter(DanhGia.IsDelete == False)
+        
+        # Get total count
+        total_reviews = query.count()
+        
+        # Apply pagination
+        offset = (page - 1) * limit
+        reviews = query.order_by(DanhGia.NgayDanhGia.desc()).offset(offset).limit(limit).all()
+        
+        # Format response
+        review_list = []
+        total_rating = 0
+        for review in reviews:
+            product = db.query(SanPham).filter(SanPham.MaSP == review.MaSP).first()
+            customer = db.query(KhachHang).filter(KhachHang.MaKH == review.MaKH).first()
+            total_rating += review.DiemDanhGia
+            
+            review_list.append(ReviewResponse(
+                MaDanhGia=review.MaDanhGia,
+                MaSP=review.MaSP,
+                MaKH=review.MaKH,
+                DiemDanhGia=review.DiemDanhGia,
+                NoiDung=review.NoiDung,
+                NgayDanhGia=review.NgayDanhGia,
+                TenKH=customer.TenKH if customer else None,
+                TenSP=product.TenSP if product else None
+            ))
+        
+        # Calculate average rating
+        average_rating = total_rating / len(review_list) if review_list else 0
+        
+        return ReviewListResponse(
+            reviews=review_list,
+            total=total_reviews,
+            average_rating=round(average_rating, 2)
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi lấy đánh giá: {str(e)}"
+        )
+
 @router.get("/my-reviews", response_model=List[ReviewResponse], summary="Xem đánh giá của tôi")
 def get_my_reviews(
     db: Session = Depends(get_db),
@@ -208,7 +275,8 @@ def get_my_reviews(
     Lấy danh sách đánh giá của khách hàng hiện tại.
     """
     # Role check: Only customers can view their reviews
-    if current_user.get("role") != "KhachHang":
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Customer", "KhachHang"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Chỉ khách hàng mới có thể xem đánh giá của mình"

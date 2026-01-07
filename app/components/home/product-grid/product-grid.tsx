@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import ProductCard from "../product-card/product-card"
+import ProductCardSkeleton from "@/app/components/shared/skeleton/ProductCardSkeleton"
 import { productsApi, Product } from "@/app/lib/api/products"
 import styles from "./product-grid.module.css"
 
@@ -39,8 +40,10 @@ export default function ProductGrid() {
         </div>
 
         {loading ? (
-          <div className={styles.loadingContainer}>
-            <p>Đang tải sản phẩm...</p>
+          <div className={styles.grid}>
+            {[...Array(8)].map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
           </div>
         ) : products.length > 0 ? (
           <div className={styles.grid}>

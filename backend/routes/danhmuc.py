@@ -12,8 +12,9 @@ router = APIRouter(tags=["DanhMuc"])
 
 @router.post("/", response_model=dict)
 def create_danhmuc(danhmuc: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    # Role check: Only Admin and Manager can create categories
-    if current_user.get("role") not in ["Admin", "Manager"]:
+    # Role check: Admin, Manager, and Employee can create categories
+    user_role = current_user.get("role")
+    if user_role not in ["Admin", "Manager", "Employee", "NhanVien"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     
@@ -75,8 +76,9 @@ def get_danhmuc(madanhmuc: int, db: Session = Depends(get_db), current_user: dic
 
 @router.put("/{madanhmuc}", response_model=dict)
 def update_danhmuc(madanhmuc: int, danhmuc: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    # Role check: Only Admin and Manager can update categories
-    if current_user.get("role") not in ["Admin", "Manager"]:
+    # Role check: Admin, Manager, and Employee can update categories
+    user_role = current_user.get("role")
+    if user_role not in ["Admin", "Manager", "Employee", "NhanVien"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     

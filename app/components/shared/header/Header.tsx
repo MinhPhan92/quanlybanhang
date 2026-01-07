@@ -74,9 +74,6 @@ export default function Header() {
             <Link href="/about" className={styles.navLink}>
               Giới thiệu
             </Link>
-            <Link href="/contact" className={styles.navLink}>
-              Liên hệ
-            </Link>
             <Link href="/policies" className={styles.navLink}>
               Chính sách
             </Link>
@@ -152,7 +149,11 @@ export default function Header() {
                 {showUserMenu && (
                   <div className={styles.userDropdown}>
                     <div className={styles.dropdownContent}>
-                      <Link href="/orders" className={styles.dropdownItem}>
+                      <Link href="/profile" className={styles.dropdownItem}>
+                        <User size={16} />
+                        <span>Thông tin cá nhân</span>
+                      </Link>
+                      <Link href="/profile/orders" className={styles.dropdownItem}>
                         <Package size={16} />
                         <span>Lịch sử đơn hàng</span>
                       </Link>
@@ -207,13 +208,6 @@ export default function Header() {
               onClick={() => setIsOpen(false)}
             >
               Giới thiệu
-            </Link>
-            <Link
-              href="/contact"
-              className={styles.mobileNavLink}
-              onClick={() => setIsOpen(false)}
-            >
-              Liên hệ
             </Link>
             <Link
               href="/policies"

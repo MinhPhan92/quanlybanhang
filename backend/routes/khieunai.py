@@ -11,10 +11,40 @@ from backend.schemas import (
     ComplaintUpdateRequest, 
     ComplaintListResponse
 )
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Optional
 
 router = APIRouter(prefix="/complaints", tags=["Complaints"])
+
+# =====================================================
+# 🔧 Helper Functions
+# =====================================================
+
+def convert_khieunai_to_response(complaint: KhieuNai, customer: KhachHang = None, staff: NhanVien = None) -> ComplaintResponse:
+    """
+    Convert KhieuNai database object to ComplaintResponse.
+    Maps database fields to API response format and generates virtual fields.
+    """
+    # Convert NgayKhieuNai (Date) to datetime for NgayTao
+    ngay_tao_datetime = None
+    if complaint.NgayKhieuNai:
+        ngay_tao_datetime = datetime.combine(complaint.NgayKhieuNai, datetime.min.time())
+    
+    return ComplaintResponse(
+        MaKhieuNai=complaint.MaKhieuNai,
+        MaKH=complaint.MaKH,
+        NoiDung=complaint.NoiDung,
+        NgayKhieuNai=complaint.NgayKhieuNai,
+        TenKH=customer.TenKH if customer else None,
+        # Virtual fields for API compatibility
+        TieuDe=f"Khiếu nại #{complaint.MaKhieuNai}",
+        TrangThai="Pending",  # Default, not stored in DB
+        NgayTao=ngay_tao_datetime,
+        NgayCapNhat=ngay_tao_datetime,
+        PhanHoi=None,  # Not in DB
+        MaNVPhanHoi=None,  # Not in DB
+        TenNVPhanHoi=staff.TenNV if staff else None
+    )
 
 # =====================================================
 # 🧾 Routes
@@ -31,7 +61,8 @@ def create_complaint(
     Chỉ khách hàng mới có thể tạo khiếu nại.
     """
     # Role check: Only customers can create complaints
-    if current_user.get("role") != "KhachHang":
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Customer", "KhachHang"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Chỉ khách hàng mới có thể tạo khiếu nại"
@@ -47,26 +78,17 @@ def create_complaint(
             )
         
         # Validate input
-        if not complaint_data.TieuDe.strip():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Tiêu đề không được để trống"
-            )
-        
         if not complaint_data.NoiDung.strip():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Nội dung không được để trống"
             )
         
-        # Create new complaint
+        # Create new complaint (only fields that exist in database)
         new_complaint = KhieuNai(
             MaKH=customer_id,
-            TieuDe=complaint_data.TieuDe.strip(),
             NoiDung=complaint_data.NoiDung.strip(),
-            TrangThai="Pending",
-            NgayTao=datetime.now(),
-            NgayCapNhat=datetime.now(),
+            NgayKhieuNai=datetime.now().date(),
             IsDelete=False
         )
         
@@ -77,19 +99,7 @@ def create_complaint(
         # Get customer name for response
         customer = db.query(KhachHang).filter(KhachHang.MaKH == customer_id).first()
         
-        return ComplaintResponse(
-            MaKhieuNai=new_complaint.MaKhieuNai,
-            MaKH=new_complaint.MaKH,
-            TieuDe=new_complaint.TieuDe,
-            NoiDung=new_complaint.NoiDung,
-            TrangThai=new_complaint.TrangThai,
-            NgayTao=new_complaint.NgayTao,
-            NgayCapNhat=new_complaint.NgayCapNhat,
-            PhanHoi=new_complaint.PhanHoi,
-            MaNVPhanHoi=new_complaint.MaNVPhanHoi,
-            TenKH=customer.TenKH if customer else None,
-            TenNVPhanHoi=None
-        )
+        return convert_khieunai_to_response(new_complaint, customer)
         
     except HTTPException:
         raise
@@ -109,7 +119,8 @@ def get_my_complaints(
     Lấy danh sách khiếu nại của khách hàng hiện tại.
     """
     # Role check: Only customers can view their complaints
-    if current_user.get("role") != "KhachHang":
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Customer", "KhachHang"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Chỉ khách hàng mới có thể xem khiếu nại của mình"
@@ -123,35 +134,19 @@ def get_my_complaints(
                 detail="Không tìm thấy thông tin khách hàng"
             )
         
-        # Get customer's complaints
+        # Get customer's complaints (use NgayKhieuNai instead of NgayTao)
         complaints = db.query(KhieuNai).filter(
             and_(
                 KhieuNai.MaKH == customer_id,
                 KhieuNai.IsDelete == False
             )
-        ).order_by(KhieuNai.NgayTao.desc()).all()
+        ).order_by(KhieuNai.NgayKhieuNai.desc()).all()
         
         # Format response
         complaint_list = []
         for complaint in complaints:
             customer = db.query(KhachHang).filter(KhachHang.MaKH == complaint.MaKH).first()
-            staff = None
-            if complaint.MaNVPhanHoi:
-                staff = db.query(NhanVien).filter(NhanVien.MaNV == complaint.MaNVPhanHoi).first()
-            
-            complaint_list.append(ComplaintResponse(
-                MaKhieuNai=complaint.MaKhieuNai,
-                MaKH=complaint.MaKH,
-                TieuDe=complaint.TieuDe,
-                NoiDung=complaint.NoiDung,
-                TrangThai=complaint.TrangThai,
-                NgayTao=complaint.NgayTao,
-                NgayCapNhat=complaint.NgayCapNhat,
-                PhanHoi=complaint.PhanHoi,
-                MaNVPhanHoi=complaint.MaNVPhanHoi,
-                TenKH=customer.TenKH if customer else None,
-                TenNVPhanHoi=staff.TenNV if staff else None
-            ))
+            complaint_list.append(convert_khieunai_to_response(complaint, customer))
         
         return complaint_list
         
@@ -173,57 +168,35 @@ def get_all_complaints(
 ):
     """
     Lấy danh sách tất cả khiếu nại.
-    Chỉ Admin và Manager mới có thể xem.
+    Admin, Manager và Employee có thể xem.
     """
-    # Role check: Only Admin and Manager can view all complaints
-    if current_user.get("role") not in ["Admin", "Manager"]:
+    # Role check: Admin, Manager, and Employee can view all complaints
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Chỉ Admin và Manager mới có thể xem tất cả khiếu nại"
+            detail="Chỉ Admin, Manager và Nhân viên mới có thể xem tất cả khiếu nại"
         )
     
     try:
-        # Build query
+        # Build query (status filter is ignored since TrangThai doesn't exist in DB)
         query = db.query(KhieuNai).filter(KhieuNai.IsDelete == False)
         
-        # Apply status filter if provided
-        if status_filter:
-            valid_statuses = ["Pending", "Processing", "Resolved", "Closed"]
-            if status_filter not in valid_statuses:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Trạng thái không hợp lệ. Các trạng thái hợp lệ: {', '.join(valid_statuses)}"
-                )
-            query = query.filter(KhieuNai.TrangThai == status_filter)
+        # Note: status_filter is ignored since TrangThai column doesn't exist in database
+        # We keep the parameter for API compatibility but don't filter by it
         
         # Get total count
         total_complaints = query.count()
         
-        # Apply pagination
+        # Apply pagination (use NgayKhieuNai instead of NgayTao)
         offset = (page - 1) * limit
-        complaints = query.order_by(KhieuNai.NgayTao.desc()).offset(offset).limit(limit).all()
+        complaints = query.order_by(KhieuNai.NgayKhieuNai.desc()).offset(offset).limit(limit).all()
         
         # Format response
         complaint_list = []
         for complaint in complaints:
             customer = db.query(KhachHang).filter(KhachHang.MaKH == complaint.MaKH).first()
-            staff = None
-            if complaint.MaNVPhanHoi:
-                staff = db.query(NhanVien).filter(NhanVien.MaNV == complaint.MaNVPhanHoi).first()
-            
-            complaint_list.append(ComplaintResponse(
-                MaKhieuNai=complaint.MaKhieuNai,
-                MaKH=complaint.MaKH,
-                TieuDe=complaint.TieuDe,
-                NoiDung=complaint.NoiDung,
-                TrangThai=complaint.TrangThai,
-                NgayTao=complaint.NgayTao,
-                NgayCapNhat=complaint.NgayCapNhat,
-                PhanHoi=complaint.PhanHoi,
-                MaNVPhanHoi=complaint.MaNVPhanHoi,
-                TenKH=customer.TenKH if customer else None,
-                TenNVPhanHoi=staff.TenNV if staff else None
-            ))
+            complaint_list.append(convert_khieunai_to_response(complaint, customer))
         
         return ComplaintListResponse(
             complaints=complaint_list,
@@ -271,47 +244,21 @@ def update_complaint(
                 detail="Khiếu nại không tồn tại"
             )
         
-        # Get staff ID from JWT token
-        staff_id = current_user.get("user_id")
+        # Update fields (only NoiDung exists in database)
+        # TrangThai and PhanHoi are accepted for API compatibility but not saved
+        if update_data.NoiDung is not None:
+            complaint.NoiDung = update_data.NoiDung.strip()
         
-        # Update fields
-        if update_data.TrangThai is not None:
-            valid_statuses = ["Pending", "Processing", "Resolved", "Closed"]
-            if update_data.TrangThai not in valid_statuses:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Trạng thái không hợp lệ. Các trạng thái hợp lệ: {', '.join(valid_statuses)}"
-                )
-            complaint.TrangThai = update_data.TrangThai
-        
-        if update_data.PhanHoi is not None:
-            complaint.PhanHoi = update_data.PhanHoi.strip()
-            complaint.MaNVPhanHoi = staff_id
-        
-        complaint.NgayCapNhat = datetime.now()
+        # Note: TrangThai and PhanHoi are ignored since they don't exist in DB
+        # We accept them for API compatibility but don't save them
         
         db.commit()
         db.refresh(complaint)
         
         # Get related data for response
         customer = db.query(KhachHang).filter(KhachHang.MaKH == complaint.MaKH).first()
-        staff = None
-        if complaint.MaNVPhanHoi:
-            staff = db.query(NhanVien).filter(NhanVien.MaNV == complaint.MaNVPhanHoi).first()
         
-        return ComplaintResponse(
-            MaKhieuNai=complaint.MaKhieuNai,
-            MaKH=complaint.MaKH,
-            TieuDe=complaint.TieuDe,
-            NoiDung=complaint.NoiDung,
-            TrangThai=complaint.TrangThai,
-            NgayTao=complaint.NgayTao,
-            NgayCapNhat=complaint.NgayCapNhat,
-            PhanHoi=complaint.PhanHoi,
-            MaNVPhanHoi=complaint.MaNVPhanHoi,
-            TenKH=customer.TenKH if customer else None,
-            TenNVPhanHoi=staff.TenNV if staff else None
-        )
+        return convert_khieunai_to_response(complaint, customer)
         
     except HTTPException:
         raise
@@ -360,23 +307,8 @@ def get_complaint_detail(
         
         # Get related data
         customer = db.query(KhachHang).filter(KhachHang.MaKH == complaint.MaKH).first()
-        staff = None
-        if complaint.MaNVPhanHoi:
-            staff = db.query(NhanVien).filter(NhanVien.MaNV == complaint.MaNVPhanHoi).first()
         
-        return ComplaintResponse(
-            MaKhieuNai=complaint.MaKhieuNai,
-            MaKH=complaint.MaKH,
-            TieuDe=complaint.TieuDe,
-            NoiDung=complaint.NoiDung,
-            TrangThai=complaint.TrangThai,
-            NgayTao=complaint.NgayTao,
-            NgayCapNhat=complaint.NgayCapNhat,
-            PhanHoi=complaint.PhanHoi,
-            MaNVPhanHoi=complaint.MaNVPhanHoi,
-            TenKH=customer.TenKH if customer else None,
-            TenNVPhanHoi=staff.TenNV if staff else None
-        )
+        return convert_khieunai_to_response(complaint, customer)
         
     except HTTPException:
         raise

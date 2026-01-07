@@ -64,8 +64,19 @@ export default function CategoriesPage() {
     try {
       setSubmitting(true);
       setError(null);
-      // TODO: Implement create/update API calls
-      alert("Chức năng này sẽ được triển khai sau");
+      
+      if (editingCategory) {
+        // Update existing category
+        await categoriesApi.update(editingCategory.MaDanhMuc, {
+          TenDanhMuc: formData.TenDanhMuc.trim(),
+        });
+      } else {
+        // Create new category
+        await categoriesApi.create({
+          TenDanhMuc: formData.TenDanhMuc.trim(),
+        });
+      }
+      
       handleCloseModal();
       loadCategories();
     } catch (err: any) {
@@ -80,8 +91,8 @@ export default function CategoriesPage() {
       return;
     }
     try {
-      // TODO: Implement delete API call
-      alert("Chức năng này sẽ được triển khai sau");
+      setError(null);
+      await categoriesApi.delete(id);
       loadCategories();
     } catch (err: any) {
       setError(err.message || "Có lỗi xảy ra khi xóa");

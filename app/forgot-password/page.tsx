@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Header from "@/app/components/shared/header/Header"
 import Footer from "@/app/components/shared/footer/Footer"
+import { authApi } from "@/app/lib/api/auth"
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react"
 import styles from "./forgot-password.module.css"
 
@@ -20,16 +21,39 @@ export default function ForgotPasswordPage() {
     setLoading(true)
     setError(null)
 
+    if (!email.trim()) {
+      setError("Vui lòng nhập địa chỉ email")
+      setLoading(false)
+      return
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Email không hợp lệ")
+      setLoading(false)
+      return
+    }
+
     try {
-      // TODO: Call API to send reset password email
-      // await authApi.forgotPassword({ email })
+      const response = await authApi.forgotPassword(email.trim())
       
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // In development, if token is returned, show it for testing
+      if (response.token && process.env.NODE_ENV === "development") {
+        console.log("Reset token (dev only):", response.token)
+        // Show token in alert for easy testing in development
+        alert(`Development Mode: Reset token = ${response.token}\n\nYou can use this URL:\n/reset-password?token=${response.token}`)
+      }
       
       setSubmitted(true)
     } catch (err: any) {
-      setError(err.message || "Có lỗi xảy ra. Vui lòng thử lại.")
+      const errorMessage = err.message || "Có lỗi xảy ra. Vui lòng thử lại."
+      
+      // Handle specific error cases
+      if (errorMessage.includes("không tồn tại") || errorMessage.includes("not found")) {
+        // Don't reveal if email exists (security best practice)
+        setSubmitted(true) // Show success message anyway
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setLoading(false)
     }
@@ -64,7 +88,13 @@ export default function ForgotPasswordPage() {
                   <li>Kiểm tra thư mục spam/junk</li>
                   <li>Đảm bảo email bạn nhập là chính xác</li>
                   <li>Thử lại sau vài phút</li>
+                  <li>Nếu vẫn không nhận được, vui lòng liên hệ hỗ trợ</li>
                 </ul>
+                {process.env.NODE_ENV === "development" && (
+                  <div className={styles.devNote}>
+                    <p><strong>Development Mode:</strong> Check console for reset token</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

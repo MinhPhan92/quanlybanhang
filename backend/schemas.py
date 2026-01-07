@@ -1,6 +1,6 @@
 from typing import Optional, Dict, List, Any
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, date
 import json
 
 
@@ -18,10 +18,32 @@ class RegisterCustomerRequest(BaseModel):
     EmailKH: Optional[str] = None
     DiaChiKH: Optional[str] = None
 
+class CustomerRegisterRequest(BaseModel):
+    username: str
+    password: str
+    email: str
+    fullName: str
+    phone: str
+    address: str
+
 
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+class ChangePasswordRequest(BaseModel):
+    currentPassword: str
+    newPassword: str
 
 
 class UserResponse(BaseModel):
@@ -66,25 +88,29 @@ class ReviewListResponse(BaseModel):
 # =====================================================
 
 class ComplaintCreateRequest(BaseModel):
-    TieuDe: str
-    NoiDung: str
+    TieuDe: Optional[str] = None  # Optional, for API compatibility (not stored in DB)
+    NoiDung: str  # Only NoiDung exists in database
 
 class ComplaintResponse(BaseModel):
     MaKhieuNai: int
     MaKH: int
-    TieuDe: str
     NoiDung: str
-    TrangThai: str
-    NgayTao: datetime
-    NgayCapNhat: Optional[datetime] = None
-    PhanHoi: Optional[str] = None
-    MaNVPhanHoi: Optional[int] = None
-    TenKH: Optional[str] = None
-    TenNVPhanHoi: Optional[str] = None
+    NgayKhieuNai: Optional[date] = None  # Matches database column name
+    TenKH: Optional[str] = None  # Added from relationship
+    # Virtual fields for compatibility (not in database but computed)
+    TieuDe: Optional[str] = None  # Will be generated from MaKhieuNai
+    TrangThai: Optional[str] = "Pending"  # Default value, not in DB
+    NgayTao: Optional[datetime] = None  # Will map from NgayKhieuNai
+    NgayCapNhat: Optional[datetime] = None  # Will map from NgayKhieuNai
+    PhanHoi: Optional[str] = None  # Not in DB, always None
+    MaNVPhanHoi: Optional[int] = None  # Not in DB, always None
+    TenNVPhanHoi: Optional[str] = None  # Not in DB, always None
 
 class ComplaintUpdateRequest(BaseModel):
-    TrangThai: Optional[str] = None
-    PhanHoi: Optional[str] = None
+    # Since these fields don't exist in DB, we'll just update NoiDung if needed
+    NoiDung: Optional[str] = None
+    TrangThai: Optional[str] = None  # For API compatibility, but won't be saved
+    PhanHoi: Optional[str] = None  # For API compatibility, but won't be saved
 
 class ComplaintListResponse(BaseModel):
     complaints: List[ComplaintResponse]

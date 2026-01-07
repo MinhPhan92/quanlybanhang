@@ -1,5 +1,5 @@
 from functools import wraps
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
@@ -7,9 +7,48 @@ from jose import jwt, JWTError, ExpiredSignatureError
 
 from backend.database import get_db
 from sqlalchemy.orm import Session
-from backend.routes.auth import SECRET_KEY, ALGORITHM
+
+# JWT Configuration (moved here to avoid circular import)
+SECRET_KEY = "67PM3"  # ⚠️ Nên lưu trong biến môi trường .env khi deploy
+ALGORITHM = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+
+def has_role(current_user: Dict, allowed_roles: List[str]) -> bool:
+    """
+    Check if current user has one of the allowed roles.
+    Handles role name variations (e.g., "Employee" vs "NhanVien", "Customer" vs "KhachHang").
+    
+    Args:
+        current_user: User dict from JWT token
+        allowed_roles: List of allowed role names
+    
+    Returns:
+        True if user's role matches any allowed role (considering variations)
+    """
+    user_role = current_user.get("role")
+    if not user_role:
+        return False
+    
+    # Normalize role names for comparison
+    role_mapping = {
+        "Employee": ["Employee", "NhanVien"],
+        "NhanVien": ["Employee", "NhanVien"],
+        "Customer": ["Customer", "KhachHang"],
+        "KhachHang": ["Customer", "KhachHang"],
+    }
+    
+    # Get all variations of the user's role
+    user_role_variations = role_mapping.get(user_role, [user_role])
+    
+    # Check if any allowed role matches any variation of user's role
+    for allowed_role in allowed_roles:
+        allowed_variations = role_mapping.get(allowed_role, [allowed_role])
+        if any(variation in user_role_variations for variation in allowed_variations):
+            return True
+    
+    return False
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict:

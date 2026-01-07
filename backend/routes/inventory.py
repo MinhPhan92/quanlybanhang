@@ -132,7 +132,8 @@ def check_stock_availability(
     Format: product_ids="1,2,3" quantities="5,10,2"
     """
     # Role check: Only Admin, Manager, and Employee can check stock
-    if current_user.get("role") not in ["Admin", "Manager", "Employee"]:
+    from backend.routes.deps import has_role
+    if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
             detail="Permission denied"

@@ -20,7 +20,7 @@ export interface ComplaintListResponse {
 }
 
 export interface ComplaintCreateRequest {
-  TieuDe: string;
+  TieuDe?: string;  // Optional, will be auto-generated if not provided
   NoiDung: string;
 }
 
@@ -42,7 +42,7 @@ export const complaintsApi = {
     if (statusFilter) {
       params.set("status_filter", statusFilter);
     }
-    return apiClient(`/complaints?${params.toString()}`);
+    return apiClient(`/complaints/?${params.toString()}`);
   },
 
   getMyComplaints: async (): Promise<Complaint[]> => {

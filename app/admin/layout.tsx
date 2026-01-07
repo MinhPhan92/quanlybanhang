@@ -51,7 +51,9 @@ export default function AdminLayout({
       return;
     }
 
-    if (user && !["Admin", "Manager", "NhanVien"].includes(user.role || "")) {
+    // Allow Admin, Manager, Employee, and NhanVien roles
+    const allowedRoles = ["Admin", "Manager", "Employee", "NhanVien"];
+    if (user && !allowedRoles.includes(user.role || "")) {
       router.push("/");
       return;
     }
@@ -75,7 +77,9 @@ export default function AdminLayout({
     return null;
   }
 
-  if (!["Admin", "Manager", "NhanVien"].includes(user.role || "")) {
+  // Allow Admin, Manager, Employee, and NhanVien roles
+  const allowedRoles = ["Admin", "Manager", "Employee", "NhanVien"];
+  if (!allowedRoles.includes(user.role || "")) {
     return null;
   }
 
@@ -86,19 +90,19 @@ export default function AdminLayout({
       icon: LayoutDashboard,
       label: "Dashboard",
       href: "/admin/dashboard",
-      roles: ["Admin", "Manager", "NhanVien"],
+      roles: ["Admin", "Manager", "Employee", "NhanVien"],
     },
     {
       icon: Package,
       label: "Sản phẩm",
       href: "/admin/products",
-      roles: ["Admin", "Manager", "NhanVien"],
+      roles: ["Admin", "Manager", "Employee", "NhanVien"],
     },
     {
       icon: Tag,
       label: "Danh mục",
       href: "/admin/categories",
-      roles: ["Admin", "Manager", "NhanVien"],
+      roles: ["Admin", "Manager", "Employee", "NhanVien"],
     },
     {
       icon: Warehouse,
@@ -110,7 +114,7 @@ export default function AdminLayout({
       icon: ShoppingCart,
       label: "Đơn hàng",
       href: "/admin/orders",
-      roles: ["Admin", "Manager", "NhanVien"],
+      roles: ["Admin", "Manager", "Employee", "NhanVien"],
     },
     {
       icon: BarChart3,
@@ -122,19 +126,19 @@ export default function AdminLayout({
       icon: Users,
       label: "Khách hàng",
       href: "/admin/customers",
-      roles: ["Admin", "Manager", "NhanVien"],
+      roles: ["Admin", "Manager", "Employee", "NhanVien"],
     },
     {
       icon: MessageSquare,
       label: "Phản hồi & Khiếu nại",
       href: "/admin/feedback",
-      roles: ["Admin", "Manager", "NhanVien"],
+      roles: ["Admin", "Manager", "Employee", "NhanVien"],
     },
     {
       icon: Tag,
       label: "Khuyến mãi",
       href: "/admin/promotions",
-      roles: ["Admin", "Manager", "NhanVien"],
+      roles: ["Admin", "Manager", "Employee", "NhanVien"],
     },
     {
       icon: FileText,
@@ -146,12 +150,6 @@ export default function AdminLayout({
       icon: UserCog,
       label: "Quản lý nhân viên",
       href: "/admin/employees",
-      roles: ["Admin"],
-    },
-    {
-      icon: Settings,
-      label: "Cấu hình hệ thống",
-      href: "/admin/settings",
       roles: ["Admin"],
     },
   ].filter((item) => item.roles.includes(user.role || ""));

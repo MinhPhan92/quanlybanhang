@@ -166,6 +166,20 @@
   color: #059669;
 }
 
+.promotionCode {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #1f2937;
+}
+
+.discountPercent {
+  color: #059669;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
 .statusBadge {
   display: inline-flex;
   align-items: center;

@@ -173,6 +173,26 @@ export default function OrdersPage() {
     }).format(price);
   };
 
+  const formatPromotion = (khuyenMai: string | null | undefined) => {
+    if (!khuyenMai) return "—";
+    
+    // Convert to string if it's not already
+    const promoStr = String(khuyenMai);
+    
+    // Extract discount percentage from voucher code (e.g., "WELCOME10" -> "10%")
+    const match = promoStr.match(/(\d+)/);
+    if (match) {
+      const discountPercent = match[1];
+      return (
+        <span className={styles.promotionCode} title={`Mã giảm giá: ${promoStr}`}>
+          {promoStr} <span className={styles.discountPercent}>({discountPercent}%)</span>
+        </span>
+      );
+    }
+    
+    return <span className={styles.promotionCode} title={`Mã giảm giá: ${promoStr}`}>{promoStr}</span>;
+  };
+
   const getActionButton = (actionStatus: string) => {
     const actionMap: Record<string, string> = {
       Confirmed: "Confirm",
@@ -273,7 +293,7 @@ export default function OrdersPage() {
                         {statusConfig.label}
                       </span>
                     </td>
-                    <td>{order.KhuyenMai || "—"}</td>
+                    <td>{formatPromotion(order.KhuyenMai)}</td>
                     <td>
                       <div className={styles.actions}>
                         {isUpdating ? (

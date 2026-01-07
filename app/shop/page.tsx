@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Header from "../components/shared/header/Header"
 import Footer from "../components/shared/footer/Footer"
 import ProductCard from "../components/home/product-card/product-card"
+import ProductCardSkeleton from "../components/shared/skeleton/ProductCardSkeleton"
 import { productsApi, categoriesApi, Product, Category, ProductFilters } from "@/app/lib/api/products"
 import styles from "@/app/shop/shop.module.css"
 
@@ -291,8 +292,10 @@ export default function ShopPage() {
 
           {/* Products Grid */}
           {loading ? (
-            <div className={styles.loadingContainer}>
-              <p>Đang tải sản phẩm...</p>
+            <div className={styles.productsGrid}>
+              {[...Array(8)].map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
             </div>
           ) : error ? (
             <div className={styles.errorContainer}>

@@ -68,6 +68,23 @@
   margin: 0;
 }
 
+.successMessage {
+  padding: 1rem;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  color: #166534;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.successMessage p {
+  margin: 0;
+}
+
 .errorMessage {
   padding: 1rem;
   background: #fee;

@@ -3,6 +3,8 @@ import { Quicksand } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
+import { ToastProvider } from "./contexts/ToastContext";
+import ToastWrapper from "./components/shared/toast/ToastWrapper";
 import { ChatProvider } from "./contexts/ChatContext";
 import ChatWidget from "./components/shared/chatbot/ChatWidget";
 
@@ -28,10 +30,13 @@ export default function RootLayout({
       <body className={`${quicksand.variable} antialiased`}>
         <AuthProvider>
           <CartProvider>
-            <ChatProvider>
-              {children}
-              <ChatWidget />
-            </ChatProvider>
+            <ToastProvider>
+              <ChatProvider>
+                {children}
+                <ToastWrapper />
+                <ChatWidget />
+              </ChatProvider>
+            </ToastProvider>
           </CartProvider>
         </AuthProvider>
       </body>

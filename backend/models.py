@@ -153,18 +153,12 @@ class KhieuNai(Base):
     __tablename__ = "KhieuNai"
     MaKhieuNai = Column(Integer, primary_key=True, autoincrement=True)
     MaKH = Column(Integer, ForeignKey("KhachHang.MaKH", onupdate="CASCADE", ondelete="CASCADE"))
-    TieuDe = Column(String(200))  # Complaint title
-    NoiDung = Column(Text)  # Complaint content
-    TrangThai = Column(String(50), default="Pending")  # Pending, Processing, Resolved, Closed
-    NgayTao = Column(DateTime)
-    NgayCapNhat = Column(DateTime)
-    PhanHoi = Column(Text, nullable=True)  # Staff response
-    MaNVPhanHoi = Column(Integer, ForeignKey("NhanVien.MaNV", onupdate="CASCADE", ondelete="SET NULL"), nullable=True)
+    NoiDung = Column(String(255))  # Complaint content (matches database VARCHAR(255))
+    NgayKhieuNai = Column(Date, default=datetime.now().date())  # Date field (matches database DATE)
     IsDelete = Column(Boolean, default=False)
     
     # Relationships
     khachhang = relationship("KhachHang")
-    nhanvien_phanhoi = relationship("NhanVien")
 
 
 class Shipper(Base):

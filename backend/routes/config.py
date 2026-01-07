@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Dict
+from datetime import datetime
 
 from backend.database import get_db
 from backend.models import SystemConfig
 from backend.routes.deps import get_current_user
+from backend.utils.activity_logger import log_activity
 
 
 router = APIRouter(prefix="/config", tags=["Config"])
@@ -29,13 +31,39 @@ def update_config(key: str, req: ConfigUpdateRequest, db: Session = Depends(get_
     if current_user.get("role") != "Admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
 
-    item = db.query(SystemConfig).filter(SystemConfig.ConfigKey == key).first()
-    if item is None:
-        item = SystemConfig(ConfigKey=key, ConfigValue=req.value)
-        db.add(item)
-    else:
-        item.ConfigValue = req.value
-    db.commit()
-    return {item.ConfigKey: item.ConfigValue}
+    try:
+        item = db.query(SystemConfig).filter(SystemConfig.ConfigKey == key).first()
+        old_value = item.ConfigValue if item else None
+        
+        if item is None:
+            item = SystemConfig(ConfigKey=key, ConfigValue=req.value, UpdatedAt=datetime.utcnow())
+            db.add(item)
+        else:
+            item.ConfigValue = req.value
+            item.UpdatedAt = datetime.utcnow()
+        
+        db.commit()
+        db.refresh(item)
+        
+        # Log activity
+        try:
+            log_activity(
+                db,
+                current_user,
+                action="UPDATE",
+                entity="SystemConfig",
+                entity_id=item.Id,
+                details=f"Updated config '{key}': {old_value} -> {req.value}",
+            )
+        except Exception:
+            pass  # Don't fail if logging fails
+        
+        return {item.ConfigKey: item.ConfigValue}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi cập nhật cấu hình: {str(e)}"
+        )
 
 

@@ -20,28 +20,74 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const validateForm = (): boolean => {
+    if (!formData.username.trim()) {
+      setError("Vui lòng nhập tên đăng nhập");
+      return false;
+    }
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp");
-      return;
+    if (!formData.email.trim()) {
+      setError("Vui lòng nhập email");
+      return false;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError("Email không hợp lệ");
+      return false;
+    }
+
+    if (!formData.fullName.trim()) {
+      setError("Vui lòng nhập họ và tên");
+      return false;
+    }
+
+    if (!formData.phone.trim()) {
+      setError("Vui lòng nhập số điện thoại");
+      return false;
+    }
+
+    if (!formData.address.trim()) {
+      setError("Vui lòng nhập địa chỉ");
+      return false;
     }
 
     if (formData.password.length < 6) {
       setError("Mật khẩu phải có ít nhất 6 ký tự");
+      return false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!validateForm()) {
       return;
     }
 
     try {
       setLoading(true);
-      // TODO: Implement register API call
-      // await authApi.register(formData);
-      alert("Chức năng đăng ký sẽ được triển khai sau");
-      router.push("/login");
+      await authApi.register({
+        username: formData.username.trim(),
+        password: formData.password,
+        email: formData.email.trim(),
+        fullName: formData.fullName.trim(),
+        phone: formData.phone.trim(),
+        address: formData.address.trim(),
+      });
+      
+      // Registration successful, redirect to login
+      router.push("/login?registered=true");
     } catch (err: any) {
-      setError(err.message || "Đăng ký thất bại. Vui lòng thử lại.");
+      const errorMessage = err.message || "Đăng ký thất bại. Vui lòng thử lại.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

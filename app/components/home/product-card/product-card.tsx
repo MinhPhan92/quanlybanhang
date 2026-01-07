@@ -3,7 +3,10 @@
 import { Heart, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/app/contexts/CartContext";
+import { useAuth } from "@/app/contexts/AuthContext";
+import { useToast } from "@/app/contexts/ToastContext";
 import styles from "./product-card.module.css";
 
 import { Product } from "@/app/lib/api/products";
@@ -14,7 +17,11 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const { showToast } = useToast();
+  const router = useRouter();
 
   const formattedPrice = (value: number) =>
     new Intl.NumberFormat("vi-VN", {
@@ -42,6 +49,41 @@ export default function ProductCard({ product }: ProductCardProps) {
   // Ưu tiên dùng HinhAnh, nếu không có thì fallback về attributes.image
   const productImage =
     product.HinhAnh || attributes.image || "/placeholder.svg";
+
+  const stock = product.SoLuongTonKho || 0;
+  const isOutOfStock = stock <= 0;
+  const isDisabled = isOutOfStock || !isAuthenticated || isAdding;
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      showToast("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng", "warning");
+      router.push("/login");
+      return;
+    }
+
+    if (isOutOfStock) {
+      showToast("Sản phẩm đã hết hàng", "error");
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      await addToCart({
+        id: product.MaSP,
+        name: product.TenSP,
+        price: product.GiaSP || 0,
+        image: productImage,
+      });
+      showToast("Đã thêm sản phẩm vào giỏ hàng", "success");
+    } catch (error: any) {
+      showToast(error.message || "Không thể thêm sản phẩm vào giỏ hàng", "error");
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   return (
     <Link href={`/product/${product.MaSP}`} className={styles.link}>
@@ -78,6 +120,13 @@ export default function ProductCard({ product }: ProductCardProps) {
               <span className={styles.categoryText}>{product.TenDanhMuc}</span>
             </div>
           )}
+
+          {/* Out of Stock Badge */}
+          {isOutOfStock && (
+            <div className={styles.outOfStockBadge}>
+              <span>Hết hàng</span>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -90,7 +139,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
             {/* {product.SoLuongTonKho !== undefined && (
               <span className={styles.stock}>
-                Còn {product.SoLuongTonKho} sản phẩm
+                Còn {stock} sản phẩm
               </span>
             )} */}
           </div>
@@ -98,26 +147,17 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* Add to Cart Button */}
           <button
             type="button"
-            onClick={async (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              try {
-                await addToCart({
-                  id: product.MaSP,
-                  name: product.TenSP,
-                  price: product.GiaSP || 0,
-                  image: attributes.image || "/placeholder.svg",
-                });
-              } catch (error) {
-                // Error is already handled in CartContext
-                console.error("Failed to add to cart:", error);
-              }
-            }}
-            className={styles.addToCartButton}
+            onClick={handleAddToCart}
+            disabled={isDisabled}
+            className={`${styles.addToCartButton} ${isDisabled ? styles.disabled : ""}`}
           >
             <ShoppingCart size={18} />
-            <span className={styles.buttonText}>Thêm giỏ</span>
-            <span className={styles.buttonTextShort}>Thêm</span>
+            <span className={styles.buttonText}>
+              {isOutOfStock ? "Hết hàng" : isAdding ? "Đang thêm..." : "Thêm giỏ"}
+            </span>
+            <span className={styles.buttonTextShort}>
+              {isOutOfStock ? "Hết" : isAdding ? "..." : "Thêm"}
+            </span>
           </button>
         </div>
       </div>
