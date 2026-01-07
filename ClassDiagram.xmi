@@ -1,0 +1,552 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMI xmlns:UML="href://org.omg/UML/1.3" xmi.version="1.1">
+    <XMI.header>
+        <XMI.documentation>
+            <XMI.exporter>Visual Paradigm</XMI.exporter>
+            <XMI.exporterVersion>1.0</XMI.exporterVersion>
+        </XMI.documentation>
+        <XMI.metamodel xmi.name="UML" xmi.version="1.4"/>
+    </XMI.header>
+    <XMI.content>
+        <UML:Model name="QuanLyBanHang" xmi.id="model1">
+            <UML:Namespace.ownedElement>
+                <!-- ============================================ -->
+                <!-- BACKEND MODELS -->
+                <!-- ============================================ -->
+                <UML:Class name="KhachHang" xmi.id="ent0003">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaKH" visibility="public" xmi.id="att161" type="int"/>
+                        <UML:Attribute name="TenKH" visibility="public" xmi.id="att162" type="string"/>
+                        <UML:Attribute name="SdtKH" visibility="public" xmi.id="att163" type="string"/>
+                        <UML:Attribute name="EmailKH" visibility="public" xmi.id="att164" type="string"/>
+                        <UML:Attribute name="DiaChiKH" visibility="public" xmi.id="att165" type="string"/>
+                        <UML:Attribute name="IsDelete" visibility="public" xmi.id="att166" type="bool"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="NhanVien" xmi.id="ent0005">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaNV" visibility="public" xmi.id="att167" type="int"/>
+                        <UML:Attribute name="TenNV" visibility="public" xmi.id="att168" type="string"/>
+                        <UML:Attribute name="ChucVu" visibility="public" xmi.id="att169" type="string"/>
+                        <UML:Attribute name="SdtNV" visibility="public" xmi.id="att170" type="string"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="DanhMuc" xmi.id="ent0006">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaDanhMuc" visibility="public" xmi.id="att171" type="int"/>
+                        <UML:Attribute name="TenDanhMuc" visibility="public" xmi.id="att172" type="string"/>
+                        <UML:Attribute name="IsDelete" visibility="public" xmi.id="att173" type="bool"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="SanPham" xmi.id="ent0007">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaSP" visibility="public" xmi.id="att174" type="int"/>
+                        <UML:Attribute name="TenSP" visibility="public" xmi.id="att175" type="string"/>
+                        <UML:Attribute name="GiaSP" visibility="public" xmi.id="att176" type="decimal"/>
+                        <UML:Attribute name="SoLuongTonKho" visibility="public" xmi.id="att177" type="int"/>
+                        <UML:Attribute name="MoTa" visibility="public" xmi.id="att178" type="text"/>
+                        <UML:Attribute name="HinhAnh" visibility="public" xmi.id="att179" type="string"/>
+                        <UML:Attribute name="MaDanhMuc" visibility="public" xmi.id="att180" type="int"/>
+                        <UML:Attribute name="IsDelete" visibility="public" xmi.id="att181" type="bool"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="DonHang" xmi.id="ent0008">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaDonHang" visibility="public" xmi.id="att182" type="int"/>
+                        <UML:Attribute name="NgayDat" visibility="public" xmi.id="att183" type="date"/>
+                        <UML:Attribute name="TongTien" visibility="public" xmi.id="att184" type="decimal"/>
+                        <UML:Attribute name="TrangThai" visibility="public" xmi.id="att185" type="string"/>
+                        <UML:Attribute name="MaKH" visibility="public" xmi.id="att186" type="int"/>
+                        <UML:Attribute name="MaNV" visibility="public" xmi.id="att187" type="int"/>
+                        <UML:Attribute name="KhuyenMai" visibility="public" xmi.id="att188" type="string"/>
+                        <UML:Attribute name="PhiShip" visibility="public" xmi.id="att189" type="decimal"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="DonHang_SanPham" xmi.id="ent0009">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaDonHang" visibility="public" xmi.id="att191" type="int"/>
+                        <UML:Attribute name="MaSP" visibility="public" xmi.id="att192" type="int"/>
+                        <UML:Attribute name="SoLuong" visibility="public" xmi.id="att193" type="int"/>
+                        <UML:Attribute name="DonGia" visibility="public" xmi.id="att194" type="decimal"/>
+                        <UML:Attribute name="GiamGia" visibility="public" xmi.id="att195" type="decimal"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="ThanhToan" xmi.id="ent0010">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaThanhToan" visibility="public" xmi.id="att196" type="int"/>
+                        <UML:Attribute name="PhuongThuc" visibility="public" xmi.id="att197" type="string"/>
+                        <UML:Attribute name="NgayThanhToan" visibility="public" xmi.id="att198" type="date"/>
+                        <UML:Attribute name="SoTien" visibility="public" xmi.id="att199" type="decimal"/>
+                        <UML:Attribute name="MaDonHang" visibility="public" xmi.id="att200" type="int"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="TaiKhoan" xmi.id="ent0011">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaTK" visibility="public" xmi.id="att201" type="int"/>
+                        <UML:Attribute name="Username" visibility="public" xmi.id="att202" type="string"/>
+                        <UML:Attribute name="Pass" visibility="public" xmi.id="att203" type="string"/>
+                        <UML:Attribute name="VaiTro" visibility="public" xmi.id="att204" type="enum"/>
+                        <UML:Attribute name="IsDelete" visibility="public" xmi.id="att205" type="bool"/>
+                        <UML:Attribute name="MaKH" visibility="public" xmi.id="att206" type="int"/>
+                        <UML:Attribute name="MaNV" visibility="public" xmi.id="att207" type="int"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="DanhGia" xmi.id="ent0012">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaDanhGia" visibility="public" xmi.id="att208" type="int"/>
+                        <UML:Attribute name="MaSP" visibility="public" xmi.id="att209" type="int"/>
+                        <UML:Attribute name="MaKH" visibility="public" xmi.id="att210" type="int"/>
+                        <UML:Attribute name="DiemDanhGia" visibility="public" xmi.id="att211" type="int"/>
+                        <UML:Attribute name="NoiDung" visibility="public" xmi.id="att212" type="text"/>
+                        <UML:Attribute name="NgayDanhGia" visibility="public" xmi.id="att213" type="datetime"/>
+                        <UML:Attribute name="IsDelete" visibility="public" xmi.id="att214" type="bool"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="KhieuNai" xmi.id="ent0013">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaKhieuNai" visibility="public" xmi.id="att215" type="int"/>
+                        <UML:Attribute name="MaKH" visibility="public" xmi.id="att216" type="int"/>
+                        <UML:Attribute name="NoiDung" visibility="public" xmi.id="att217" type="string"/>
+                        <UML:Attribute name="NgayKhieuNai" visibility="public" xmi.id="att218" type="date"/>
+                        <UML:Attribute name="IsDelete" visibility="public" xmi.id="att219" type="bool"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="SystemLog" xmi.id="ent0015">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="Id" visibility="public" xmi.id="att227" type="int"/>
+                        <UML:Attribute name="Level" visibility="public" xmi.id="att228" type="string"/>
+                        <UML:Attribute name="Endpoint" visibility="public" xmi.id="att229" type="string"/>
+                        <UML:Attribute name="Method" visibility="public" xmi.id="att230" type="string"/>
+                        <UML:Attribute name="StatusCode" visibility="public" xmi.id="att231" type="int"/>
+                        <UML:Attribute name="RequestBody" visibility="public" xmi.id="att232" type="text"/>
+                        <UML:Attribute name="ResponseBody" visibility="public" xmi.id="att233" type="text"/>
+                        <UML:Attribute name="ErrorMessage" visibility="public" xmi.id="att234" type="text"/>
+                        <UML:Attribute name="CreatedAt" visibility="public" xmi.id="att235" type="datetime"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="ActivityLog" xmi.id="ent0016">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="Id" visibility="public" xmi.id="att236" type="int"/>
+                        <UML:Attribute name="UserId" visibility="public" xmi.id="att237" type="int"/>
+                        <UML:Attribute name="Username" visibility="public" xmi.id="att238" type="string"/>
+                        <UML:Attribute name="Role" visibility="public" xmi.id="att239" type="string"/>
+                        <UML:Attribute name="Action" visibility="public" xmi.id="att240" type="string"/>
+                        <UML:Attribute name="Entity" visibility="public" xmi.id="att241" type="string"/>
+                        <UML:Attribute name="EntityId" visibility="public" xmi.id="att242" type="string"/>
+                        <UML:Attribute name="Details" visibility="public" xmi.id="att243" type="text"/>
+                        <UML:Attribute name="IP" visibility="public" xmi.id="att244" type="string"/>
+                        <UML:Attribute name="UserAgent" visibility="public" xmi.id="att245" type="string"/>
+                        <UML:Attribute name="CreatedAt" visibility="public" xmi.id="att246" type="datetime"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="SystemConfig" xmi.id="ent0017">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="Id" visibility="public" xmi.id="att247" type="int"/>
+                        <UML:Attribute name="ConfigKey" visibility="public" xmi.id="att248" type="string"/>
+                        <UML:Attribute name="ConfigValue" visibility="public" xmi.id="att249" type="string"/>
+                        <UML:Attribute name="Description" visibility="public" xmi.id="att250" type="string"/>
+                        <UML:Attribute name="UpdatedAt" visibility="public" xmi.id="att251" type="datetime"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="PaymentTransaction" xmi.id="ent0018">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="TransactionId" visibility="public" xmi.id="att252" type="string"/>
+                        <UML:Attribute name="MaDonHang" visibility="public" xmi.id="att253" type="int"/>
+                        <UML:Attribute name="Amount" visibility="public" xmi.id="att254" type="decimal"/>
+                        <UML:Attribute name="Status" visibility="public" xmi.id="att255" type="string"/>
+                        <UML:Attribute name="Signature" visibility="public" xmi.id="att256" type="string"/>
+                        <UML:Attribute name="CreatedAt" visibility="public" xmi.id="att257" type="datetime"/>
+                        <UML:Attribute name="UpdatedAt" visibility="public" xmi.id="att258" type="datetime"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                
+                <!-- ============================================ -->
+                <!-- BACKEND SCHEMAS -->
+                <!-- ============================================ -->
+                <UML:Class name="RegisterRequest" xmi.id="ent0033"/>
+                <UML:Class name="RegisterCustomerRequest" xmi.id="ent0034"/>
+                <UML:Class name="CustomerRegisterRequest" xmi.id="ent0035"/>
+                <UML:Class name="LoginRequestSchema" xmi.id="ent0036"/>
+                <UML:Class name="ForgotPasswordRequest" xmi.id="ent0037"/>
+                <UML:Class name="ResetPasswordRequest" xmi.id="ent0038"/>
+                <UML:Class name="ChangePasswordRequest" xmi.id="ent0039"/>
+                <UML:Class name="UserResponse" xmi.id="ent0040"/>
+                <UML:Class name="TokenResponse" xmi.id="ent0041"/>
+                <UML:Class name="ReviewCreateRequest" xmi.id="ent0042"/>
+                <UML:Class name="ReviewResponse" xmi.id="ent0043"/>
+                <UML:Class name="ReviewListResponse" xmi.id="ent0044"/>
+                <UML:Class name="ComplaintCreateRequest" xmi.id="ent0045"/>
+                <UML:Class name="ComplaintResponse" xmi.id="ent0046"/>
+                <UML:Class name="ComplaintUpdateRequest" xmi.id="ent0047"/>
+                <UML:Class name="ComplaintListResponse" xmi.id="ent0048"/>
+                <UML:Class name="ProductCreateRequestSchema" xmi.id="ent0049"/>
+                <UML:Class name="ProductUpdateRequestSchema" xmi.id="ent0050"/>
+                <UML:Class name="ProductResponseSchema" xmi.id="ent0051"/>
+                <UML:Class name="ProductListResponseSchema" xmi.id="ent0052"/>
+                <UML:Class name="ContactCreateRequest" xmi.id="ent0053"/>
+                <UML:Class name="ContactResponse" xmi.id="ent0054"/>
+                <UML:Class name="ContactListResponse" xmi.id="ent0055"/>
+                <UML:Class name="CreateTransactionRequestSchema" xmi.id="ent0056"/>
+                <UML:Class name="CreateTransactionResponseSchema" xmi.id="ent0057"/>
+                <UML:Class name="TransactionInfoResponseSchema" xmi.id="ent0058"/>
+                <UML:Class name="PaymentCallbackRequestSchema" xmi.id="ent0059"/>
+                <UML:Class name="PaymentCallbackResponseSchema" xmi.id="ent0060"/>
+                
+                <!-- ============================================ -->
+                <!-- FRONTEND API CLASSES -->
+                <!-- ============================================ -->
+                <UML:Class name="Product" xmi.id="ent0066">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaSP" visibility="public" xmi.id="att259" type="number"/>
+                        <UML:Attribute name="TenSP" visibility="public" xmi.id="att260" type="string"/>
+                        <UML:Attribute name="GiaSP" visibility="public" xmi.id="att261" type="number"/>
+                        <UML:Attribute name="SoLuongTonKho" visibility="public" xmi.id="att262" type="number"/>
+                        <UML:Attribute name="MoTa" visibility="public" xmi.id="att263" type="string"/>
+                        <UML:Attribute name="HinhAnh" visibility="public" xmi.id="att264" type="string"/>
+                        <UML:Attribute name="MaDanhMuc" visibility="public" xmi.id="att265" type="number"/>
+                        <UML:Attribute name="IsDelete" visibility="public" xmi.id="att266" type="boolean"/>
+                        <UML:Attribute name="attributes" visibility="public" xmi.id="att267" type="Map"/>
+                        <UML:Attribute name="TenDanhMuc" visibility="public" xmi.id="att268" type="string"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="ProductListResponse" xmi.id="ent0068">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="products" visibility="public" xmi.id="att269" type="Product[]"/>
+                        <UML:Attribute name="total" visibility="public" xmi.id="att270" type="number"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="ProductFilters" xmi.id="ent0069">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="madanhmuc" visibility="public" xmi.id="att271" type="number"/>
+                        <UML:Attribute name="min_price" visibility="public" xmi.id="att272" type="number"/>
+                        <UML:Attribute name="max_price" visibility="public" xmi.id="att273" type="number"/>
+                        <UML:Attribute name="search" visibility="public" xmi.id="att274" type="string"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="ProductCreateRequestFE" xmi.id="ent0070"/>
+                <UML:Class name="ProductUpdateRequestFE" xmi.id="ent0071"/>
+                <UML:Class name="Category" xmi.id="ent0072">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaDanhMuc" visibility="public" xmi.id="att275" type="number"/>
+                        <UML:Attribute name="TenDanhMuc" visibility="public" xmi.id="att276" type="string"/>
+                        <UML:Attribute name="IsDelete" visibility="public" xmi.id="att277" type="boolean"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="Order" xmi.id="ent0073">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaDonHang" visibility="public" xmi.id="att278" type="number"/>
+                        <UML:Attribute name="NgayDat" visibility="public" xmi.id="att279" type="string"/>
+                        <UML:Attribute name="TongTien" visibility="public" xmi.id="att280" type="number"/>
+                        <UML:Attribute name="TrangThai" visibility="public" xmi.id="att281" type="string"/>
+                        <UML:Attribute name="MaKH" visibility="public" xmi.id="att282" type="number"/>
+                        <UML:Attribute name="MaNV" visibility="public" xmi.id="att283" type="number"/>
+                        <UML:Attribute name="KhuyenMai" visibility="public" xmi.id="att284" type="string"/>
+                        <UML:Attribute name="PhiShip" visibility="public" xmi.id="att285" type="number"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="OrderItem" xmi.id="ent0074">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaSP" visibility="public" xmi.id="att287" type="number"/>
+                        <UML:Attribute name="TenSP" visibility="public" xmi.id="att288" type="string"/>
+                        <UML:Attribute name="SoLuong" visibility="public" xmi.id="att289" type="number"/>
+                        <UML:Attribute name="DonGia" visibility="public" xmi.id="att290" type="number"/>
+                        <UML:Attribute name="GiamGia" visibility="public" xmi.id="att291" type="number"/>
+                        <UML:Attribute name="image" visibility="public" xmi.id="att292" type="string"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="OrderDetail" xmi.id="ent0075">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="items" visibility="public" xmi.id="att293" type="OrderItem[]"/>
+                        <UML:Attribute name="shippingAddress" visibility="public" xmi.id="att294" type="string"/>
+                        <UML:Attribute name="paymentMethod" visibility="public" xmi.id="att295" type="string"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="StatusUpdateRequestFE" xmi.id="ent0076"/>
+                <UML:Class name="StatusUpdateResponseFE" xmi.id="ent0077"/>
+                <UML:Class name="CustomerInfo" xmi.id="ent0078">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaKH" visibility="public" xmi.id="att296" type="number"/>
+                        <UML:Attribute name="TenKH" visibility="public" xmi.id="att297" type="string"/>
+                        <UML:Attribute name="SdtKH" visibility="public" xmi.id="att298" type="string"/>
+                        <UML:Attribute name="EmailKH" visibility="public" xmi.id="att299" type="string"/>
+                        <UML:Attribute name="DiaChiKH" visibility="public" xmi.id="att300" type="string"/>
+                        <UML:Attribute name="IsDelete" visibility="public" xmi.id="att301" type="boolean"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="CustomerUpdateRequestFE" xmi.id="ent0079"/>
+                <UML:Class name="LoginRequestFE" xmi.id="ent0080"/>
+                <UML:Class name="LoginResponseFE" xmi.id="ent0081"/>
+                <UML:Class name="RegisterRequestFE" xmi.id="ent0082"/>
+                <UML:Class name="RegisterResponseFE" xmi.id="ent0083"/>
+                <UML:Class name="UserInfo" xmi.id="ent0084"/>
+                <UML:Class name="StatusResponseFE" xmi.id="ent0085"/>
+                <UML:Class name="Payment" xmi.id="ent0086">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="MaThanhToan" visibility="public" xmi.id="att302" type="number"/>
+                        <UML:Attribute name="MaDonHang" visibility="public" xmi.id="att303" type="number"/>
+                        <UML:Attribute name="PhuongThuc" visibility="public" xmi.id="att304" type="string"/>
+                        <UML:Attribute name="NgayThanhToan" visibility="public" xmi.id="att305" type="string"/>
+                        <UML:Attribute name="SoTien" visibility="public" xmi.id="att306" type="number"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="CreateTransactionRequestFE" xmi.id="ent0087"/>
+                <UML:Class name="CreateTransactionResponseFE" xmi.id="ent0088"/>
+                <UML:Class name="TransactionInfoFE" xmi.id="ent0089"/>
+                <UML:Class name="PaymentCallbackRequestFE" xmi.id="ent0090"/>
+                <UML:Class name="PaymentCallbackResponseFE" xmi.id="ent0091"/>
+                <UML:Class name="OrderTransactionFE" xmi.id="ent0092"/>
+                
+                <!-- ============================================ -->
+                <!-- FRONTEND CONTEXT CLASSES -->
+                <!-- ============================================ -->
+                <UML:Class name="CartItem" xmi.id="ent0101">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="id" visibility="public" xmi.id="att307" type="number"/>
+                        <UML:Attribute name="name" visibility="public" xmi.id="att308" type="string"/>
+                        <UML:Attribute name="price" visibility="public" xmi.id="att309" type="number"/>
+                        <UML:Attribute name="image" visibility="public" xmi.id="att310" type="string"/>
+                        <UML:Attribute name="quantity" visibility="public" xmi.id="att311" type="number"/>
+                        <UML:Attribute name="maxStock" visibility="public" xmi.id="att312" type="number"/>
+                        <UML:Attribute name="priceChanged" visibility="public" xmi.id="att313" type="boolean"/>
+                        <UML:Attribute name="unavailable" visibility="public" xmi.id="att314" type="boolean"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="CartContextType" xmi.id="ent0102">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="cartItems" visibility="public" xmi.id="att315" type="CartItem[]"/>
+                        <UML:Attribute name="isLoading" visibility="public" xmi.id="att316" type="boolean"/>
+                        <UML:Operation name="addToCart" visibility="public" xmi.id="att317"/>
+                        <UML:Operation name="removeFromCart" visibility="public" xmi.id="att318"/>
+                        <UML:Operation name="updateQuantity" visibility="public" xmi.id="att319"/>
+                        <UML:Operation name="clearCart" visibility="public" xmi.id="att320"/>
+                        <UML:Operation name="getTotalItems" visibility="public" xmi.id="att321"/>
+                        <UML:Operation name="getTotalPrice" visibility="public" xmi.id="att322"/>
+                        <UML:Operation name="validateCart" visibility="public" xmi.id="att323"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="AuthContextType" xmi.id="ent0103">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="user" visibility="public" xmi.id="att324" type="UserInfo"/>
+                        <UML:Attribute name="isAuthenticated" visibility="public" xmi.id="att325" type="boolean"/>
+                        <UML:Attribute name="isLoading" visibility="public" xmi.id="att326" type="boolean"/>
+                        <UML:Operation name="login" visibility="public" xmi.id="att327"/>
+                        <UML:Operation name="logout" visibility="public" xmi.id="att328"/>
+                        <UML:Operation name="refreshUser" visibility="public" xmi.id="att329"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="Message" xmi.id="ent0104">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="id" visibility="public" xmi.id="att330" type="string"/>
+                        <UML:Attribute name="role" visibility="public" xmi.id="att331" type="string"/>
+                        <UML:Attribute name="content" visibility="public" xmi.id="att332" type="string"/>
+                        <UML:Attribute name="timestamp" visibility="public" xmi.id="att333" type="Date"/>
+                        <UML:Attribute name="mode" visibility="public" xmi.id="att334" type="string"/>
+                        <UML:Attribute name="source" visibility="public" xmi.id="att335" type="string"/>
+                        <UML:Attribute name="rows" visibility="public" xmi.id="att336" type="any[]"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="ChatContextType" xmi.id="ent0105">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="messages" visibility="public" xmi.id="att337" type="Message[]"/>
+                        <UML:Attribute name="isOpen" visibility="public" xmi.id="att338" type="boolean"/>
+                        <UML:Attribute name="isTyping" visibility="public" xmi.id="att339" type="boolean"/>
+                        <UML:Attribute name="isLoading" visibility="public" xmi.id="att340" type="boolean"/>
+                        <UML:Attribute name="loadingMessage" visibility="public" xmi.id="att341" type="string"/>
+                        <UML:Attribute name="error" visibility="public" xmi.id="att342" type="string"/>
+                        <UML:Attribute name="sessionId" visibility="public" xmi.id="att343" type="string"/>
+                        <UML:Operation name="toggleChat" visibility="public" xmi.id="att344"/>
+                        <UML:Operation name="sendMessage" visibility="public" xmi.id="att345"/>
+                        <UML:Operation name="clearHistory" visibility="public" xmi.id="att346"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="Toast" xmi.id="ent0106">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="id" visibility="public" xmi.id="att347" type="string"/>
+                        <UML:Attribute name="message" visibility="public" xmi.id="att348" type="string"/>
+                        <UML:Attribute name="type" visibility="public" xmi.id="att349" type="string"/>
+                        <UML:Attribute name="duration" visibility="public" xmi.id="att350" type="number"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class name="ToastContextType" xmi.id="ent0107">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="toasts" visibility="public" xmi.id="att351" type="Toast[]"/>
+                        <UML:Operation name="showToast" visibility="public" xmi.id="att352"/>
+                        <UML:Operation name="removeToast" visibility="public" xmi.id="att353"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                
+                <!-- ============================================ -->
+                <!-- FRONTEND UI CLASSES -->
+                <!-- ============================================ -->
+                <UML:Class name="ToastComponent" xmi.id="ent0114">
+                    <UML:Classifier.feature>
+                        <UML:Attribute name="toast" visibility="public" xmi.id="att354" type="Toast"/>
+                        <UML:Operation name="onClose" visibility="public" xmi.id="att355"/>
+                    </UML:Classifier.feature>
+                </UML:Class>
+                
+                <!-- ============================================ -->
+                <!-- ASSOCIATIONS - BACKEND -->
+                <!-- ============================================ -->
+                <UML:Association xmi.id="assoc001">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc001_end1" participant="ent0003" name="khachhang" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc001_end2" participant="ent0008" name="dinhangs" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc002">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc002_end1" participant="ent0005" name="nhanvien" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc002_end2" participant="ent0008" name="dinhangs" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc003">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc003_end1" participant="ent0006" name="danhmuc" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc003_end2" participant="ent0007" name="sanphams" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc004">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc004_end1" participant="ent0008" name="donhang" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc004_end2" participant="ent0009" name="donhang_sanphams" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc005">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc005_end1" participant="ent0007" name="sanpham" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc005_end2" participant="ent0009" name="donhang_sanphams" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc006">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc006_end1" participant="ent0008" name="donhang" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc006_end2" participant="ent0010" name="thanhtoans" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc007">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc007_end1" participant="ent0003" name="khachhang" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc007_end2" participant="ent0011" name="taikhoan" aggregation="none" multiplicity="0..1"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc008">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc008_end1" participant="ent0005" name="nhanvien" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc008_end2" participant="ent0011" name="taikhoan" aggregation="none" multiplicity="0..1"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc009">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc009_end1" participant="ent0007" name="sanpham" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc009_end2" participant="ent0012" name="danhgias" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc010">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc010_end1" participant="ent0003" name="khachhang" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc010_end2" participant="ent0012" name="danhgias" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc011">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc011_end1" participant="ent0003" name="khachhang" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc011_end2" participant="ent0013" name="khieunais" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc012">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc012_end1" participant="ent0008" name="donhang" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc012_end2" participant="ent0018" name="transactions" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                
+                <!-- Backend Schema Associations -->
+                <UML:Dependency xmi.id="dep001" client="ent0043" supplier="ent0007"/>
+                <UML:Dependency xmi.id="dep002" client="ent0043" supplier="ent0003"/>
+                <UML:Dependency xmi.id="dep003" client="ent0046" supplier="ent0003"/>
+                <UML:Dependency xmi.id="dep004" client="ent0051" supplier="ent0006"/>
+                
+                <!-- ============================================ -->
+                <!-- ASSOCIATIONS - FRONTEND API -->
+                <!-- ============================================ -->
+                <UML:Association xmi.id="assoc013">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc013_end1" participant="ent0072" name="category" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc013_end2" participant="ent0066" name="products" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc014">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc014_end1" participant="ent0073" name="order" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc014_end2" participant="ent0074" name="items" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc015">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc015_end1" participant="ent0003" name="customer" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc015_end2" participant="ent0073" name="orders" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc016">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc016_end1" participant="ent0005" name="employee" aggregation="none" multiplicity="0..1"/>
+                        <UML:AssociationEnd xmi.id="assoc016_end2" participant="ent0073" name="orders" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc017">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc017_end1" participant="ent0008" name="order" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc017_end2" participant="ent0086" name="payments" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc018">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc018_end1" participant="ent0066" name="product" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc018_end2" participant="ent0101" name="cartItems" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Dependency xmi.id="dep005" client="ent0092" supplier="ent0073"/>
+                
+                <!-- ============================================ -->
+                <!-- ASSOCIATIONS - FRONTEND CONTEXTS -->
+                <!-- ============================================ -->
+                <UML:Association xmi.id="assoc019">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc019_end1" participant="ent0102" name="cartContext" aggregation="composite" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc019_end2" participant="ent0101" name="cartItems" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc020">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc020_end1" participant="ent0103" name="authContext" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc020_end2" participant="ent0084" name="user" aggregation="none" multiplicity="0..1"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc021">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc021_end1" participant="ent0105" name="chatContext" aggregation="composite" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc021_end2" participant="ent0104" name="messages" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Association xmi.id="assoc022">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc022_end1" participant="ent0107" name="toastContext" aggregation="composite" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc022_end2" participant="ent0106" name="toasts" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                
+                <!-- ============================================ -->
+                <!-- ASSOCIATIONS - FRONTEND UI -->
+                <!-- ============================================ -->
+                <UML:Association xmi.id="assoc023">
+                    <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id="assoc023_end1" participant="ent0106" name="toast" aggregation="none" multiplicity="1"/>
+                        <UML:AssociationEnd xmi.id="assoc023_end2" participant="ent0114" name="toastComponent" aggregation="none" multiplicity="0..*"/>
+                    </UML:Association.connection>
+                </UML:Association>
+                <UML:Dependency xmi.id="dep006" client="ent0107" supplier="ent0114"/>
+            </UML:Namespace.ownedElement>
+        </UML:Model>
+    </XMI.content>
+</XMI>

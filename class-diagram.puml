@@ -1,0 +1,424 @@
+@startuml ClassDiagram
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+skinparam shadowing false
+
+' ===========================
+' BACKEND DOMAIN MODELS
+' ===========================
+
+package "Backend.Models" {
+  class KhachHang {
+    +MaKH: int
+    +TenKH: string
+    +SdtKH: string
+    +EmailKH: string
+    +DiaChiKH: string
+    +IsDelete: bool
+  }
+
+  class NhanVien {
+    +MaNV: int
+    +TenNV: string
+    +ChucVu: string
+    +SdtNV: string
+  }
+
+  class DanhMuc {
+    +MaDanhMuc: int
+    +TenDanhMuc: string
+    +IsDelete: bool
+  }
+
+  class SanPham {
+    +MaSP: int
+    +TenSP: string
+    +GiaSP: decimal
+    +SoLuongTonKho: int
+    +MoTa: text
+    +HinhAnh: string
+    +MaDanhMuc: int
+    +IsDelete: bool
+  }
+
+  class DonHang {
+    +MaDonHang: int
+    +NgayDat: date
+    +TongTien: decimal
+    +TrangThai: string
+    +MaKH: int
+    +MaNV: int
+    +KhuyenMai: string
+    +PhiShip: decimal
+    +MaShipper: int
+  }
+
+  class DonHang_SanPham {
+    +MaDonHang: int
+    +MaSP: int
+    +SoLuong: int
+    +DonGia: decimal
+    +GiamGia: decimal
+  }
+
+  class ThanhToan {
+    +MaThanhToan: int
+    +PhuongThuc: string
+    +NgayThanhToan: date
+    +SoTien: decimal
+    +MaDonHang: int
+  }
+
+  class TaiKhoan {
+    +MaTK: int
+    +Username: string
+    +Pass: string
+    +VaiTro: enum
+    +IsDelete: bool
+    +MaKH: int
+    +MaNV: int
+  }
+
+  class DanhGia {
+    +MaDanhGia: int
+    +MaSP: int
+    +MaKH: int
+    +DiemDanhGia: int
+    +NoiDung: text
+    +NgayDanhGia: datetime
+    +IsDelete: bool
+  }
+
+  class KhieuNai {
+    +MaKhieuNai: int
+    +MaKH: int
+    +NoiDung: string
+    +NgayKhieuNai: date
+    +IsDelete: bool
+  }
+
+  class Shipper {
+    +MaShipper: int
+    +TenShipper: string
+    +SdtShipper: string
+    +DonViGiao: string
+    +BienSoXe: string
+    +TrangThai: string
+    +IsDelete: bool
+  }
+
+  class SystemLog {
+    +Id: int
+    +Level: string
+    +Endpoint: string
+    +Method: string
+    +StatusCode: int
+    +RequestBody: text
+    +ResponseBody: text
+    +ErrorMessage: text
+    +CreatedAt: datetime
+  }
+
+  class ActivityLog {
+    +Id: int
+    +UserId: int
+    +Username: string
+    +Role: string
+    +Action: string
+    +Entity: string
+    +EntityId: string
+    +Details: text
+    +IP: string
+    +UserAgent: string
+    +CreatedAt: datetime
+  }
+
+  class SystemConfig {
+    +Id: int
+    +ConfigKey: string
+    +ConfigValue: string
+    +Description: string
+    +UpdatedAt: datetime
+  }
+
+  class PaymentTransaction {
+    +TransactionId: string
+    +MaDonHang: int
+    +Amount: decimal
+    +Status: string
+    +Signature: string
+    +CreatedAt: datetime
+    +UpdatedAt: datetime
+  }
+}
+
+' Backend relationships - Associations
+KhachHang ||--o{ DonHang : "1..* donhangs"
+NhanVien ||--o{ DonHang : "0..* donhangs"
+DanhMuc ||--o{ SanPham : "1..* sanphams"
+DonHang ||--o{ DonHang_SanPham : "1..* donhang_sanphams"
+SanPham ||--o{ DonHang_SanPham : "1..* donhang_sanphams"
+DonHang ||--o{ ThanhToan : "0..* thanhtoans"
+Shipper ||--o{ DonHang : "0..* donhangs"
+KhachHang ||--o| TaiKhoan : "0..1 taikhoan"
+NhanVien ||--o| TaiKhoan : "0..1 taikhoan"
+SanPham ||--o{ DanhGia : "0..* danhgias"
+KhachHang ||--o{ DanhGia : "0..* danhgias"
+KhachHang ||--o{ KhieuNai : "0..* khieunais"
+DonHang ||--o{ PaymentTransaction : "0..* transactions"
+
+' ===========================
+' BACKEND SCHEMAS (Pydantic)
+' ===========================
+
+package "Backend.Schemas" {
+  class RegisterRequest
+  class RegisterCustomerRequest
+  class CustomerRegisterRequest
+  class LoginRequestSchema
+  class ForgotPasswordRequest
+  class ResetPasswordRequest
+  class ChangePasswordRequest
+  class UserResponse
+  class TokenResponse
+
+  class ReviewCreateRequest
+  class ReviewResponse
+  class ReviewListResponse
+
+  class ComplaintCreateRequest
+  class ComplaintResponse
+  class ComplaintUpdateRequest
+  class ComplaintListResponse
+
+  class ProductCreateRequestSchema
+  class ProductUpdateRequestSchema
+  class ProductResponseSchema
+  class ProductListResponseSchema
+
+  class ContactCreateRequest
+  class ContactResponse
+  class ContactListResponse
+
+  class CreateTransactionRequestSchema
+  class CreateTransactionResponseSchema
+  class TransactionInfoResponseSchema
+  class PaymentCallbackRequestSchema
+  class PaymentCallbackResponseSchema
+}
+
+ReviewResponse --> SanPham
+ReviewResponse --> KhachHang
+ComplaintResponse --> KhachHang
+ProductResponseSchema --> DanhMuc
+
+' ===========================
+' FRONTEND DOMAIN TYPES / API
+' ===========================
+
+package "Frontend.API" {
+  class Product {
+    +MaSP: number
+    +TenSP: string
+    +GiaSP: number
+    +SoLuongTonKho: number
+    +MoTa: string
+    +HinhAnh: string
+    +MaDanhMuc: number
+    +IsDelete: boolean
+    +attributes: Map
+    +TenDanhMuc: string
+  }
+
+  class ProductListResponse {
+    +products: Product[]
+    +total: number
+  }
+
+  class ProductFilters {
+    +madanhmuc: number
+    +min_price: number
+    +max_price: number
+    +search: string
+  }
+
+  class ProductCreateRequestFE
+  class ProductUpdateRequestFE
+
+  class Category {
+    +MaDanhMuc: number
+    +TenDanhMuc: string
+    +IsDelete: boolean
+  }
+
+  class Order {
+    +MaDonHang: number
+    +NgayDat: string
+    +TongTien: number
+    +TrangThai: string
+    +MaKH: number
+    +MaNV: number
+    +KhuyenMai: string
+    +PhiShip: number
+    +MaShipper: number
+  }
+
+  class OrderItem {
+    +MaSP: number
+    +TenSP: string
+    +SoLuong: number
+    +DonGia: number
+    +GiamGia: number
+    +image: string
+  }
+
+  class OrderDetail {
+    +items: OrderItem[]
+    +shippingAddress: string
+    +paymentMethod: string
+  }
+
+  class StatusUpdateRequestFE
+  class StatusUpdateResponseFE
+
+  class CustomerInfo {
+    +MaKH: number
+    +TenKH: string
+    +SdtKH: string
+    +EmailKH: string
+    +DiaChiKH: string
+    +IsDelete: boolean
+  }
+
+  class CustomerUpdateRequestFE
+
+  class LoginRequestFE
+  class LoginResponseFE
+  class RegisterRequestFE
+  class RegisterResponseFE
+  class UserInfo
+  class StatusResponseFE
+
+  class Payment {
+    +MaThanhToan: number
+    +MaDonHang: number
+    +PhuongThuc: string
+    +NgayThanhToan: string
+    +SoTien: number
+  }
+
+  class CreateTransactionRequestFE
+  class CreateTransactionResponseFE
+  class TransactionInfoFE
+  class PaymentCallbackRequestFE
+  class PaymentCallbackResponseFE
+  class OrderTransactionFE
+}
+
+' Frontend API relationships
+Product }o--|| Category : "belongs to"
+Order ||--o{ OrderItem : "1..* items"
+Order }o--|| KhachHang : "customer"
+Order }o--o| NhanVien : "0..1 employee"
+Order }o--o| Shipper : "0..1 shipper"
+Payment }o--|| DonHang : "order"
+OrderTransactionFE }o--|| Order : "order"
+
+' ===========================
+' FRONTEND CONTEXTS
+' ===========================
+
+package "Frontend.Contexts" {
+  class CartItem {
+    +id: number
+    +name: string
+    +price: number
+    +image: string
+    +quantity: number
+    +maxStock: number
+    +priceChanged: boolean
+    +unavailable: boolean
+  }
+
+  class CartContextType {
+    +cartItems: CartItem[]
+    +addToCart()
+    +removeFromCart()
+    +updateQuantity()
+    +clearCart()
+    +getTotalItems()
+    +getTotalPrice()
+    +isLoading: boolean
+    +validateCart()
+  }
+
+  class AuthContextType {
+    +user: UserInfo
+    +isAuthenticated: boolean
+    +isLoading: boolean
+    +login()
+    +logout()
+    +refreshUser()
+  }
+
+  class Message {
+    +id: string
+    +role: string
+    +content: string
+    +timestamp: Date
+    +mode: string
+    +source: string
+    +rows: any[]
+  }
+
+  class ChatContextType {
+    +messages: Message[]
+    +isOpen: boolean
+    +isTyping: boolean
+    +isLoading: boolean
+    +loadingMessage: string
+    +error: string
+    +sessionId: string
+    +toggleChat()
+    +sendMessage()
+    +clearHistory()
+  }
+
+  class Toast {
+    +id: string
+    +message: string
+    +type: string
+    +duration: number
+  }
+
+  class ToastContextType {
+    +toasts: Toast[]
+    +showToast()
+    +removeToast()
+  }
+}
+
+' Frontend Context relationships
+CartItem }o--|| Product : "references"
+CartContextType ||--o{ CartItem : "1..* cartItems"
+AuthContextType }o--o| UserInfo : "user"
+ChatContextType ||--o{ Message : "1..* messages"
+ToastContextType ||--o{ Toast : "0..* toasts"
+
+' ===========================
+' FRONTEND COMPONENTS (ABSTRACT)
+' ===========================
+
+package "Frontend.UI" {
+  class ToastComponent {
+    +toast: Toast
+    +onClose()
+  }
+}
+
+ToastComponent }o--|| Toast : "displays"
+ToastContextType ..> ToastComponent : "uses"
+
+@enduml
+
+

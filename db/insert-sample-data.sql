@@ -169,3 +169,12 @@ INSERT INTO KhieuNai (NoiDung, NgayKhieuNai, IsDelete, MaKH) VALUES
 -- - Các bảng SystemConfig, Project, SystemLog, ActivityLog không có trong schema
 --   nên không được thêm vào file này
 -- =======================================
+INSERT INTO SanPham (TenSP, GiaSP, SoLuongTonKho, MaDanhMuc, HinhAnh, MoTa) VALUES
+('Máy xay sinh tố đa năng Roler RB-4136A', 1899000, 25, 2, 'productimg/mayxaysinhtodanangrolerrb4136a-7a18f5be.jpg', '{"công suất":"1000W","dung tích":"1.5L","màu":"đỏ"}'),
+('Nồi cơm điện cao tần Cuckoo CRP-CHSS1009FN', 3999000, 18, 1, 'productimg/noi-com-dien-cuckoo-cr-1030f1-1a092135.jpg', '{"dung tích":"1.8L","công suất":"1400W","chế độ":"đa năng"}'),
+('Nồi cơm điện BlueStone RCB-5516', 1299000, 30, 1, 'productimg/noi-com-dien-bluestone-rcb-551-6a33f9cd.jpg', '{"dung tích":"1.8L","lòng nồi":"chống dính","bảo hành":"24 tháng"}'),
+('Máy xay sinh tố Vitamix 750', 14490000, 10, 2, 'productimg/may-xay-sinh-to-vitamix-750-s1-71a37c2b.jpg', '{"công suất":"1200W","chức năng":"đánh đá","bình":"Tritan"}'),
+('Ấm siêu tốc Sato 30S039', 499000, 40, 3, 'productimg/sato-30s039-f6d17409.jpg', '{"dung tích":"1.7L","ruột":"inox 304","tự ngắt":"có"}'),
+('Bộ nồi inox 5 đáy Elmich', 2199000, 22, 4, '/placeholder.svg', '{"chất liệu":"inox 304","đáy":"5 lớp","dùng bếp từ":"có"}'),
+('Chảo chống dính sâu lòng Lock&Lock 28cm', 699000, 35, 4, '/placeholder.svg', '{"phủ":"titan","đáy":"từ","tay cầm":"nhựa bakelite"}'),
+('Bình giữ nhiệt Elmich 500ml', 349000, 50, 5, '/placeholder.svg', '{"giữ nóng":"12h","giữ lạnh":"18h","chất liệu":"inox 304"}');
