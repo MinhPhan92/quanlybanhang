@@ -12,13 +12,16 @@ import { Loader2, QrCode, CreditCard, Truck, Wallet } from "lucide-react";
 import styles from "./checkout.module.css";
 
 // =====================================================
-// 📋 Mock QR Payment Checkout Page
+// 📋 ORDER PROCESSING FLOW - STEP 2: CHECKOUT PAGE
 // =====================================================
+// This is where orders are created from cart items.
 // Flow:
 // 1. User fills shipping info and selects payment method
-// 2. If QR payment selected, creates order and transaction
-// 3. Displays QR code with payment URL
-// 4. User can open mock payment page to complete payment
+// 2. Calculates totals (subtotal, shipping, tax, discount)
+// 3. Creates order via ordersApi.create() → backend/routes/donhang.py
+// 4. If QR payment: creates payment transaction → backend/routes/mock_payment.py
+// 5. Displays QR code or redirects to success page
+// =====================================================
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -33,6 +36,7 @@ export default function CheckoutPage() {
     city: "",
     postalCode: "",
     paymentMethod: "qr", // Default to QR payment
+    discountPercentage: "", // Discount percentage input
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,19 +75,42 @@ export default function CheckoutPage() {
     }));
   };
 
-  // Calculate totals
+  // ORDER FLOW STEP 2.1: Calculate order totals
+  // These calculations determine the final order amount
+  // Subtotal: from cart items (price × quantity for each item)
   const subtotal = getTotalPrice();
+  // Shipping: free if subtotal >= 10,000,000 VND, else 30,000 VND
   const shipping = subtotal >= 10000000 ? 0 : 30000;
+  // Tax: 10% of subtotal
   const tax = subtotal * 0.1;
-  const total = subtotal + shipping + tax;
+  // Original total before discount
+  const originalTotal = subtotal + shipping + tax;
+  
+  // ORDER FLOW STEP 2.2: Calculate discount
+  // Discount is applied as percentage to total (subtotal + shipping + tax)
+  // Backend will recalculate and apply discount when creating order
+  const discountPercentage = parseFloat(formData.discountPercentage) || 0;
+  const discountAmount = discountPercentage > 0 && discountPercentage <= 100 
+    ? (originalTotal * discountPercentage) / 100 
+    : 0;
+  
+  // Final total after discount
+  const total = originalTotal - discountAmount;
 
+  // ORDER FLOW STEP 2.3: Submit checkout form and create order
+  // This is the main order creation flow:
+  // 1. Validates cart is not empty
+  // 2. Prepares order data from cart items
+  // 3. Calls ordersApi.create() → backend creates DonHang record
+  // 4. If QR payment: creates payment transaction
+  // 5. Clears cart and redirects to success page
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
 
     try {
-      // Validate cart is not empty
+      // Validate cart is not empty before creating order
       if (cartItems.length === 0) {
         setError(
           "Giỏ hàng trống. Vui lòng thêm sản phẩm trước khi thanh toán."
@@ -92,35 +119,46 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Create order with items (price snapshot)
+      // ORDER FLOW STEP 2.4: Prepare order data from cart
+      // This data will be sent to backend to create DonHang record
+      // Items include price snapshot (DonGia) - price at order time
+      // Backend will apply discount and calculate final total
       const orderData = {
-        NgayDat: new Date().toISOString().split("T")[0],
-        TongTien: total,
-        TrangThai: "Chờ thanh toán", // PENDING_PAYMENT
-        MaKH: user?.MaKH,
+        NgayDat: new Date().toISOString().split("T")[0], // Order date
+        TongTien: originalTotal, // Original total before discount (backend will apply discount)
+        TrangThai: "Chờ thanh toán", // Initial status: PENDING_PAYMENT
+        MaKH: user?.MaKH, // Customer ID from authenticated user
+        discount_percentage: discountPercentage > 0 ? discountPercentage : undefined, // Discount % to apply
         items: cartItems.map((item) => ({
-          MaSP: item.id, // CartItem uses 'id' field, not 'MaSP'
-          SoLuong: item.quantity,
-          DonGia: item.price, // CartItem uses 'price' field, not 'GiaSP'
-          GiamGia: 0,
+          MaSP: item.id, // Product ID
+          SoLuong: item.quantity, // Quantity ordered
+          DonGia: item.price, // Price snapshot at order time (stored in DonHang_SanPham)
+          GiamGia: 0, // Item-level discount (not used currently)
         })),
       };
 
+      // ORDER FLOW STEP 2.5: Create order via API
+      // This calls POST /api/donhang/ → backend/routes/donhang.py
+      // Backend creates DonHang and DonHang_SanPham records
       const orderResponse = await ordersApi.create(orderData);
       const newOrderId = orderResponse.MaDonHang;
       setOrderId(newOrderId);
 
-      // If QR payment selected, create transaction
+      // ORDER FLOW STEP 2.6: Handle payment based on selected method
       if (formData.paymentMethod === "qr") {
+        // QR Payment: Create payment transaction
+        // This calls POST /api/payment/create-transaction → backend/routes/mock_payment.py
+        // Returns payment URL for QR code display
         const txnResponse = await paymentsApi.createTransaction(newOrderId);
         setTransactionData(txnResponse);
-        setShowQRPayment(true);
+        setShowQRPayment(true); // Show QR code for payment
       } else if (formData.paymentMethod === "cod") {
-        // For COD, just show success message
-        clearCart();
+        // COD (Cash on Delivery): No payment needed now
+        // Order status remains "Chờ thanh toán" until delivery
+        clearCart(); // Clear cart after successful order creation
         router.push(`/order/success?orderId=${newOrderId}`);
       } else {
-        // For other methods, redirect to order success (mock)
+        // Other payment methods: Redirect to success (mock)
         clearCart();
         router.push(`/order/success?orderId=${newOrderId}`);
       }
@@ -338,6 +376,34 @@ export default function CheckoutPage() {
                   </div>
                 </section>
 
+                {/* Mã giảm giá */}
+                <section className={styles.section}>
+                  <h2 className={styles.sectionTitle}>Mã giảm giá</h2>
+                  
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>
+                      Phần trăm giảm giá (%)
+                    </label>
+                    <input
+                      type="number"
+                      name="discountPercentage"
+                      value={formData.discountPercentage}
+                      onChange={handleChange}
+                      className={styles.input}
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      placeholder="Nhập phần trăm giảm giá (0-100)"
+                    />
+                    {discountPercentage > 0 && (
+                      <p className={styles.discountInfo}>
+                        Giảm: {discountAmount.toLocaleString("vi-VN")}₫ 
+                        ({discountPercentage}%)
+                      </p>
+                    )}
+                  </div>
+                </section>
+
                 {/* Phương thức thanh toán */}
                 <section className={styles.section}>
                   <h2 className={styles.sectionTitle}>
@@ -476,6 +542,15 @@ export default function CheckoutPage() {
                     <span>Thuế (10%):</span>
                     <span>{tax.toLocaleString("vi-VN")}₫</span>
                   </div>
+
+                  {discountAmount > 0 && (
+                    <div className={styles.summaryRow}>
+                      <span>Giảm giá ({discountPercentage}%):</span>
+                      <span className={styles.discountAmount}>
+                        -{discountAmount.toLocaleString("vi-VN")}₫
+                      </span>
+                    </div>
+                  )}
 
                   <div className={styles.divider}></div>
 

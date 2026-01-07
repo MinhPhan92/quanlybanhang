@@ -9,6 +9,18 @@ export interface Payment {
 }
 
 // =====================================================
+// 📋 ORDER PROCESSING FLOW - STEP 5: PAYMENT API
+// =====================================================
+// Frontend API wrapper for payment transaction operations.
+// These functions handle QR payment gateway integration.
+// Flow:
+// 1. createTransaction() - Creates payment transaction for order
+// 2. getTransaction() - Gets transaction info (for mock payment page)
+// 3. submitCallback() - Submits payment result (success/failed/canceled)
+// 4. getOrderTransactions() - Gets all transactions for an order
+// =====================================================
+
+// =====================================================
 // 📋 Mock Payment Transaction Types (QR Payment Gateway)
 // =====================================================
 
@@ -70,8 +82,11 @@ export const paymentsApi = {
   // =====================================================
 
   /**
-   * Create a new payment transaction for an order.
-   * Returns a paymentUrl that can be used to generate QR code.
+   * ORDER FLOW STEP 5.1: Create payment transaction for order
+   * Called from checkout page when user selects QR payment method.
+   * Creates PaymentTransaction record in database.
+   * Returns paymentUrl that can be used to generate QR code.
+   * Calls POST /api/payment/create-transaction → backend/routes/mock_payment.py create_transaction()
    */
   createTransaction: async (
     orderId: number
@@ -94,8 +109,11 @@ export const paymentsApi = {
   },
 
   /**
-   * Submit payment callback with result.
+   * ORDER FLOW STEP 5.2: Submit payment callback with result
    * Called when user clicks Success/Failed/Cancel on mock payment page.
+   * Backend updates transaction status and order status based on result.
+   * If SUCCESS: Updates order status to "Chờ xử lý" and creates ThanhToan record.
+   * Calls POST /api/payment/callback → backend/routes/mock_payment.py payment_callback()
    */
   submitCallback: async (
     transactionId: string,

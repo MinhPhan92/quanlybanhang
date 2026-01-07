@@ -3,7 +3,7 @@
   margin: 0 auto;
   padding: 2rem 1rem;
   min-height: 100vh;
-  background: linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%);
+  background: #f2d9c2;
 }
 
 .header {
@@ -14,10 +14,7 @@
 .title {
   font-size: 2.5rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #1f2937;
   margin: 0 0 0.75rem 0;
   letter-spacing: -0.02em;
 }
@@ -32,7 +29,8 @@
 .card {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #000000;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   overflow: hidden;
   margin-bottom: 1.5rem;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -40,7 +38,7 @@
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
 }
 
 .cardHeader {
@@ -48,7 +46,7 @@
   align-items: center;
   gap: 1.5rem;
   padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #ff8c42;
   color: white;
   position: relative;
   overflow: hidden;
@@ -232,9 +230,9 @@
 .formGroup input:focus,
 .formGroup textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #ff8c42;
   background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.1);
   transform: translateY(-1px);
 }
 
@@ -295,15 +293,15 @@
 }
 
 .saveButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #ff8c42;
   color: white;
   border: 2px solid transparent;
 }
 
 .saveButton:hover:not(:disabled) {
-  background: linear-gradient(135deg, #5568d3 0%, #6b3fa0 100%);
+  background-color: #e67e2f;
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 12px rgba(255, 140, 66, 0.4);
 }
 
 .cancelButton:disabled,
@@ -325,7 +323,7 @@
   width: 40px;
   height: 40px;
   border: 4px solid #e5e7eb;
-  border-top-color: #667eea;
+  border-top-color: #ff8c42;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -365,14 +363,14 @@
 }
 
 .tab:hover {
-  color: #475569;
+  color: #ff8c42;
   background: #f8fafc;
 }
 
 .tabActive {
-  color: #667eea;
-  border-bottom-color: #667eea;
-  background: linear-gradient(to bottom, rgba(102, 126, 234, 0.05), transparent);
+  color: #ff8c42;
+  border-bottom-color: #ff8c42;
+  background: linear-gradient(to bottom, rgba(255, 140, 66, 0.05), transparent);
 }
 
 .sectionTitle {
@@ -426,7 +424,7 @@
 }
 
 .productLink:hover h3 {
-  color: #667eea;
+  color: #ff8c42;
 }
 
 .reviewRating {
@@ -480,7 +478,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background-color: #667eea;
+  background-color: #ff8c42;
   color: white;
   border-radius: 0.5rem;
   text-decoration: none;
@@ -489,7 +487,7 @@
 }
 
 .newComplaintButton:hover {
-  background-color: #5568d3;
+  background-color: #e67e2f;
 }
 
 .complaintHeader {
@@ -581,15 +579,16 @@
 .shopButton {
   display: inline-block;
   padding: 0.75rem 1.5rem;
-  background-color: #667eea;
+  background-color: #ff8c42;
   color: white;
   border-radius: 0.5rem;
   text-decoration: none;
   font-weight: 500;
   margin-top: 1rem;
+  transition: background-color 0.2s;
 }
 
 .shopButton:hover {
-  background-color: #5568d3;
+  background-color: #e67e2f;
 }
 

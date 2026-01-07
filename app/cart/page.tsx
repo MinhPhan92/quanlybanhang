@@ -1,5 +1,16 @@
 "use client";
 
+// =====================================================
+// 📦 ORDER PROCESSING FLOW - STEP 1: CART PAGE
+// =====================================================
+// Displays cart items and allows navigation to checkout.
+// Flow:
+// 1. Validates cart items on page load
+// 2. Displays cart items with quantity controls
+// 3. Calculates totals (subtotal, shipping, tax)
+// 4. Navigates to checkout when user clicks "Thanh toán"
+// =====================================================
+
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,12 +27,14 @@ export default function CartPage() {
     useCart();
   const { isAuthenticated } = useAuth();
 
-  // Validate cart khi load trang
+  // ORDER FLOW STEP 1.1: Validate cart when page loads
+  // Ensures cart items are still available and prices are current
+  // This prevents checkout with invalid cart data
   useEffect(() => {
     if (cartItems.length > 0) {
       validateCart();
     }
-  }, []); // Chỉ chạy 1 lần khi mount
+  }, []); // Only run once on mount
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -44,21 +57,29 @@ export default function CartPage() {
     return null;
   }
 
+  // ORDER FLOW STEP 1.2: Calculate cart totals
+  // These calculations are also done in checkout page
+  // Subtotal: sum of all item prices × quantities
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+  // Shipping: free if subtotal >= 10,000,000 VND, else 100,000 VND
   const shipping = subtotal > 0 ? (subtotal >= 10000000 ? 0 : 100000) : 0;
+  // Tax: 10% of subtotal
   const tax = Math.round(subtotal * 0.1);
+  // Total: subtotal + shipping + tax (before discounts)
   const total = subtotal + shipping + tax;
 
-  // Handle checkout button click
+  // ORDER FLOW STEP 1.3: Navigate to checkout
+  // This transitions from cart to checkout page
+  // Checkout page will use cart items to create order
   const handleCheckout = () => {
     if (!isAuthenticated) {
-      // Redirect to login with return URL
+      // Redirect to login with return URL to checkout
       router.push("/login?redirect=/checkout");
     } else {
-      // Go directly to checkout
+      // Go directly to checkout page
       router.push("/checkout");
     }
   };

@@ -1,3 +1,17 @@
+// =====================================================
+// 📋 ORDER PROCESSING FLOW - STEP 7: ORDER SUCCESS PAGE
+// =====================================================
+// Displays order confirmation after successful order creation.
+// This page is shown after:
+// 1. Order is created in checkout
+// 2. Payment is completed (for COD or other non-QR methods)
+// 3. User is redirected here with orderId parameter
+// Flow:
+// 1. Displays order confirmation message
+// 2. Shows order ID and total
+// 3. Provides links to view order details and download invoice
+// =====================================================
+
 "use client"
 
 import { useEffect, useState } from "react"

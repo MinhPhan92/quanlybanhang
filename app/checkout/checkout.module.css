@@ -282,6 +282,18 @@
   font-weight: 600;
 }
 
+.discountInfo {
+  color: #10b981;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+.discountAmount {
+  color: #10b981;
+  font-weight: 600;
+}
+
 .divider {
   height: 1px;
   background-color: #e5e7eb;

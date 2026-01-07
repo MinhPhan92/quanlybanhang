@@ -72,39 +72,53 @@ class SanPham(Base):
         "DonHang_SanPham", back_populates="sanpham")
 
 
+# =====================================================
+# 📋 ORDER PROCESSING FLOW - DATABASE MODELS
+# =====================================================
+# SQLAlchemy models representing order-related database tables.
+# These models define the structure of order data stored in the database.
+# =====================================================
+
+# ORDER FLOW MODEL: DonHang (Order)
+# Main order table - stores order header information
 class DonHang(Base):
     __tablename__ = "DonHang"
-    MaDonHang = Column(Integer, primary_key=True, autoincrement=True)
-    NgayDat = Column(Date)
-    TongTien = Column(Numeric(10, 2))
-    TrangThai = Column(String(50))
+    MaDonHang = Column(Integer, primary_key=True, autoincrement=True)  # Order ID (primary key)
+    NgayDat = Column(Date)  # Order date
+    TongTien = Column(Numeric(10, 2))  # Total amount (after discount)
+    TrangThai = Column(String(50))  # Order status (e.g., "Chờ thanh toán", "Đang xử lý")
     MaKH = Column(Integer, ForeignKey("KhachHang.MaKH",
-                  onupdate="CASCADE", ondelete="SET NULL"))
+                  onupdate="CASCADE", ondelete="SET NULL"))  # Customer ID (foreign key)
     MaNV = Column(Integer, ForeignKey("NhanVien.MaNV",
-                  onupdate="CASCADE", ondelete="SET NULL"))
-    KhuyenMai = Column(String(50), nullable=True)  # Voucher code field
-    PhiShip = Column(Numeric(10, 2), nullable=True)
+                  onupdate="CASCADE", ondelete="SET NULL"))  # Employee ID (foreign key, nullable)
+    KhuyenMai = Column(String(50), nullable=True)  # Discount/promotion info (stored as "X%")
+    PhiShip = Column(Numeric(10, 2), nullable=True)  # Shipping fee
     MaShipper = Column(Integer, ForeignKey("Shipper.MaShipper",
-                    onupdate="CASCADE", ondelete="SET NULL"), nullable=True)
-    khachhang = relationship("KhachHang", back_populates="donhangs")
-    nhanvien = relationship("NhanVien", back_populates="donhangs")
+                    onupdate="CASCADE", ondelete="SET NULL"), nullable=True)  # Shipper ID (for delivery)
+    # Relationships
+    khachhang = relationship("KhachHang", back_populates="donhangs")  # Link to customer
+    nhanvien = relationship("NhanVien", back_populates="donhangs")  # Link to employee
     donhang_sanphams = relationship(
-        "DonHang_SanPham", back_populates="donhang")
-    thanhtoans = relationship("ThanhToan", back_populates="donhang")
-    shipper = relationship("Shipper", back_populates="donhangs")
+        "DonHang_SanPham", back_populates="donhang")  # Link to order items
+    thanhtoans = relationship("ThanhToan", back_populates="donhang")  # Link to payments
+    shipper = relationship("Shipper", back_populates="donhangs")  # Link to shipper
 
 
+# ORDER FLOW MODEL: DonHang_SanPham (Order Item)
+# Junction table linking orders to products
+# Stores quantity and price snapshot at order time
 class DonHang_SanPham(Base):
     __tablename__ = "DonHang_SanPham"
     MaDonHang = Column(Integer, ForeignKey(
-        "DonHang.MaDonHang", onupdate="CASCADE", ondelete="CASCADE"), primary_key=True)
+        "DonHang.MaDonHang", onupdate="CASCADE", ondelete="CASCADE"), primary_key=True)  # Order ID (part of composite key)
     MaSP = Column(Integer, ForeignKey("SanPham.MaSP",
-                  onupdate="CASCADE", ondelete="CASCADE"), primary_key=True)
-    SoLuong = Column(Integer)
-    DonGia = Column(Numeric(10, 2))
-    GiamGia = Column(Numeric(10, 2))
-    donhang = relationship("DonHang", back_populates="donhang_sanphams")
-    sanpham = relationship("SanPham", back_populates="donhang_sanphams")
+                  onupdate="CASCADE", ondelete="CASCADE"), primary_key=True)  # Product ID (part of composite key)
+    SoLuong = Column(Integer)  # Quantity ordered
+    DonGia = Column(Numeric(10, 2))  # Price snapshot at order time (CRITICAL: preserves historical pricing)
+    GiamGia = Column(Numeric(10, 2))  # Item-level discount
+    # Relationships
+    donhang = relationship("DonHang", back_populates="donhang_sanphams")  # Link to order
+    sanpham = relationship("SanPham", back_populates="donhang_sanphams")  # Link to product
 
 
 class ThanhToan(Base):
@@ -215,22 +229,26 @@ class SystemConfig(Base):
 # =====================================================
 # Transaction statuses: CREATED, SUCCESS, FAILED, CANCELED
 
+# ORDER FLOW MODEL: PaymentTransaction
+# Mock payment transaction for QR payment gateway.
+# This simulates a real payment gateway like VNPay/MoMo but fully internal.
+# Used when user selects QR payment method in checkout.
 class PaymentTransaction(Base):
     """
     Mock payment transaction for QR payment gateway.
     This simulates a real payment gateway like VNPay/MoMo but fully internal.
     """
     __tablename__ = "PaymentTransaction"
-    TransactionId = Column(String(50), primary_key=True)  # UUID-like unique ID
+    TransactionId = Column(String(50), primary_key=True)  # Unique transaction ID (format: TXN_timestamp_uuid)
     # Use UNSIGNED INTEGER to match DonHang.MaDonHang type
-    MaDonHang = Column(MySQLInteger(unsigned=True), ForeignKey("DonHang.MaDonHang", onupdate="CASCADE", ondelete="CASCADE"))
-    Amount = Column(Numeric(12, 2), nullable=False)  # Amount to pay (locked to order.TongTien)
-    Status = Column(String(20), default="CREATED")  # CREATED, SUCCESS, FAILED, CANCELED
-    Signature = Column(String(255), nullable=True)  # Hash signature for verification
-    CreatedAt = Column(DateTime, default=datetime.utcnow)
-    UpdatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    MaDonHang = Column(MySQLInteger(unsigned=True), ForeignKey("DonHang.MaDonHang", onupdate="CASCADE", ondelete="CASCADE"))  # Order ID (foreign key)
+    Amount = Column(Numeric(12, 2), nullable=False)  # Amount to pay (locked to order.TongTien - cannot be modified)
+    Status = Column(String(20), default="CREATED")  # Transaction status: CREATED, SUCCESS, FAILED, CANCELED
+    Signature = Column(String(255), nullable=True)  # Hash signature for verification (SHA256 hash)
+    CreatedAt = Column(DateTime, default=datetime.utcnow)  # Transaction creation timestamp
+    UpdatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Last update timestamp
     
     # Relationship to order
-    donhang = relationship("DonHang")
+    donhang = relationship("DonHang")  # Link to order
 
 

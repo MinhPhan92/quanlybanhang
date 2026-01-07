@@ -137,8 +137,33 @@ export default function OrdersPage() {
     }
   };
 
+  // Map Vietnamese status to English status for compatibility
+  const normalizeStatus = (status: string): string => {
+    const statusMap: Record<string, string> = {
+      "Chờ thanh toán": "Pending",
+      "Chờ xử lý": "Pending",
+      "Đã xác nhận": "Confirmed",
+      "Đang xử lý": "Processing",
+      "Đã giao hàng": "Shipped",
+      "Đã giao": "Delivered",
+      "Đã hủy": "Cancelled",
+      "Đã trả hàng": "Returned",
+      "PENDING_PAYMENT": "Pending",
+      "PAID": "Confirmed",
+    };
+    return statusMap[status] || status;
+  };
+
   const getStatusConfig = (status: string) => {
-    return STATUS_CONFIG[status] || {
+    const normalizedStatus = normalizeStatus(status);
+    const config = STATUS_CONFIG[normalizedStatus];
+    if (config) {
+      return {
+        ...config,
+        label: status, // Keep original Vietnamese label if it's Vietnamese
+      };
+    }
+    return {
       label: status,
       color: "#6b7280",
       icon: Package,
@@ -147,8 +172,9 @@ export default function OrdersPage() {
   };
 
   const getAvailableActions = (currentStatus: string): string[] => {
-    const config = getStatusConfig(currentStatus);
-    return config.nextActions;
+    const normalizedStatus = normalizeStatus(currentStatus);
+    const config = STATUS_CONFIG[normalizedStatus];
+    return config ? config.nextActions : [];
   };
 
   const formatDate = (dateString: string) => {

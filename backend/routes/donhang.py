@@ -1,9 +1,22 @@
+# =====================================================
+# 📋 ORDER PROCESSING FLOW - STEP 4: BACKEND ORDER ROUTES
+# =====================================================
+# Backend API endpoints for order management.
+# This is where orders are actually created and stored in database.
+# Flow:
+# 1. create_donhang() - Creates DonHang and DonHang_SanPham records
+# 2. get_all_donhang() - Retrieves orders (filtered by user role)
+# 3. get_donhang() - Gets single order with items
+# 4. update_order_status() - Updates status and manages inventory
+# 5. update_delivery() - Updates shipping info and shipper assignment
+# =====================================================
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models import DonHang, Shipper
 from backend.routes.deps import get_current_user
-from backend.utils.promotion_data import VoucherData
+# Removed VoucherData import - using direct discount percentage instead
 from backend.utils.inventory_manager import InventoryManager, InventoryError
 from pydantic import BaseModel
 from typing import Optional
@@ -49,9 +62,13 @@ class DeliveryUpdateResponse(BaseModel):
 # Create
 
 
+# ORDER FLOW STEP 4.1: Create new order
+# Called from checkout page via POST /api/donhang/
+# This is the main order creation endpoint
 @router.post("/", response_model=dict)
 def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    # Role check: Admin, Manager, Employee can create any orders
+    # ORDER FLOW STEP 4.1.1: Validate user permissions
+    # Admin, Manager, Employee can create any orders
     # KhachHang can only create orders for themselves
     user_role = current_user.get("role")
     
@@ -59,45 +76,46 @@ def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: d
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
     
+    # ORDER FLOW STEP 4.1.2: Security check for customers
     # If customer is creating order, ensure MaKH matches their account
+    # Prevents customers from creating orders for other customers
     if user_role == "KhachHang":
         # Get customer ID from token (stored as user_id for customers)
         customer_id_from_token = current_user.get("user_id")
         # Override MaKH to prevent customers from creating orders for others
         donhang["MaKH"] = customer_id_from_token
     
-    # Extract voucher code from payload
-    voucher_code = donhang.get("voucher_code")
+    # ORDER FLOW STEP 4.1.3: Process discount
+    # Extract discount percentage from payload and calculate final amount
+    discount_percentage = donhang.get("discount_percentage")
     original_amount = donhang.get("TongTien", 0)
     final_amount = original_amount
-    applied_voucher = None
+    applied_discount = None
     
-    # Process voucher if provided
-    if voucher_code:
-        # Validate and calculate discount
-        is_valid, error_msg = VoucherData.is_voucher_valid(voucher_code, original_amount)
-        if not is_valid:
+    # Process discount percentage if provided
+    if discount_percentage is not None:
+        try:
+            discount_percentage = float(discount_percentage)
+            # Validate discount percentage (0-100)
+            if discount_percentage < 0 or discount_percentage > 100:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Phần trăm giảm giá phải từ 0 đến 100"
+                )
+            
+            # Calculate discount amount from percentage
+            if discount_percentage > 0:
+                discount_amount = (original_amount * discount_percentage) / 100
+                final_amount = original_amount - discount_amount
+                applied_discount = discount_percentage
+        except (ValueError, TypeError):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
-                detail=f"Mã giảm giá không hợp lệ: {error_msg}"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Phần trăm giảm giá không hợp lệ"
             )
-        
-        # Calculate discount amount
-        discount_amount, calc_error = VoucherData.calculate_discount(voucher_code, original_amount)
-        if calc_error:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
-                detail=f"Lỗi tính toán giảm giá: {calc_error}"
-            )
-        
-        # Apply discount
-        final_amount = original_amount - discount_amount
-        applied_voucher = voucher_code
-        
-        # Mark voucher as used (in real system, this would update database)
-        VoucherData.use_voucher(voucher_code)
     
-    # Parse NgayDat - convert ISO datetime string to date object
+    # ORDER FLOW STEP 4.1.4: Parse order date
+    # Convert ISO datetime string to date object
     ngay_dat_str = donhang.get("NgayDat")
     if ngay_dat_str:
         # If it's an ISO datetime string, parse it and extract date
@@ -107,7 +125,7 @@ def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: d
                 ngay_dat = datetime.fromisoformat(ngay_dat_str.replace('Z', '+00:00'))
                 ngay_dat = ngay_dat.date()  # Convert to date object
             except (ValueError, AttributeError):
-                # If parsing fails, try to use current date
+                # If parsing fails, use current date
                 ngay_dat = date.today()
         elif isinstance(ngay_dat_str, date):
             ngay_dat = ngay_dat_str
@@ -116,27 +134,34 @@ def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: d
     else:
         ngay_dat = date.today()
     
-    # Get shipping fee and tax from request (if provided)
+    # ORDER FLOW STEP 4.1.5: Calculate shipping fee
+    # Get shipping fee from request (if provided)
     phi_ship = donhang.get("PhiShip")
     if phi_ship is None:
         # Calculate shipping based on subtotal if not provided
+        # Free shipping if order >= 10,000,000 VND
         phi_ship = 0 if original_amount >= 10000000 else 100000
     
-    # Create order with voucher information
+    # ORDER FLOW STEP 4.1.6: Create DonHang record
+    # Store discount percentage as string in KhuyenMai field for backward compatibility
+    discount_info = f"{applied_discount}%" if applied_discount else None
+    
     new_dh = DonHang(
         NgayDat=ngay_dat,
-        TongTien=final_amount,  # Use final amount after discount
-        TrangThai=donhang.get("TrangThai"),
-        MaKH=donhang.get("MaKH"),
-        MaNV=donhang.get("MaNV"),
-        KhuyenMai=applied_voucher,  # Store voucher code
+        TongTien=final_amount,  # Final amount after discount applied
+        TrangThai=donhang.get("TrangThai"),  # Initial status (usually "Chờ thanh toán")
+        MaKH=donhang.get("MaKH"),  # Customer ID
+        MaNV=donhang.get("MaNV"),  # Employee ID (if order created by employee)
+        KhuyenMai=discount_info,  # Store discount percentage as "X%"
         PhiShip=phi_ship  # Store shipping fee
     )
     db.add(new_dh)
     db.commit()
     db.refresh(new_dh)
 
-    # Save order items with price snapshot (DonGia)
+    # ORDER FLOW STEP 4.1.7: Create order items (DonHang_SanPham records)
+    # Each item stores price snapshot (DonGia) at order time
+    # This preserves historical pricing even if product price changes later
     items = donhang.get("items", [])
     if items:
         from backend.models import DonHang_SanPham
@@ -149,12 +174,13 @@ def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: d
                     detail=f"MaSP is required for order item. Received item: {item}"
                 )
             
+            # Create order item record with price snapshot
             order_item = DonHang_SanPham(
                 MaDonHang=new_dh.MaDonHang,
                 MaSP=ma_sp,
                 SoLuong=item.get("SoLuong", 1),
-                DonGia=item.get("DonGia", 0),  # Price snapshot at order time
-                GiamGia=item.get("GiamGia", 0)
+                DonGia=item.get("DonGia", 0),  # Price snapshot at order time (critical for historical accuracy)
+                GiamGia=item.get("GiamGia", 0)  # Item-level discount
             )
             db.add(order_item)
         db.commit()
@@ -172,20 +198,21 @@ def create_donhang(donhang: dict, db: Session = Depends(get_db), current_user: d
     except Exception:
         pass
     
-    # Return order info with voucher details
+    # Return order info with discount details
     response = {
         "MaDonHang": new_dh.MaDonHang,
         "TongTien": float(new_dh.TongTien),
         "KhuyenMai": new_dh.KhuyenMai
     }
     
-    # Add discount information if voucher was applied
-    if applied_voucher:
+    # Add discount information if discount was applied
+    if applied_discount is not None:
         discount_amount = original_amount - final_amount
         response.update({
             "original_amount": original_amount,
             "discount_amount": discount_amount,
-            "voucher_applied": True
+            "discount_percentage": applied_discount,
+            "voucher_applied": False  # Keep for backward compatibility
         })
     else:
         response["voucher_applied"] = False
@@ -436,6 +463,10 @@ def delete_donhang(madonhang: int, db: Session = Depends(get_db), current_user: 
 # 📦 Status Update with Inventory Management
 # =====================================================
 
+# ORDER FLOW STEP 4.2: Update order status
+# Called by admin/employee to change order status
+# This is critical: status changes trigger inventory operations
+# Calls InventoryManager to handle stock reserve/release/confirm/cancel
 @router.put("/{madonhang}/status", response_model=StatusUpdateResponse, summary="Cập nhật trạng thái đơn hàng")
 def update_order_status(
     madonhang: int,
@@ -446,8 +477,14 @@ def update_order_status(
     """
     Cập nhật trạng thái đơn hàng và xử lý tồn kho an toàn.
     Sử dụng transaction để đảm bảo tính nhất quán dữ liệu.
+    
+    Status transitions trigger inventory operations:
+    - Pending/Confirmed → Processing: Reserve stock
+    - Processing → Shipped: Confirm stock deduction
+    - Any → Cancelled: Release stock back
     """
-    # Role check: Only Admin, Manager, and Employee can update order status
+    # ORDER FLOW STEP 4.2.1: Validate permissions
+    # Only Admin, Manager, and Employee can update order status
     from backend.routes.deps import has_role
     if not has_role(current_user, ["Admin", "Manager", "Employee", "NhanVien"]):
         raise HTTPException(
@@ -456,7 +493,7 @@ def update_order_status(
         )
     
     try:
-        # Get current order
+        # ORDER FLOW STEP 4.2.2: Get order from database
         order = db.query(DonHang).filter(DonHang.MaDonHang == madonhang).first()
         if not order:
             raise HTTPException(
@@ -467,7 +504,8 @@ def update_order_status(
         old_status = order.TrangThai
         new_status = request.new_status
         
-        # Validate status transition
+        # ORDER FLOW STEP 4.2.3: Validate status transition
+        # Only allow valid status values
         valid_statuses = ["Pending", "Confirmed", "Processing", "Shipped", "Delivered", "Cancelled", "Returned"]
         if new_status not in valid_statuses:
             raise HTTPException(
@@ -475,7 +513,12 @@ def update_order_status(
                 detail=f"Trạng thái không hợp lệ. Các trạng thái hợp lệ: {', '.join(valid_statuses)}"
             )
         
-        # Handle inventory changes with transaction safety
+        # ORDER FLOW STEP 4.2.4: Handle inventory changes
+        # This is critical: status changes affect inventory
+        # InventoryManager determines what action to take based on status transition:
+        # - Reserve stock when order is confirmed
+        # - Deduct stock when order is processing/shipped
+        # - Release stock when order is cancelled
         inventory_success, inventory_message = InventoryManager.handle_inventory_change(
             db, madonhang, new_status, old_status
         )
@@ -486,7 +529,7 @@ def update_order_status(
                 detail=f"Lỗi cập nhật tồn kho: {inventory_message}"
             )
         
-        # Update order status
+        # ORDER FLOW STEP 4.2.5: Update order status in database
         order.TrangThai = new_status
         db.commit()
 

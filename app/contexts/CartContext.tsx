@@ -1,5 +1,16 @@
 "use client";
 
+// =====================================================
+// 📦 ORDER PROCESSING FLOW - STEP 1: CART MANAGEMENT
+// =====================================================
+// This context manages the shopping cart state throughout the order process.
+// Flow:
+// 1. User adds products to cart (addToCart)
+// 2. Cart validates items against backend (stock, price)
+// 3. Cart persists in localStorage
+// 4. Cart items are used in checkout to create orders
+// =====================================================
+
 import {
   createContext,
   useContext,
@@ -12,15 +23,16 @@ import { useAuth } from "./AuthContext";
 import { cartApi } from "@/app/lib/api/cart";
 import { productsApi } from "@/app/lib/api/products";
 
+// Cart item interface - represents a product in the shopping cart
 export interface CartItem {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  quantity: number;
-  maxStock?: number; // Thêm thông tin tồn kho tối đa
-  priceChanged?: boolean; // Đánh dấu nếu giá thay đổi
-  unavailable?: boolean; // Đánh dấu nếu sản phẩm không còn
+  id: number; // Product ID (MaSP)
+  name: string; // Product name
+  price: number; // Current price (snapshot at add time, may be updated)
+  image: string; // Product image URL
+  quantity: number; // Quantity in cart
+  maxStock?: number; // Maximum available stock (for validation)
+  priceChanged?: boolean; // Flag if price changed since adding to cart
+  unavailable?: boolean; // Flag if product is no longer available
 }
 
 interface CartContextType {
@@ -40,6 +52,7 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+// LocalStorage key for persisting cart data
 const CART_STORAGE_KEY = "cart_items";
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -48,7 +61,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Load cart from localStorage on mount
+  // ORDER FLOW STEP 1.1: Load cart from localStorage on component mount
+  // This restores the user's cart when they return to the site
   useEffect(() => {
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY);
@@ -60,7 +74,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // ORDER FLOW STEP 1.2: Persist cart to localStorage whenever it changes
+  // Ensures cart data survives page refreshes
   useEffect(() => {
     try {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
@@ -69,11 +84,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [cartItems]);
 
+  // ORDER FLOW STEP 1.3: Add product to cart
+  // - Validates user authentication
+  // - Calls backend API to add item to server-side cart
+  // - Updates local state (adds new item or increases quantity)
+  // - Cart items will be used later in checkout to create order
   const addToCart = async (
     item: Omit<CartItem, "quantity">,
     quantity: number = 1
   ) => {
-    // Check if user is logged in
+    // Require authentication before adding to cart
     if (!isAuthenticated) {
       router.push("/login");
       return;
@@ -81,24 +101,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     setIsLoading(true);
     try {
-      // Call backend API
+      // Call backend API to add item to cart
+      // Backend validates stock availability
       await cartApi.addToCart({
         sanPhamId: item.id,
         soLuong: quantity,
       });
 
-      // Update local state
+      // Update local cart state
       setCartItems((prev) => {
         const existingItem = prev.find((cartItem) => cartItem.id === item.id);
         if (existingItem) {
-          // If item exists, increase quantity
+          // If item already in cart, increase quantity
           return prev.map((cartItem) =>
             cartItem.id === item.id
               ? { ...cartItem, quantity: cartItem.quantity + quantity }
               : cartItem
           );
         } else {
-          // If item doesn't exist, add it
+          // If item not in cart, add it as new item
           return [...prev, { ...item, quantity }];
         }
       });
@@ -118,20 +139,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
   };
 
+  // ORDER FLOW STEP 1.4: Update item quantity in cart
+  // - Validates stock availability before updating
+  // - Updates price if it changed since adding to cart
+  // - Marks item as unavailable if out of stock
+  // - This ensures cart data is accurate before checkout
   const updateQuantity = async (id: number, quantity: number) => {
+    // If quantity is 0 or negative, remove item from cart
     if (quantity <= 0) {
       removeFromCart(id);
       return;
     }
 
-    // Kiểm tra tồn kho trước khi cập nhật
+    // Check stock availability before updating quantity
+    // This prevents ordering more than available stock
     try {
       const availability = await productsApi.checkAvailability(id, quantity);
 
       if (!availability.available) {
         alert(availability.reason || "Không thể cập nhật số lượng");
 
-        // Nếu hết hàng hoàn toàn, đánh dấu unavailable
+        // If completely out of stock, mark as unavailable
         if (availability.SoLuongTonKho === 0) {
           setCartItems((prev) =>
             prev.map((item) =>
@@ -142,7 +170,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Cập nhật với thông tin mới từ server
+      // Update cart item with latest info from server
+      // This syncs price, stock, and product details
       setCartItems((prev) =>
         prev.map((item) => {
           if (item.id === id) {
@@ -155,7 +184,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
               price: availability.GiaSP || item.price,
               name: availability.TenSP || item.name,
               image: availability.HinhAnh || item.image,
-              priceChanged: priceChanged || item.priceChanged,
+              priceChanged: !!priceChanged || !!item.priceChanged, // Ensure boolean type
               unavailable: false,
             };
           }
@@ -163,6 +192,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         })
       );
 
+      // Alert user if price changed
       if (
         availability.GiaSP &&
         cartItems.find((item) => item.id === id)?.price !== availability.GiaSP
@@ -175,19 +205,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("Error checking availability:", error);
-      // Vẫn cho phép cập nhật nếu API lỗi
+      // Still allow update if API fails (graceful degradation)
       setCartItems((prev) =>
         prev.map((item) => (item.id === id ? { ...item, quantity } : item))
       );
     }
   };
 
-  // Validate toàn bộ giỏ hàng
+  // ORDER FLOW STEP 1.5: Validate entire cart before checkout
+  // - Checks all items for stock availability and price changes
+  // - Removes unavailable items
+  // - Updates prices if changed
+  // - Called before checkout to ensure cart is valid
+  // - This prevents order creation with invalid cart data
   const validateCart = async () => {
     if (cartItems.length === 0) return;
 
     setIsLoading(true);
     try {
+      // Validate each cart item against current product data
       const validatedItems = await Promise.all(
         cartItems.map(async (item) => {
           try {
@@ -198,6 +234,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
             const priceChanged =
               availability.GiaSP && item.price !== availability.GiaSP;
+            // Adjust quantity if requested amount not available
             const quantityAdjusted =
               !availability.available && availability.SoLuongTonKho
                 ? availability.SoLuongTonKho
@@ -210,18 +247,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
               price: availability.GiaSP || item.price,
               name: availability.TenSP || item.name,
               image: availability.HinhAnh || item.image,
-              priceChanged: priceChanged,
+              priceChanged: !!priceChanged || !!item.priceChanged, // Ensure boolean type
               unavailable:
                 !availability.available && !availability.SoLuongTonKho,
             };
           } catch (error) {
             console.error(`Error validating item ${item.id}:`, error);
-            return item; // Giữ nguyên nếu lỗi
+            return item; // Keep original if validation fails
           }
         })
       );
 
-      // Lọc bỏ sản phẩm không còn (unavailable = true)
+      // Remove unavailable items from cart
       const availableItems = validatedItems.filter((item) => !item.unavailable);
 
       if (availableItems.length < cartItems.length) {
@@ -232,6 +269,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         );
       }
 
+      // Alert user about price changes
       const priceChangedCount = availableItems.filter(
         (item) => item.priceChanged
       ).length;
@@ -247,14 +285,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // ORDER FLOW STEP 1.6: Clear cart after successful order
+  // Called after order is successfully created in checkout
   const clearCart = () => {
     setCartItems([]);
   };
 
+  // Helper: Get total number of items in cart
   const getTotalItems = () => {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
   };
 
+  // ORDER FLOW STEP 1.7: Calculate total cart price
+  // Used in cart page and checkout page to display totals
+  // This is the subtotal before shipping, tax, and discounts
   const getTotalPrice = () => {
     return cartItems.reduce(
       (total, item) => total + item.price * item.quantity,

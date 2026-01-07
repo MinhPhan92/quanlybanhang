@@ -76,6 +76,9 @@ def generate_transaction_id() -> str:
 # 📋 API Endpoints
 # =====================================================
 
+# ORDER FLOW STEP 5.1: Create payment transaction
+# Called from checkout page when user selects QR payment
+# Creates PaymentTransaction record linked to order
 @router.post("/create-transaction", response_model=CreateTransactionResponse, 
              summary="Tạo giao dịch thanh toán mới")
 def create_transaction(
@@ -84,15 +87,17 @@ def create_transaction(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Tạo giao dịch thanh toán mới cho đơn hàng.
+    ORDER FLOW STEP 5.1.1: Create payment transaction for order
     
-    - Kiểm tra đơn hàng tồn tại và đang ở trạng thái PENDING_PAYMENT
-    - Tạo transaction với amount = order.TongTien (không thể sửa)
-    - Trả về URL để hiển thị QR code
+    This is called from checkout page when user selects QR payment method.
+    - Validates order exists and is in PENDING_PAYMENT status
+    - Creates PaymentTransaction with amount = order.TongTien (locked, cannot be modified)
+    - Generates unique transaction ID and signature
+    - Returns paymentUrl for QR code display
     
     **Lưu ý**: Amount được lấy từ đơn hàng, không cho phép user tự nhập.
     """
-    # 1. Find the order
+    # ORDER FLOW STEP 5.1.2: Find the order
     order = db.query(DonHang).filter(DonHang.MaDonHang == request.orderId).first()
     if not order:
         raise HTTPException(
@@ -100,7 +105,8 @@ def create_transaction(
             detail=f"Không tìm thấy đơn hàng #{request.orderId}"
         )
     
-    # 2. Check order status - only allow payment for pending orders
+    # ORDER FLOW STEP 5.1.3: Validate order status
+    # Only allow payment for pending orders
     # Allow various pending states for flexibility
     allowed_statuses = ["PENDING_PAYMENT", "Chờ thanh toán", "Chờ xử lý", "Pending", "pending", None]
     if order.TrangThai and order.TrangThai not in allowed_statuses:
@@ -111,7 +117,8 @@ def create_transaction(
                 detail=f"Đơn hàng #{request.orderId} đã được thanh toán"
             )
     
-    # 3. Check if there's already an active transaction for this order
+    # ORDER FLOW STEP 5.1.4: Check for existing transaction
+    # Prevent duplicate transactions for same order
     existing_txn = db.query(PaymentTransaction).filter(
         PaymentTransaction.MaDonHang == request.orderId,
         PaymentTransaction.Status == "CREATED"
@@ -127,12 +134,15 @@ def create_transaction(
             status=existing_txn.Status
         )
     
-    # 4. Generate transaction ID and signature
+    # ORDER FLOW STEP 5.1.5: Generate transaction ID and signature
+    # Transaction ID format: TXN_timestamp_uuid
+    # Signature: SHA256 hash for verification
     transaction_id = generate_transaction_id()
-    amount = float(order.TongTien) if order.TongTien else 0.0
+    amount = float(order.TongTien) if order.TongTien else 0.0  # Amount locked to order total
     signature = generate_signature(transaction_id, amount)
     
-    # 5. Create transaction record
+    # ORDER FLOW STEP 5.1.6: Create PaymentTransaction record
+    # This record tracks the payment process
     transaction = PaymentTransaction(
         TransactionId=transaction_id,
         MaDonHang=request.orderId,
@@ -147,7 +157,8 @@ def create_transaction(
     db.commit()
     db.refresh(transaction)
     
-    # 6. Return transaction info with payment URL
+    # ORDER FLOW STEP 5.1.7: Return transaction info with payment URL
+    # Payment URL is used to generate QR code and navigate to mock payment page
     return CreateTransactionResponse(
         transactionId=transaction_id,
         orderId=request.orderId,
@@ -189,6 +200,9 @@ def get_transaction(
     )
 
 
+# ORDER FLOW STEP 5.2: Payment callback handler
+# Called from mock payment page when user clicks Success/Failed/Cancel
+# Updates transaction status and order status based on payment result
 @router.post("/callback", response_model=PaymentCallbackResponse,
              summary="Xử lý kết quả thanh toán")
 def payment_callback(
@@ -196,13 +210,14 @@ def payment_callback(
     db: Session = Depends(get_db)
 ):
     """
-    Xử lý callback từ mock payment page.
+    ORDER FLOW STEP 5.2.1: Process payment callback from mock payment page
     
-    Giống như callback URL của VNPay/MoMo, endpoint này:
-    - Xác thực signature
-    - Cập nhật trạng thái transaction
-    - Cập nhật trạng thái đơn hàng
-    - Trả về URL redirect
+    This simulates a real payment gateway callback (like VNPay/MoMo).
+    - Verifies signature for security
+    - Updates transaction status (SUCCESS/FAILED/CANCELED)
+    - Updates order status based on result
+    - If SUCCESS: Creates ThanhToan record and updates order to "Chờ xử lý"
+    - Returns redirect URL for frontend
     
     **Results**: SUCCESS, FAILED, CANCELED
     """
@@ -247,15 +262,19 @@ def payment_callback(
     result = request.result.upper()
     now = datetime.utcnow()
     
+    # ORDER FLOW STEP 5.2.2: Handle SUCCESS result
     if result == "SUCCESS":
-        # Update transaction status
+        # Update transaction status to SUCCESS
         transaction.Status = "SUCCESS"
         transaction.UpdatedAt = now
         
-        # Update order status to Pending Processing (skip Paid status)
+        # ORDER FLOW STEP 5.2.3: Update order status
+        # Change from "Chờ thanh toán" to "Chờ xử lý"
+        # This indicates payment is complete and order is ready for processing
         order.TrangThai = "Chờ xử lý"
         
-        # Create payment record in ThanhToan table
+        # ORDER FLOW STEP 5.2.4: Create payment record
+        # Record payment in ThanhToan table for payment history
         payment = ThanhToan(
             MaDonHang=order.MaDonHang,
             PhuongThuc="QR_PAYMENT",  # Mock QR payment method
@@ -266,6 +285,7 @@ def payment_callback(
         
         db.commit()
         
+        # Return success response with redirect URL
         return PaymentCallbackResponse(
             success=True,
             message="Thanh toán thành công!",

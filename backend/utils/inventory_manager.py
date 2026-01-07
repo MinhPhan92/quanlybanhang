@@ -1,8 +1,14 @@
-# backend/utils/inventory_manager.py
-"""
-Inventory management utilities for handling stock updates safely.
-This module provides transaction-safe inventory operations.
-"""
+# =====================================================
+# 📋 ORDER PROCESSING FLOW - STEP 6: INVENTORY MANAGEMENT
+# =====================================================
+# Inventory management utilities for handling stock updates safely.
+# This module manages inventory changes when order status changes.
+# Flow:
+# 1. handle_inventory_change() - Called when order status is updated
+# 2. Determines action based on status transition (reserve/release/confirm/cancel)
+# 3. Updates product stock quantities atomically
+# 4. Used by backend/routes/donhang.py update_order_status()
+# =====================================================
 
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -15,8 +21,51 @@ class InventoryError(Exception):
     pass
 
 class InventoryManager:
-    """Handles inventory operations with transaction safety"""
+    """
+    ORDER FLOW STEP 6: Handles inventory operations with transaction safety
     
+    This class manages stock updates when orders change status.
+    Critical operations:
+    - Reserve stock when order is confirmed
+    - Deduct stock when order is processing/shipped
+    - Release stock when order is cancelled
+    - All operations are atomic (within database transaction)
+    """
+    
+    @staticmethod
+    def _normalize_status(status: str) -> str:
+        """
+        Normalize Vietnamese status names to English for consistent processing.
+        
+        Args:
+            status: Order status (can be Vietnamese or English)
+            
+        Returns:
+            str: Normalized English status name
+        """
+        if not status:
+            return status
+        
+        status_map = {
+            # Vietnamese to English
+            "Chờ thanh toán": "Pending",
+            "Chờ xử lý": "Pending",
+            "Đã xác nhận": "Confirmed",
+            "Đang xử lý": "Processing",
+            "Đã giao hàng": "Shipped",
+            "Đã giao": "Delivered",
+            "Đã hủy": "Cancelled",
+            "Đã trả hàng": "Returned",
+            # English variants
+            "PENDING_PAYMENT": "Pending",
+            "PAID": "Confirmed",
+        }
+        
+        return status_map.get(status, status)
+    
+    # ORDER FLOW STEP 6.1: Handle inventory changes when order status changes
+    # This is called from backend/routes/donhang.py update_order_status()
+    # Determines what inventory action to take based on status transition
     @staticmethod
     def handle_inventory_change(
         db: Session, 
@@ -25,11 +74,19 @@ class InventoryManager:
         old_status: str = None
     ) -> Tuple[bool, str]:
         """
-        Handle inventory changes when order status changes.
+        ORDER FLOW STEP 6.1.1: Handle inventory changes when order status changes
+        
+        This is the main inventory management function called when order status is updated.
         Uses database transactions to ensure data consistency.
         
+        Inventory actions based on status transitions:
+        - Pending → Confirmed/Processing: Reserve stock (subtract from available)
+        - Processing → Shipped: Confirm stock deduction (already reserved)
+        - Any → Cancelled: Release stock (add back to available)
+        - Cancelled → Any: Reserve stock again (if order is reactivated)
+        
         Args:
-            db: Database session
+            db: Database session (transaction context)
             order_id: ID of the order
             new_status: New order status
             old_status: Previous order status (optional)
@@ -54,21 +111,29 @@ class InventoryManager:
             if not order_items:
                 raise InventoryError(f"No items found for order {order_id}")
             
-            # Determine inventory action based on status change
-            action = InventoryManager._determine_inventory_action(old_status, new_status)
+            # Normalize status names for consistent processing
+            normalized_old_status = InventoryManager._normalize_status(old_status) if old_status else None
+            normalized_new_status = InventoryManager._normalize_status(new_status)
+            
+            # ORDER FLOW STEP 6.1.2: Determine inventory action based on status change
+            # This analyzes the status transition and decides what to do with stock
+            action = InventoryManager._determine_inventory_action(normalized_old_status, normalized_new_status)
             
             if action == "none":
-                # No inventory change needed
+                # No inventory change needed (e.g., status change that doesn't affect stock)
                 return True, "No inventory change required"
             
-            # Process inventory changes for each item
+            # ORDER FLOW STEP 6.1.3: Process inventory changes for each order item
+            # Loop through all items in the order and update their stock
             for item in order_items:
                 product = db.query(SanPham).filter(SanPham.MaSP == item.MaSP).first()
                 if not product:
                     raise InventoryError(f"Product {item.MaSP} not found")
                 
                 if action == "reserve":
-                    # Reserve stock (subtract from available)
+                    # ORDER FLOW STEP 6.1.4: Reserve stock (subtract from available)
+                    # Used when order moves from Pending to Confirmed/Processing
+                    # Stock is reserved but not yet deducted (can be released if order cancelled)
                     if product.SoLuongTonKho < item.SoLuong:
                         raise InventoryError(
                             f"Insufficient stock for product {product.TenSP}. "
@@ -77,16 +142,28 @@ class InventoryManager:
                     product.SoLuongTonKho -= item.SoLuong
                     
                 elif action == "release":
-                    # Release stock (add back to available)
+                    # ORDER FLOW STEP 6.1.5: Release stock (add back to available)
+                    # Used when order is cancelled or returned
+                    # Restores stock that was previously reserved/deducted
                     product.SoLuongTonKho += item.SoLuong
                     
                 elif action == "confirm":
-                    # Confirm reservation (no additional change needed)
-                    # Stock was already reserved when order was created
-                    pass
+                    # ORDER FLOW STEP 6.1.6: Deduct stock when order is confirmed
+                    # This handles cases where order was created with "Chờ thanh toán" status
+                    # and inventory wasn't reserved initially
+                    # Check if stock was already deducted (in case order was created with Pending status)
+                    # We need to deduct stock if it hasn't been deducted yet
+                    if product.SoLuongTonKho < item.SoLuong:
+                        raise InventoryError(
+                            f"Insufficient stock for product {product.TenSP}. "
+                            f"Available: {product.SoLuongTonKho}, Required: {item.SoLuong}"
+                        )
+                    product.SoLuongTonKho -= item.SoLuong
                     
                 elif action == "cancel":
-                    # Cancel order (restore stock)
+                    # ORDER FLOW STEP 6.1.7: Cancel order (restore stock)
+                    # Only restore if stock was actually deducted
+                    # This releases reserved/deducted stock back to available inventory
                     product.SoLuongTonKho += item.SoLuong
                 
                 # Log the inventory change
@@ -117,40 +194,46 @@ class InventoryManager:
     def _determine_inventory_action(old_status: str, new_status: str) -> str:
         """
         Determine what inventory action to take based on status change.
+        Status names should already be normalized to English.
+        
+        Business logic:
+        - Pending: Order created, payment pending → Don't deduct stock yet
+        - Confirmed: Order confirmed by staff → Deduct stock NOW
+        - Processing/Shipped/Delivered: Stock already deducted → No change
+        - Cancelled: Restore stock if it was deducted
         
         Args:
-            old_status: Previous order status
-            new_status: New order status
+            old_status: Previous order status (normalized to English)
+            new_status: New order status (normalized to English)
             
         Returns:
             str: Action to take ('reserve', 'release', 'confirm', 'cancel', 'none')
         """
-        # Define status flow and inventory actions
-        status_flow = {
-            "Pending": "reserve",      # Reserve stock when order is pending
-            "Confirmed": "confirm",     # Confirm reservation when order is confirmed
-            "Processing": "none",       # No change during processing
-            "Shipped": "none",         # No change when shipped
-            "Delivered": "none",       # No change when delivered
-            "Cancelled": "cancel",     # Release stock when cancelled
-            "Returned": "release"      # Release stock when returned
-        }
-        
         # If no old status, assume it's a new order
         if not old_status:
-            return status_flow.get(new_status, "none")
+            # For new orders, deduct stock if status is Confirmed
+            # Otherwise, don't deduct stock until confirmed
+            if new_status == "Confirmed":
+                return "confirm"
+            return "none"
         
         # Handle specific status transitions
-        if old_status == "Pending" and new_status == "Confirmed":
-            return "confirm"  # Confirm the reservation
-        elif old_status == "Pending" and new_status == "Cancelled":
-            return "cancel"    # Release reserved stock
-        elif old_status in ["Confirmed", "Processing"] and new_status == "Cancelled":
-            return "cancel"    # Release stock when cancelling confirmed order
+        if new_status == "Confirmed":
+            # Deduct stock when order is confirmed (regardless of previous status)
+            # This handles: Pending→Confirmed, or any other status→Confirmed
+            return "confirm"
+        elif new_status == "Cancelled":
+            # Restore stock when order is cancelled
+            # Only restore if stock was actually deducted (i.e., order was Confirmed or later)
+            if old_status in ["Confirmed", "Processing", "Shipped", "Delivered"]:
+                return "cancel"
+            # If order was Pending and cancelled, no stock was deducted, so nothing to restore
+            return "none"
         elif old_status == "Delivered" and new_status == "Returned":
             return "release"   # Release stock when order is returned
-        elif new_status in ["Pending", "Confirmed", "Processing", "Shipped", "Delivered"]:
-            return "none"     # No inventory change for these statuses
+        elif new_status in ["Processing", "Shipped", "Delivered"]:
+            # No inventory change for these statuses (stock already deducted when confirmed)
+            return "none"
         else:
             return "none"
     

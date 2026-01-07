@@ -100,8 +100,8 @@ export const apiClient = async (
       // For review endpoints, this is expected validation (user hasn't purchased)
       if (endpoint.includes("/reviews")) {
         console.warn(`[apiClient] 403 ${endpoint}: ${errorMessage}`);
-      } else if (endpoint.includes("/donhang") && errorMessage.includes("Permission denied")) {
-        // For order creation, this might be a role issue - log as warning
+      } else if (endpoint.includes("/donhang") && (errorMessage.includes("Permission denied") || errorMessage.includes("chỉ dành cho"))) {
+        // For order endpoints, this might be a role issue - log as warning
         console.warn(`[apiClient] 403 ${endpoint}: ${errorMessage}`);
       } else if (endpoint.includes("/danhmuc") || endpoint.includes("/sanpham")) {
         // For category/product endpoints, log as warning (expected permission checks)
