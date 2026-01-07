@@ -7,7 +7,10 @@ from jose import jwt, JWTError, ExpiredSignatureError
 
 from backend.database import get_db
 from sqlalchemy.orm import Session
-from backend.routes.auth import SECRET_KEY, ALGORITHM
+
+# JWT Configuration (moved here to avoid circular import)
+SECRET_KEY = "67PM3"  # ⚠️ Nên lưu trong biến môi trường .env khi deploy
+ALGORITHM = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 

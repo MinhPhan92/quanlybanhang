@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { LogIn, Loader2, Eye, EyeOff } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { LogIn, Loader2, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { authApi, LoginRequest, UserInfo } from "@/app/lib/api/auth";
 import { useAuth } from "@/app/contexts/AuthContext";
 import styles from "./login.module.css";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, login, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState<LoginRequest>({
     username: "",
@@ -17,6 +18,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Check for registration success message
+  useEffect(() => {
+    if (searchParams.get("registered") === "true") {
+      setShowSuccess(true);
+      // Remove query param from URL
+      router.replace("/login", { scroll: false });
+      // Hide success message after 5 seconds
+      setTimeout(() => setShowSuccess(false), 5000);
+    }
+  }, [searchParams, router]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -119,6 +132,13 @@ export default function LoginPage() {
           <h1 className={styles.title}>Đăng nhập</h1>
           <p className={styles.subtitle}>Nhập thông tin để truy cập hệ thống</p>
         </div>
+
+        {showSuccess && (
+          <div className={styles.successMessage}>
+            <CheckCircle size={20} />
+            <p>Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.</p>
+          </div>
+        )}
 
         {error && (
           <div className={styles.errorMessage}>

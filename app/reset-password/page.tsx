@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Header from "@/app/components/shared/header/Header"
 import Footer from "@/app/components/shared/footer/Footer"
+import { authApi } from "@/app/lib/api/auth"
 import { Lock, CheckCircle, XCircle } from "lucide-react"
 import styles from "./reset-password.module.css"
 
@@ -73,11 +74,7 @@ export default function ResetPasswordPage() {
     setLoading(true)
 
     try {
-      // TODO: Call API to reset password
-      // await authApi.resetPassword({ token, newPassword: password })
-      
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await authApi.resetPassword(token!, password)
       
       setSuccess(true)
       setTimeout(() => {

@@ -5,6 +5,8 @@ export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: "/auth/login",
     REGISTER: "/auth/register",
+    FORGOT_PASSWORD: "/auth/forgot-password",
+    RESET_PASSWORD: "/auth/reset-password",
   },
   STATUS: "/status",
   PRODUCT: {
@@ -70,5 +72,14 @@ export const API_ENDPOINTS = {
     CALLBACK: "/payment/callback",
     ORDER_TRANSACTIONS: (orderId: number) =>
       `/payment/order/${orderId}/transactions`,
+  },
+  CONFIG: {
+    BASE: "/config",
+    GET_ALL: "/config",
+    UPDATE: (key: string) => `/config/${key}`,
+  },
+  CUSTOMER: {
+    BASE: "/khachhang",
+    ME: "/khachhang/me",
   },
 };

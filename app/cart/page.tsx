@@ -97,8 +97,9 @@ export default function CartPage() {
             {/* Cart Items */}
             <div className={styles.cartItems}>
               {cartItems.map((item) => {
-                const isMaxStock =
-                  item.maxStock && item.quantity >= item.maxStock;
+                const isMaxStock = Boolean(
+                  item.maxStock && item.quantity >= item.maxStock
+                );
 
                 return (
                   <div key={item.id} className={styles.cartItem}>

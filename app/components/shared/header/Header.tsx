@@ -74,9 +74,6 @@ export default function Header() {
             <Link href="/about" className={styles.navLink}>
               Giới thiệu
             </Link>
-            <Link href="/contact" className={styles.navLink}>
-              Liên hệ
-            </Link>
             <Link href="/policies" className={styles.navLink}>
               Chính sách
             </Link>
@@ -207,13 +204,6 @@ export default function Header() {
               onClick={() => setIsOpen(false)}
             >
               Giới thiệu
-            </Link>
-            <Link
-              href="/contact"
-              className={styles.mobileNavLink}
-              onClick={() => setIsOpen(false)}
-            >
-              Liên hệ
             </Link>
             <Link
               href="/policies"

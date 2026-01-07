@@ -47,24 +47,31 @@ export default function AddressBookPage() {
   const loadAddresses = async () => {
     try {
       setLoading(true)
-      // TODO: Call API to load addresses
-      // const data = await addressesApi.getAll()
-      // setAddresses(data)
+      // Since the database only has one address per customer (DiaChiKH),
+      // we'll load the customer's address and display it as a single address
+      const { customerApi } = await import("@/app/lib/api/customer")
+      const customerInfo = await customerApi.getMyInfo()
       
-      // Mock data for now
-      setAddresses([
-        {
-          id: 1,
-          fullName: "Nguyễn Văn A",
-          phone: "0912345678",
-          address: "123 Đường ABC",
-          city: "Hà Nội",
-          postalCode: "100000",
-          isDefault: true,
-        },
-      ])
+      if (customerInfo.DiaChiKH) {
+        // Parse address - assuming format: "address, city, postalCode" or just "address"
+        const addressParts = customerInfo.DiaChiKH.split(",").map(s => s.trim())
+        setAddresses([
+          {
+            id: 1,
+            fullName: customerInfo.TenKH || "",
+            phone: customerInfo.SdtKH || "",
+            address: addressParts[0] || customerInfo.DiaChiKH,
+            city: addressParts[1] || "",
+            postalCode: addressParts[2] || "",
+            isDefault: true,
+          },
+        ])
+      } else {
+        setAddresses([])
+      }
     } catch (err: any) {
       console.error("Error loading addresses:", err)
+      setAddresses([])
     } finally {
       setLoading(false)
     }
@@ -73,23 +80,24 @@ export default function AddressBookPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      if (editingId) {
-        // TODO: Update address API
-        // await addressesApi.update(editingId, formData)
-        setAddresses(
-          addresses.map((addr) => (addr.id === editingId ? { ...addr, ...formData } : addr))
-        )
-        setEditingId(null)
-      } else {
-        // TODO: Create address API
-        // await addressesApi.create(formData)
-        const newAddress: Address = {
-          id: Date.now(),
-          ...formData,
-        }
-        setAddresses([...addresses, newAddress])
-        setShowAddForm(false)
-      }
+      const { customerApi } = await import("@/app/lib/api/customer")
+      
+      // Combine address parts into DiaChiKH
+      const fullAddress = [formData.address, formData.city, formData.postalCode]
+        .filter(Boolean)
+        .join(", ")
+      
+      // Update customer info
+      await customerApi.updateMyInfo({
+        TenKH: formData.fullName,
+        SdtKH: formData.phone,
+        DiaChiKH: fullAddress,
+      })
+      
+      // Reload addresses
+      await loadAddresses()
+      setShowAddForm(false)
+      setEditingId(null)
       setFormData({
         fullName: "",
         phone: "",
@@ -100,33 +108,28 @@ export default function AddressBookPage() {
       })
     } catch (err: any) {
       console.error("Error saving address:", err)
+      alert(err.message || "Có lỗi xảy ra khi lưu địa chỉ")
     }
   }
 
   const handleDelete = async (id: number) => {
     if (!confirm("Bạn có chắc chắn muốn xóa địa chỉ này?")) return
     try {
-      // TODO: Delete address API
-      // await addressesApi.delete(id)
-      setAddresses(addresses.filter((addr) => addr.id !== id))
+      const { customerApi } = await import("@/app/lib/api/customer")
+      // Clear address
+      await customerApi.updateMyInfo({
+        DiaChiKH: "",
+      })
+      await loadAddresses()
     } catch (err: any) {
       console.error("Error deleting address:", err)
+      alert(err.message || "Có lỗi xảy ra khi xóa địa chỉ")
     }
   }
 
   const handleSetDefault = async (id: number) => {
-    try {
-      // TODO: Set default address API
-      // await addressesApi.setDefault(id)
-      setAddresses(
-        addresses.map((addr) => ({
-          ...addr,
-          isDefault: addr.id === id,
-        }))
-      )
-    } catch (err: any) {
-      console.error("Error setting default address:", err)
-    }
+    // Since we only have one address, this is always the default
+    // No action needed
   }
 
   const startEdit = (address: Address) => {

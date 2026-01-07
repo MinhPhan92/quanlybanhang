@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Header from "@/app/components/shared/header/Header"
 import Footer from "@/app/components/shared/footer/Footer"
+import { authApi } from "@/app/lib/api/auth"
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react"
 import styles from "./forgot-password.module.css"
 
@@ -20,12 +21,26 @@ export default function ForgotPasswordPage() {
     setLoading(true)
     setError(null)
 
+    if (!email.trim()) {
+      setError("Vui lòng nhập địa chỉ email")
+      setLoading(false)
+      return
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Email không hợp lệ")
+      setLoading(false)
+      return
+    }
+
     try {
-      // TODO: Call API to send reset password email
-      // await authApi.forgotPassword({ email })
+      const response = await authApi.forgotPassword(email.trim())
       
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // In development, if token is returned, show it for testing
+      if (response.token && process.env.NODE_ENV === "development") {
+        console.log("Reset token (dev only):", response.token)
+        // Optionally show token in UI for testing
+      }
       
       setSubmitted(true)
     } catch (err: any) {

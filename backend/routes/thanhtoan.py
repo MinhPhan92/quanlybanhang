@@ -43,6 +43,20 @@ def add_payment_voucher(data: dict, db: Session = Depends(get_db), current_user:
 
 @router.get("/history/{madonhang}", response_model=list)
 def view_payment_history(madonhang: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    """
+    Xem lịch sử thanh toán của một đơn hàng.
+    """
     payments = db.query(ThanhToan).filter(
         ThanhToan.MaDonHang == madonhang).all()
-    return [p.__dict__ for p in payments]
+    
+    # Properly serialize SQLAlchemy objects to dictionaries
+    result = []
+    for p in payments:
+        result.append({
+            "MaThanhToan": p.MaThanhToan,
+            "PhuongThuc": p.PhuongThuc,
+            "NgayThanhToan": p.NgayThanhToan.isoformat() if p.NgayThanhToan else None,
+            "SoTien": float(p.SoTien) if p.SoTien else 0.0,
+            "MaDonHang": p.MaDonHang
+        })
+    return result

@@ -18,10 +18,27 @@ class RegisterCustomerRequest(BaseModel):
     EmailKH: Optional[str] = None
     DiaChiKH: Optional[str] = None
 
+class CustomerRegisterRequest(BaseModel):
+    username: str
+    password: str
+    email: str
+    fullName: str
+    phone: str
+    address: str
+
 
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
 
 
 class UserResponse(BaseModel):

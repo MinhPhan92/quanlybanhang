@@ -17,6 +17,21 @@ export interface LoginResponse {
   };
 }
 
+export interface RegisterRequest {
+  username: string;
+  password: string;
+  email: string;
+  fullName: string;
+  phone: string;
+  address: string;
+}
+
+export interface RegisterResponse {
+  MaTK: number;
+  username: string;
+  role: string;
+}
+
 export interface UserInfo {
   MaTK: number;
   username: string;
@@ -44,6 +59,14 @@ export const authApi = {
     return apiClient(API_ENDPOINTS.AUTH.LOGIN, {
       method: "POST",
       body: JSON.stringify(credentials),
+    });
+  },
+
+  register: async (data: RegisterRequest): Promise<RegisterResponse> => {
+    return apiClient(API_ENDPOINTS.AUTH.REGISTER, {
+      method: "POST",
+      body: JSON.stringify(data),
+      auth: false, // Registration doesn't require authentication
     });
   },
 
@@ -100,6 +123,22 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify(data),
       auth: true,
+    });
+  },
+
+  forgotPassword: async (email: string): Promise<{ status: string; message: string; token?: string }> => {
+    return apiClient(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, {
+      method: "POST",
+      body: JSON.stringify({ email }),
+      auth: false,
+    });
+  },
+
+  resetPassword: async (token: string, newPassword: string): Promise<{ status: string; message: string }> => {
+    return apiClient(API_ENDPOINTS.AUTH.RESET_PASSWORD, {
+      method: "POST",
+      body: JSON.stringify({ token, new_password: newPassword }),
+      auth: false,
     });
   },
 };

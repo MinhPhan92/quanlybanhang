@@ -99,9 +99,9 @@ export default function CheckoutPage() {
         TrangThai: "Chờ thanh toán", // PENDING_PAYMENT
         MaKH: user?.MaKH,
         items: cartItems.map((item) => ({
-          MaSP: item.MaSP,
+          MaSP: item.id, // CartItem uses 'id' field, not 'MaSP'
           SoLuong: item.quantity,
-          DonGia: item.GiaSP, // Price snapshot at checkout time
+          DonGia: item.price, // CartItem uses 'price' field, not 'GiaSP'
           GiamGia: 0,
         })),
       };

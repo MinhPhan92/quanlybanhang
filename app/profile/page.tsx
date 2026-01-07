@@ -6,10 +6,10 @@ import { useAuth } from "@/app/contexts/AuthContext";
 import { reviewsApi, Review } from "@/app/lib/api/reviews";
 import { complaintsApi, Complaint } from "@/app/lib/api/complaints";
 import { authApi } from "@/app/lib/api/auth";
+import { customerApi } from "@/app/lib/api/customer";
 import { useToast } from "@/app/contexts/ToastContext";
 import { User, Mail, Phone, MapPin, Edit, Save, X, Star, MessageSquare, Trash2, Lock, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import styles from "./profile.module.css";
 import styles from "./profile.module.css";
 
 export default function ProfilePage() {
@@ -50,8 +50,10 @@ export default function ProfilePage() {
   }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
-    if (user) {
-      // TODO: Load user profile data from API
+    if (user && user.role === "KhachHang") {
+      loadProfile();
+    } else if (user) {
+      // For non-customer users, just set username
       setFormData({
         fullName: user.username || "",
         email: "",
@@ -60,6 +62,29 @@ export default function ProfilePage() {
       });
     }
   }, [user]);
+
+  const loadProfile = async () => {
+    try {
+      const customerInfo = await customerApi.getMyInfo();
+      setFormData({
+        fullName: customerInfo.TenKH || "",
+        email: customerInfo.EmailKH || "",
+        phone: customerInfo.SdtKH || "",
+        address: customerInfo.DiaChiKH || "",
+      });
+    } catch (err: any) {
+      console.error("Error loading profile:", err);
+      // Fallback to username if API fails
+      if (user) {
+        setFormData({
+          fullName: user.username || "",
+          email: "",
+          phone: "",
+          address: "",
+        });
+      }
+    }
+  };
 
   useEffect(() => {
     if (user && user.role === "KhachHang") {
@@ -107,13 +132,42 @@ export default function ProfilePage() {
   };
 
   const handleSave = async () => {
+    if (!user || user.role !== "KhachHang") {
+      showToast("Chỉ khách hàng mới có thể cập nhật thông tin", "error");
+      return;
+    }
+
+    // Validation
+    if (!formData.fullName.trim()) {
+      showToast("Vui lòng nhập họ và tên", "error");
+      return;
+    }
+    if (!formData.email.trim()) {
+      showToast("Vui lòng nhập email", "error");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      showToast("Email không hợp lệ", "error");
+      return;
+    }
+    if (!formData.phone.trim()) {
+      showToast("Vui lòng nhập số điện thoại", "error");
+      return;
+    }
+
     try {
       setLoading(true);
-      // TODO: Implement update profile API call
-      alert("Chức năng cập nhật thông tin sẽ được triển khai sau");
+      await customerApi.updateMyInfo({
+        TenKH: formData.fullName.trim(),
+        EmailKH: formData.email.trim(),
+        SdtKH: formData.phone.trim(),
+        DiaChiKH: formData.address.trim(),
+      });
+      showToast("Cập nhật thông tin thành công", "success");
       setEditing(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating profile:", error);
+      showToast(error.message || "Có lỗi xảy ra khi cập nhật thông tin", "error");
     } finally {
       setLoading(false);
     }
@@ -283,6 +337,7 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+      )}
 
       {/* Change Password Section */}
       <div className={styles.card}>
@@ -478,7 +533,6 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
-      )}
 
       {activeTab === "reviews" && isCustomer && (
         <div className={styles.card}>
