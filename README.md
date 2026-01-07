@@ -29,7 +29,7 @@ python -m venv .venv
 # Linux/Mac:
 source .venv/bin/activate
 
-# Cai dat cac thu vien
+# Cai dat cac thu vien (file requirements.txt o thu muc goc)
 pip install -r requirements.txt
 ```
 
